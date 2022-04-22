@@ -1,0 +1,46 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_install_hook_types: ["pre-push"]
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.2.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-vcs-permalinks
+- repo: local
+  hooks:
+  - id: markdown-lint
+    name: "Markdown Lint"
+    entry: markdownlint
+    args: ["README.md"]
+    language: system
+    types: [markdown]
+    pass_filenames: false
+  - id: vale-grammar
+    name: "Vale Grammar"
+    entry: vale
+    args: ["README.md", "--output", "line"]
+    language: system
+    types: [markdown]
+    pass_filenames: false
+  - id: cargo-check
+    name: "Cargo Check"
+    entry: cargo
+    args: ["check"]
+    language: system
+    types: [rust]
+    pass_filenames: false
+  - id: cargo-clippy
+    name: "Cargo Clippy"
+    entry: cargo
+    args: ["clippy"]
+    language: system
+    types: [rust]
+    pass_filenames: false
+  - id: test
+    name: "Cargo test"
+    entry: cargo
+    args: ["test"]
+    language: system
+    types: [rust]
+    pass_filenames: false
