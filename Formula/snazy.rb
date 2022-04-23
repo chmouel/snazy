@@ -9,7 +9,7 @@ class Snazy < Formula
 
   on_macos do
     url "https://github.com/chmouel/snazy/releases/download/0.0.1/snazy_0.0.1_macOS_all.tar.gz"
-    sha256 "2c4a379926b68f8ac8bdda198093fe418c95a4766256e0df719344e95633a2e5"
+    sha256 "eba0ab2c8b2a14fe4819d7bf5879469e1a45fd2e0e834dd9a46d986075cd86c9"
 
     def install
       bin.install "snazy"
@@ -19,7 +19,7 @@ class Snazy < Formula
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/chmouel/snazy/releases/download/0.0.1/snazy_0.0.1_linux_amd64.tar.gz"
-      sha256 "0ee2403d419341bbb1c00b4d8e93307d1e5eea1f2ed0edb6bc379625707e1ff8"
+      sha256 "c0b446a53d6616a03c4bdf3ad98d39a38b226d9ccb88cc1734433264a2b3a438"
 
       def install
         bin.install "snazy"
