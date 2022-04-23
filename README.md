@@ -90,6 +90,9 @@ strings.
   (`[sugarjazy](https://github.com/chmouel/sugarjazy)`) but I wanted to
   experiment with Rust so I called this one
   `[snazy](https://www.urbandictionary.com/define.php?term=snazy)`.
+- Why rust? Good question, it seems the kids like it but i still don't get it,
+  maybe one day I will but it really take a few years to dig a programming
+  language.
 
 ## Copyright
 
