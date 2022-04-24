@@ -1,14 +1,22 @@
 [package]
+authors = ["Chmouel Boudjnah <chmouel@chmouel.com>"]
+categories = ["command-line-utilities"]
+description = "snazy is a snazy json log viewer"
+license = "MIT/Apache-2.0"
+readme = "README.md"
 name = "snazy"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[badges.appveyor]
+repository = "chmouel/snazy"
 
 [dependencies]
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 chrono = "0.4.19"
 yansi = "0.5.1"
-clap = { version = "3.1.12", features = ["derive"] }
+clap = { version = "3.1", features = ["derive", "cargo"] }
+clap_complete = "3.1"
 regex = "1.5.5"
+
