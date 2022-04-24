@@ -26,7 +26,7 @@ struct Knative {
 pub fn getinfo(
     rawline: &str,
     kail_no_prefix: bool,
-    time_format: &str,
+    time_format: Option<&str>,
 ) -> Option<HashMap<String, String>> {
     let mut msg = HashMap::new();
     let mut sample = rawline.to_string();
@@ -47,7 +47,7 @@ pub fn getinfo(
         // parse timestamp to a unix timestamp
         msg.insert(
             "ts".to_string(),
-            crate::utils::convert_str_to_ts(p.timestamp.as_str(), time_format),
+            crate::utils::convert_str_to_ts(p.timestamp.as_str(), time_format.unwrap()),
         );
         let mut others = String::new();
         if p.other.contains_key("provider") {
@@ -72,12 +72,15 @@ pub fn getinfo(
             if ts.is_f64() {
                 msg.insert(
                     "ts".to_string(),
-                    crate::utils::convert_unix_ts(ts.as_f64().unwrap() as i64, time_format),
+                    crate::utils::convert_unix_ts(
+                        ts.as_f64().unwrap() as i64,
+                        time_format.unwrap(),
+                    ),
                 );
             } else if ts.as_str().is_some() {
                 msg.insert(
                     "ts".to_string(),
-                    crate::utils::convert_str_to_ts(ts.as_str().unwrap(), time_format),
+                    crate::utils::convert_str_to_ts(ts.as_str().unwrap(), time_format.unwrap()),
                 );
             }
         };
@@ -89,8 +92,19 @@ pub fn getinfo(
     Some(msg)
 }
 
-pub fn read_from_stdin(cli: crate::cli::Cli) {
+pub fn read_from_stdin(matches: &clap::ArgMatches) {
     let stdin = io::stdin();
+    // check if filter-levels is specified
+    let mut filter_levels = Vec::new();
+    if matches.is_present("filter-levels") {
+        filter_levels = matches
+            .value_of("filter-levels")
+            .unwrap()
+            .split(',')
+            .map(|s| s.to_string())
+            .collect();
+    }
+
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
         // exclude lines with only space or empty
@@ -98,18 +112,19 @@ pub fn read_from_stdin(cli: crate::cli::Cli) {
             continue;
         }
 
-        if let Some(msg) =
-            crate::parse::getinfo(parseline, cli.kail_no_prefix, cli.time_format.as_str())
-        {
+        if let Some(msg) = crate::parse::getinfo(
+            parseline,
+            matches.is_present("kail-no-prefix"),
+            matches.value_of("time_format"),
+        ) {
             let unwrapped = serde_json::to_string(&msg).unwrap();
             //check if unwrapped is not an empty hashmap
             if unwrapped == "{}" {
                 println!("{}", parseline);
                 continue;
             }
-            if !cli.filter_levels.is_empty()
-                && !cli.filter_levels.contains(&msg["level"].to_lowercase())
-            {
+
+            if !filter_levels.is_empty() && !filter_levels.contains(&msg["level"].to_lowercase()) {
                 continue;
             }
 
@@ -124,8 +139,8 @@ pub fn read_from_stdin(cli: crate::cli::Cli) {
                 "".to_string()
             };
             let mut themsg = msg.get("msg").unwrap().to_string();
-            if !cli.regexp.is_empty() {
-                let re = Regex::new(format!(r"(?P<r>{})", cli.regexp).as_str()).unwrap();
+            if let Some(regexp) = matches.value_of("regexp") {
+                let re = Regex::new(format!(r"(?P<r>{})", regexp).as_str()).unwrap();
                 let _result = re
                     .replace_all(&themsg, Paint::yellow("$r").to_string())
                     .to_string();

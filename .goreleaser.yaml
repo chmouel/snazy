@@ -13,7 +13,10 @@ archives:
   - replacements:
       darwin: macOS
     name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-
+    files:
+      - src: misc/completions/*
+        dst: completions
+        strip_parent: true
 checksum:
   name_template: 'checksums.txt'
 
@@ -25,7 +28,12 @@ brews:
     folder: Formula
     homepage: "https://github.com/chmouel/snazy"
     description: snazy  - a snazy json log viewer
-
+    install: |
+      bin.install "snazy" => "snazy"
+      prefix.install_metafiles
+      bash_completion.install "completions/snazy.bash"
+      fish_completion.install "completions/snazy.fish"
+      zsh_completion.install "completions/_snazy"
 nfpms:
   - file_name_template: "snazy-{{.Version}}_{{.Os}}-{{.Arch}}"
     homepage: https://github.com/chmouel/snazy
@@ -80,3 +88,12 @@ aurs:
 
       # license
       install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/snazy/LICENSE"
+
+      # completions
+      mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+      mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+      mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+
+      install -Dm644 "completions/snazy.bash" "${pkgdir}/usr/share/bash-completion/completions/snazy"
+      install -Dm644 "completions/snazy.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/snazy.fish"
+      install -Dm644 "completions/_snazy" "${pkgdir}/usr/share/zsh/site-functions/_snazy"
