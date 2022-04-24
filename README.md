@@ -3,13 +3,12 @@
 Snazy is a simple tool to parse json logs and output them in a nice format with
 nice colors.
 
-As a [`tekton`](http://tekton.dev) developer this works pretty well with tekton
-controllers and webhooks pods but the shoudld work as well with most knative
-package and other pods using go-uber/zap.
+As a [`tekton`](http://tekton.dev) developer who has to dig into controller/webhook logs I wanted 
+something that is a bit easier to look on the eyes and identify error/info/warning statements easily.
+
+It's not only for `tekton` but would work well with projects using [`go-uber/zap`](https://github.com/uber-go/zap) library like [`knative`](https://knative.dev) and many others.
 
 ## Screenshot
-
-### Default
 
 ![screenshot](./.github/screenshot.png)
 
@@ -58,7 +57,7 @@ kubectl logs deployment/controller|snazy
 It supports streaming too, so if you do a `kubectl logs -f` it would just wait
 for input.
 
-If you need to stream a file you simply can do a `snazy < FILE`
+If you need to parse a file you simply can use the shell with `snazy < FILE`
 
 If your input comes from <https://github.com/boz/kail> it will automatically
 detect it and print the namespace/pod[container] :
@@ -75,7 +74,7 @@ If you want to only show some levels, you can add the -f option with level
 separated by commas, for example:
 
 ```shell
-% kuibectl log pod|snazy -f warning,error
+% kubectl log pod|snazy -f warning,error
 ```
 
 will only show warning and error fro the log.
@@ -86,10 +85,9 @@ strings.
 
 ## FAQ
 
-- I used to have a python script that does the same and more called
-  (`[sugarjazy](https://github.com/chmouel/sugarjazy)`) but I wanted to
-  experiment with Rust so I called this one
-  `[snazy](https://www.urbandictionary.com/define.php?term=snazy)`.
+- I have seen a tool like that before with another stupid name? I used to have a python script that does the same and more called
+  ([sugarjazy](https://github.com/chmouel/sugarjazy)) but I wanted to experiment with Rust so I called this one
+  [snazy](https://www.urbandictionary.com/define.php?term=snazy).
 - Why rust? Good question, it seems the kids like it but i still don't get it,
   maybe one day I will but it really take a few years to dig a programming
   language.
