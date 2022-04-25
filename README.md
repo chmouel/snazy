@@ -3,7 +3,7 @@
 Snazy is a simple tool to parse json logs and output them in a nice format with
 nice colors.
 
-As a [`tekton`](http://tekton.dev) developer who has to dig into controller/webhook logs I wanted 
+As a [`tekton`](http://tekton.dev) developer who has to dig into controller/webhook logs I wanted
 something that is a bit easier to look on the eyes and identify error/info/warning statements easily.
 
 It's not only for `tekton` but would work well with projects using [`go-uber/zap`](https://github.com/uber-go/zap) library like [`knative`](https://knative.dev) and many others.

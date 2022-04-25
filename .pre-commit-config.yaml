@@ -30,6 +30,13 @@ repos:
     language: system
     types: [rust]
     pass_filenames: false
+  - id: cargo-build
+    name: "Cargo Build"
+    entry: cargo
+    args: ["build"]
+    language: system
+    types: [rust]
+    pass_filenames: false
   - id: cargo-clippy
     name: "Cargo Clippy"
     entry: cargo
@@ -44,3 +51,10 @@ repos:
     language: system
     types: [rust]
     pass_filenames: false
+  - id: fmt
+    name: fmt
+    description: Format files with cargo fmt.
+    entry: cargo fmt
+    language: system
+    types: [rust]
+    args: ["--"]
