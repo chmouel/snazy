@@ -35,6 +35,12 @@ brew tap chmouel/snazy https://github.com/chmouel/snazy
 brew install snazy
 ```
 
+### Crates.io
+
+```shell
+cargo install snazy
+```
+
 ### Docker
 
 ```shell
@@ -44,7 +50,7 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
 ## Build from source
 
 Snazy is using rust, if you want to compile it directly you just need to
-checkout the source and run `cargo install`.
+checkout the source and run `cargo build`.
 
 ## Usage
 
