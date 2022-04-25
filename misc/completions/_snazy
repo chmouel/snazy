@@ -15,8 +15,8 @@ _snazy() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'-r+[highlight word in a message with a regexp]: : ' \
-'--regexp=[highlight word in a message with a regexp]: : ' \
+'*-r+[highlight word in a message with a regexp]: : ' \
+'*--regexp=[highlight word in a message with a regexp]: : ' \
 '--time-format=[Time format]: : ' \
 '-h[Print help information]' \
 '--help[Print help information]' \

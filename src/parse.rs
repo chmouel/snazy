@@ -1,9 +1,10 @@
+use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use std::io::{self, BufRead};
-use yansi::Paint;
+use yansi::{Color, Paint, Style}; // 0.6.5
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Pac {
@@ -139,12 +140,30 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
                 "".to_string()
             };
             let mut themsg = msg.get("msg").unwrap().to_string();
-            if let Some(regexp) = matches.value_of("regexp") {
-                let re = Regex::new(format!(r"(?P<r>{})", regexp).as_str()).unwrap();
-                let _result = re
-                    .replace_all(&themsg, Paint::yellow("$r").to_string())
-                    .to_string();
-                themsg = _result;
+
+            if matches.occurrences_of("regexp") > 0 {
+                let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
+                for r in regexps {
+                    let re = Regex::new(format!(r"(?P<r>{})", r).as_str()).unwrap();
+                    // pick up a random colours out of yellow/red/blue/magenta/cyan
+                    let colours = vec![
+                        Color::Yellow,
+                        Color::Red,
+                        Color::Blue,
+                        Color::Magenta,
+                        Color::Cyan,
+                    ];
+                    let mut rng = rand::thread_rng();
+                    let style = Style::new(colours[rng.gen_range(0, colours.len())]);
+
+                    let _result = re
+                        .replace_all(&themsg, style.paint("$r").to_string())
+                        .to_string();
+                    themsg = _result;
+                    // let _result = re
+                    //     .replace_all(&themsg, Paint::yellow("$r").to_string())
+                    //     .to_string();
+                }
             }
 
             println!("{} {} {}{}", Paint::wrapping(level), ts, other, themsg);

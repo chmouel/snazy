@@ -7,7 +7,9 @@ pub fn build_app() -> Command<'static> {
                 .long("regexp")
                 .short('r')
                 .help("highlight word in a message with a regexp")
-                .takes_value(true),
+                .takes_value(true)
+                .min_values(1)
+                .multiple_occurrences(true),
         )
         .arg(
             Arg::new("time_format")
