@@ -5,24 +5,32 @@
 class Snazy < Formula
   desc "snazy  - a snazy json log viewer"
   homepage "https://github.com/chmouel/snazy"
-  version "0.0.1"
+  version "0.0.2"
 
   on_macos do
-    url "https://github.com/chmouel/snazy/releases/download/0.0.1/snazy_0.0.1_macOS_all.tar.gz"
-    sha256 "eba0ab2c8b2a14fe4819d7bf5879469e1a45fd2e0e834dd9a46d986075cd86c9"
+    url "https://github.com/chmouel/snazy/releases/download/0.0.2/snazy_0.0.2_macOS_all.tar.gz"
+    sha256 "79f6ada57e2eab617e9ddd1f2602de276dcec66e19b735d5b8c426f9ae3d1d0a"
 
     def install
-      bin.install "snazy"
+      bin.install "snazy" => "snazy"
+      prefix.install_metafiles
+      bash_completion.install "completions/snazy.bash"
+      fish_completion.install "completions/snazy.fish"
+      zsh_completion.install "completions/_snazy"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/chmouel/snazy/releases/download/0.0.1/snazy_0.0.1_linux_amd64.tar.gz"
-      sha256 "c0b446a53d6616a03c4bdf3ad98d39a38b226d9ccb88cc1734433264a2b3a438"
+      url "https://github.com/chmouel/snazy/releases/download/0.0.2/snazy_0.0.2_linux_amd64.tar.gz"
+      sha256 "4435c7491f77a4bc186099c07b7453f7f38081b42bb24a1fa202cb484f1829f2"
 
       def install
-        bin.install "snazy"
+        bin.install "snazy" => "snazy"
+        prefix.install_metafiles
+        bash_completion.install "completions/snazy.bash"
+        fish_completion.install "completions/snazy.fish"
+        zsh_completion.install "completions/_snazy"
       end
     end
   end
