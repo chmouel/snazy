@@ -40,7 +40,7 @@ repos:
   - id: cargo-clippy
     name: "Cargo Clippy"
     entry: cargo
-    args: ["clippy"]
+    args: ["clippy", "--", "-D", "warnings"]
     language: system
     types: [rust]
     pass_filenames: false

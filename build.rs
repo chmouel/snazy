@@ -13,7 +13,6 @@ fn main() {
 
     let mut app = build_app();
     for shell in [Bash, Zsh, PowerShell, Fish, Elvish] {
-        println!("Generating Shell {}", shell.to_string());
         generate_to(shell, &mut app, "snazy", &outdir).unwrap();
     }
 }
