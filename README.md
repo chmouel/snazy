@@ -42,8 +42,7 @@ brew install snazy
 cargo install snazy
 ```
 
-### [Docker](https://github.com/chmouel/snazy/pkgs/c
-tainer/snazy)
+### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
 
 ```shell
 kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
