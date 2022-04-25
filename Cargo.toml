@@ -6,7 +6,7 @@ description = "snazy is a snazy json log viewer"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 name = "snazy"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 
 [badges.appveyor]
