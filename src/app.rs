@@ -10,6 +10,11 @@ pub fn build_app() -> Command<'static> {
     let app = Command::new("snazy")
         .version(crate_version!())
         .color(clap_color_choice)
+        .after_help(
+            r#"You just need to pipe to snazy some logs formatted as json to humm (sorry) snazzy them 💄
+eg: `kubectl logs -f controller-pod|snazy`"#
+        )
+
         .arg(
             Arg::new("regexp")
                 .long("regexp")
