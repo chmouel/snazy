@@ -17,6 +17,8 @@ archives:
       - src: misc/completions/*
         dst: completions
         strip_parent: true
+      - LICENSE
+      - README.md
 checksum:
   name_template: 'checksums.txt'
 
