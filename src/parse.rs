@@ -92,6 +92,36 @@ pub fn getinfo(
     Some(msg)
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_line() {
+        let line = r#"{"severity":"INFO","timestamp":"2022-04-25T10:24:30.155404234Z","logger":"pipelinesascode","caller":"kubeinteraction/secrets.go:114","message":"hello moto"}"#;
+        let msg = super::getinfo(line, false, Some("%H:%M")).unwrap();
+        assert_eq!(msg["msg"], "hello moto");
+    }
+    #[test]
+    fn test_kail_prefix() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(line, false, Some("%H:%M")).unwrap();
+        assert!(msg["msg"].contains("ns/pod[container]"));
+        assert!(msg["msg"].contains("updated"));
+    }
+    #[test]
+    fn test_kail_no_prefix() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(line, true, Some("%H:%M")).unwrap();
+        assert_eq!(msg["msg"], "updated");
+    }
+    #[test]
+    fn test_pac_provider_icon() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(line, true, Some("%H:%M")).unwrap();
+        assert!(msg.contains_key("others"));
+        assert!(msg["others"].contains(" "));
+    }
+}
+
 pub fn read_from_stdin(matches: &clap::ArgMatches) {
     let stdin = io::stdin();
     // check if filter-levels is specified
