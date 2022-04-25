@@ -25,15 +25,15 @@ _snazy() {
                 return 0
             fi
             case "${prev}" in
+                --regexp)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -r)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 --time-format)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                --filter-levels)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -f)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;

@@ -21,13 +21,13 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'snazy' {
-            [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
-            [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
-            [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information')
             [CompletionResult]::new('-r', 'r', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
             [CompletionResult]::new('--regexp', 'regexp', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
+            [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information')
+            [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
+            [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
             [CompletionResult]::new('--kail-no-prefix', 'kail-no-prefix', [CompletionResultType]::ParameterName, 'Hide container prefix when showing kail')
             break
         }

@@ -15,13 +15,13 @@ _snazy() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
+'-r+[highlight word in a message with a regexp]: : ' \
+'--regexp=[highlight word in a message with a regexp]: : ' \
 '--time-format=[Time format]: : ' \
-'-f+[filter levels separated by commas, eg: info,debug]: : ' \
-'--filter-levels=[filter levels separated by commas, eg: info,debug]: : ' \
 '-h[Print help information]' \
 '--help[Print help information]' \
-'-r[highlight word in a message with a regexp]' \
-'--regexp[highlight word in a message with a regexp]' \
+'-f[filter levels separated by commas, eg: info,debug]' \
+'--filter-levels[filter levels separated by commas, eg: info,debug]' \
 '--kail-no-prefix[Hide container prefix when showing kail]' \
 && ret=0
 }

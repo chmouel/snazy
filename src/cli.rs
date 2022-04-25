@@ -6,7 +6,8 @@ pub fn build_app() -> Command<'static> {
             Arg::new("regexp")
                 .long("regexp")
                 .short('r')
-                .help("highlight word in a message with a regexp"),
+                .help("highlight word in a message with a regexp")
+                .takes_value(true),
         )
         .arg(
             Arg::new("time_format")
@@ -16,8 +17,6 @@ pub fn build_app() -> Command<'static> {
         )
         .arg(
             Arg::new("filter-levels")
-                .min_values(1)
-                .multiple_values(true)
                 .help("filter levels separated by commas, eg: info,debug")
                 .short('f')
                 .long("filter-levels"),
