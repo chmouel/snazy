@@ -32,7 +32,7 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information')
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version information')
-            [CompletionResult]::new('--kail-no-prefix', 'kail-no-prefix', [CompletionResultType]::ParameterName, 'Hide container prefix when showing kail')
+            [CompletionResult]::new('--kail-no-prefix', 'kail-no-prefix', [CompletionResultType]::ParameterName, 'Hide container prefix when showing the log with kail')
             break
         }
     })

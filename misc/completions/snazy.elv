@@ -29,7 +29,7 @@ set edit:completion:arg-completer[snazy] = {|@words|
             cand --help 'Print help information'
             cand -V 'Print version information'
             cand --version 'Print version information'
-            cand --kail-no-prefix 'Hide container prefix when showing kail'
+            cand --kail-no-prefix 'Hide container prefix when showing the log with kail'
         }
     ]
     $completions[$command]

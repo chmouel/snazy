@@ -26,7 +26,7 @@ _snazy() {
 '--help[Print help information]' \
 '-V[Print version information]' \
 '--version[Print version information]' \
-'--kail-no-prefix[Hide container prefix when showing kail]' \
+'--kail-no-prefix[Hide container prefix when showing the log with kail]' \
 && ret=0
 }
 

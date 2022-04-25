@@ -22,13 +22,20 @@ eg: `kubectl logs -f controller-pod|snazy`"#
                 .help("highlight word in a message with a regexp")
                 .takes_value(true)
                 .min_values(1)
-                .multiple_occurrences(true),
+                .multiple_occurrences(true)
+                .long_help(
+                    "Specify one or multiple regexps to highligh in message.\n\
+                    each regexp match will be colored with a different color"
+                ),
         )
         .arg(
             Arg::new("time_format")
                 .long("time-format")
                 .help("Time format")
-                .default_value("%H:%M:%S"),
+                .default_value("%H:%M:%S")
+                .long_help(
+                    "Specify a timeformat as documented in the strftime(3) manpage."
+                ),
         )
         .arg(
             Arg::new("filter-levels")
@@ -40,7 +47,7 @@ eg: `kubectl logs -f controller-pod|snazy`"#
         .arg(
             Arg::new("kail-no-prefix")
                 .long("kail-no-prefix")
-                .help("Hide container prefix when showing kail"),
+                .help("Hide container prefix when showing the log with kail"),
         )
         .arg(
             Arg::new("color")
