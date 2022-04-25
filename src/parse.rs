@@ -1,4 +1,3 @@
-use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -97,6 +96,8 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
     let stdin = io::stdin();
     // check if filter-levels is specified
     let mut filter_levels = Vec::new();
+    let mut regexp_colours = HashMap::new();
+
     if matches.is_present("filter-levels") {
         filter_levels = matches
             .value_of("filter-levels")
@@ -105,7 +106,20 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
             .map(|s| s.to_string())
             .collect();
     }
-
+    if matches.occurrences_of("regexp") > 0 {
+        let colours = vec![
+            Color::Yellow,
+            Color::Magenta,
+            Color::Cyan,
+            Color::Red,
+            Color::Blue,
+        ];
+        let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
+        // assign a colour to each regexp
+        for (i, regexp) in regexps.iter().enumerate() {
+            regexp_colours.insert(regexp.to_string(), colours[i % colours.len()]);
+        }
+    }
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
         // exclude lines with only space or empty
@@ -145,17 +159,7 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
                 let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
                 for r in regexps {
                     let re = Regex::new(format!(r"(?P<r>{})", r).as_str()).unwrap();
-                    // pick up a random colours out of yellow/red/blue/magenta/cyan
-                    let colours = vec![
-                        Color::Yellow,
-                        Color::Red,
-                        Color::Blue,
-                        Color::Magenta,
-                        Color::Cyan,
-                    ];
-                    let mut rng = rand::thread_rng();
-                    let style = Style::new(colours[rng.gen_range(0, colours.len())]);
-
+                    let style = Style::new(regexp_colours[r]);
                     let _result = re
                         .replace_all(&themsg, style.paint("$r").to_string())
                         .to_string();
