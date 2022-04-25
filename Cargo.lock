@@ -275,6 +275,7 @@ dependencies = [
 name = "snazy"
 version = "0.1.0"
 dependencies = [
+ "atty",
  "chrono",
  "clap",
  "clap_complete",

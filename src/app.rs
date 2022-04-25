@@ -1,7 +1,15 @@
-use clap::{Arg, Command};
+use clap::{crate_version, Arg, ColorChoice, Command};
 
 pub fn build_app() -> Command<'static> {
+    let clap_color_choice = if std::env::var_os("NO_COLOR").is_none() {
+        ColorChoice::Auto
+    } else {
+        ColorChoice::Never
+    };
+
     let app = Command::new("snazy")
+        .version(crate_version!())
+        .color(clap_color_choice)
         .arg(
             Arg::new("regexp")
                 .long("regexp")
@@ -27,6 +35,22 @@ pub fn build_app() -> Command<'static> {
             Arg::new("kail-no-prefix")
                 .long("kail-no-prefix")
                 .help("Hide container prefix when showing kail"),
+        )
+        .arg(
+            Arg::new("color")
+                .long("color")
+                .short('c')
+                .takes_value(true)
+                .value_name("when")
+                .possible_values(&["never", "auto", "always"])
+                .hide_possible_values(true)
+                .help("When to use colors: never, *auto*, always")
+                .long_help(
+                    "Declare when to use color for the pattern match output:\n  \
+                       'auto':      show colors if the output goes to an interactive console (default)\n  \
+                       'never':     do not use colorized output\n  \
+                       'always':    always use colorized output",
+                ),
         );
     app
 }

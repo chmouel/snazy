@@ -104,6 +104,9 @@ Shell completions is available for most shells in the [misc/completions](./misc/
 - Why rust? Good question, it seems the kids like it but i still don't get it,
   maybe one day I will but it really take a few years to dig a programming
   language.
+- I have seen some of this code already 🤨, yep being a noob i much digged
+  into the source code of (the super duper great)
+  [sharkdp/fd](https://github.com/sharkdp/fd)
 
 ## Copyright
 
