@@ -18,14 +18,14 @@ _snazy() {
 '*-r+[highlight word in a message with a regexp]: : ' \
 '*--regexp=[highlight word in a message with a regexp]: : ' \
 '--time-format=[Time format]: : ' \
+'-f+[filter levels separated by commas, eg: info,debug]: :(info debug warning error info fatal panic dpanic)' \
+'--filter-levels=[filter levels separated by commas, eg: info,debug]: :(info debug warning error info fatal panic dpanic)' \
 '-c+[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '--color=[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '-h[Print help information]' \
 '--help[Print help information]' \
 '-V[Print version information]' \
 '--version[Print version information]' \
-'-f[filter levels separated by commas, eg: info,debug]' \
-'--filter-levels[filter levels separated by commas, eg: info,debug]' \
 '--kail-no-prefix[Hide container prefix when showing kail]' \
 && ret=0
 }

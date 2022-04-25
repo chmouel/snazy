@@ -37,6 +37,14 @@ _snazy() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
+                --filter-levels)
+                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    return 0
+                    ;;
+                -f)
+                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    return 0
+                    ;;
                 --color)
                     COMPREPLY=($(compgen -W "" -- "${cur}"))
                     return 0

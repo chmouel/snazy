@@ -34,6 +34,7 @@ eg: `kubectl logs -f controller-pod|snazy`"#
             Arg::new("filter-levels")
                 .help("filter levels separated by commas, eg: info,debug")
                 .short('f')
+                .possible_values(&["info", "debug", "warning", "error", "info", "fatal", "panic", "dpanic"])
                 .long("filter-levels"),
         )
         .arg(
