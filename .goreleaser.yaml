@@ -27,7 +27,7 @@ brews:
       name: snazy
     folder: Formula
     homepage: "https://github.com/chmouel/snazy"
-    description: snazy  - a snazy json log viewer
+    description: snazy - a snazzy json log viewer
     install: |
       bin.install "snazy" => "snazy"
       prefix.install_metafiles
@@ -37,7 +37,7 @@ brews:
 nfpms:
   - file_name_template: "snazy-{{.Version}}_{{.Os}}-{{.Arch}}"
     homepage: https://github.com/chmouel/snazy
-    description: snazy  - a snazy json log viewer
+    description: snazy - a snazzy json log viewer
     maintainer: Chmouel Boudjnah <chmouel@chmouel.com>
     license: Apache 2.0
     formats:
@@ -76,7 +76,7 @@ release:
 aurs:
   - name: snazy-bin
     homepage: "https://github.com/chmouel/snazy"
-    description: "Snazy - a snazy json log viewer"
+    description: "snazy - a snazzy json log viewer"
     maintainers:
       - "Chmouel Boudjnah <chmouel@chmouel.com>"
     license: Apache 2.0

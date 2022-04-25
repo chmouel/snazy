@@ -2,7 +2,7 @@
 build = "build.rs"
 authors = ["Chmouel Boudjnah <chmouel@chmouel.com>"]
 categories = ["command-line-utilities"]
-description = "snazy is a snazy json log viewer"
+description = "snazy is a snazzy json log viewer"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 name = "snazy"
