@@ -160,9 +160,6 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
                         .replace_all(&themsg, style.paint("$r").to_string())
                         .to_string();
                     themsg = _result;
-                    // let _result = re
-                    //     .replace_all(&themsg, Paint::yellow("$r").to_string())
-                    //     .to_string();
                 }
             }
 

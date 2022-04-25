@@ -3,7 +3,7 @@ use std::fs;
 use clap_complete::{generate_to, Shell};
 use Shell::*;
 
-include!("src/cli.rs");
+include!("src/app.rs");
 
 fn main() {
     let outdir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
