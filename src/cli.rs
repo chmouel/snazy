@@ -55,6 +55,22 @@ eg: `kubectl logs -f controller-pod|snazy`"#
                 .help("Hide container prefix when showing the log with kail"),
         )
         .arg(
+            Arg::new("json-keys")
+                .long("json-keys")
+                .short('k')
+                .help("key to use for json parsing")
+                .takes_value(true)
+                .multiple_occurrences(true)
+                .long_help(
+                    "Specify multiple keys for json parsing.\n\
+                    keys needed are: msg (message), level (logging level), ts (timestamp).\n\
+                    all keys are needed to be present, eg: \n\n\
+                    `snazy -k msg=message -k level=level -k ts=ts`\n \n\
+                    will parse the json and use the message, level and timestamp keys\n\
+                    from the (`message`, `level`, `ts`) json keys."
+                ),
+        )
+        .arg(
             Arg::new("color")
                 .long("color")
                 .short('c')

@@ -1,10 +1,6 @@
 use chrono::NaiveDateTime;
+use serde_json::Value;
 use yansi::Paint;
-
-pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
-    let ts = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
-    ts.format(time_format).to_string()
-}
 
 pub fn color_by_level(level: &str) -> String {
     match level {
@@ -16,7 +12,20 @@ pub fn color_by_level(level: &str) -> String {
     }
 }
 
-pub fn convert_unix_ts(value: i64, time_format: &str) -> String {
+pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
+    let ts = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
+    ts.format(time_format).to_string()
+}
+
+fn convert_unix_ts(value: i64, time_format: &str) -> String {
     let ts = NaiveDateTime::from_timestamp(value, 0);
     ts.format(time_format).to_string()
+}
+
+pub fn conver_ts_float_or_str(value: &Value, time_format: &str) -> String {
+    match value {
+        Value::String(s) => convert_str_to_ts(s.as_str(), time_format),
+        Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format),
+        _ => "".to_string(),
+    }
 }

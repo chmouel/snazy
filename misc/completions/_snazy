@@ -20,6 +20,8 @@ _snazy() {
 '*-f+[filter by levels]: :(info debug warning error info fatal panic dpanic)' \
 '*--filter-levels=[filter by levels]: :(info debug warning error info fatal panic dpanic)' \
 '--time-format=[Time format]: : ' \
+'*-k+[key to use for json parsing]: : ' \
+'*--json-keys=[key to use for json parsing]: : ' \
 '-c+[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '--color=[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '-h[Print help information]' \

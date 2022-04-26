@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/crates/v/snazy.svg)](https://crates.io/crates/snazy) [![AUR](https://img.shields.io/aur/version/snazy-bin)](https://aur.archlinux.org/packages/snazy-bin) [![CICD](https://github.com/chmouel/snazy/actions/workflows/rust.yaml/badge.svg)](https://github.com/chmouel/snazy/actions/workflows/rust.yaml)  [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Version](https://img.shields.io/crates/v/snazy.svg)](https://crates.io/crates/snazy) [![AUR](https://img.shields.io/aur/version/snazy-bin)](https://aur.archlinux.org/packages/snazy-bin) [![CICD](https://github.com/chmouel/snazy/actions/workflows/rust.yaml/badge.svg)](https://github.com/chmouel/snazy/actions/workflows/rust.yaml) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 # snazy - a snazzy json log viewer
 
@@ -51,7 +51,7 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
 ## Build from [source](https://github.com/chmouel/snazy)
 
 Snazy is using rust, if you want to compile it directly you just need to
-checkout the source and run `cargo build`.
+check out the source and run `cargo build`.
 
 ## Usage
 
@@ -76,7 +76,7 @@ flag `--kail-no-prefix`.
 
 If you want to highlight some pattern you can add the option `-r REGEXP` and
 `snazy` will highlight it. You can have multiple `-r` switches with multiple
-regexps and you get different highlight for each match.
+regexps, and you get different highlight for each match.
 
 If you want to only show some levels, you can add the -f to filter by level or multiple -f for multiple levels :
 
@@ -84,27 +84,37 @@ If you want to only show some levels, you can add the -f to filter by level or m
 % kubectl log pod|snazy -f warning -f error
 ```
 
-will only show warning and error fro the log.
+Will only show warning and error from the log.
 
 You can customize the time printed with the `-t` option which respect the
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
+You can do your own field matching with the -k/--json-keys, it accepts the
+field `msg`, `level` and `ts`. Those fields target a key in json to be used for
+parsing. The value should be:
+
+* `msg`: The message text (string)
+* `level`: The log level (eg: info) (string)
+* `ts`: The timestamp, a float or a datetime
+
+If any of those are missing the parser will fails.
+
 ## Shell completions
 
-Shell completions is available for most shells in the [misc/completions](./misc/completions) and it should be automatically installed with the aur/brew package.
+Shell completions are available for most shells in the [misc/completions](./misc/completions) and it should be automatically installed with the aur/brew package.
 
 ## FAQ
 
-- I have seen a tool like that before with another stupid name? I used to have a python script that does the same and more called
-  ([sugarjazy](https://github.com/chmouel/sugarjazy)) but I wanted to experiment with Rust so I called this one
+* I have seen a tool like that before with another stupid name? I used to have a python script that does the same and more called
+  ([sugarjazy](https://github.com/chmouel/sugarjazy)) but I wanted to experiment with Rust, so I called this one
   [snazy](https://www.urbandictionary.com/define.php?term=snazy).
-- You missed a z to snazzy... true that... but snazy is easier to google than snazzy :p
-- Why rust? Good question, it seems the kids like it but i still don't get it,
-  maybe one day I will but it really take a few years to dig a programming
+* You missed a z to snazzy. True that. But snazy is easier to google than snazzy :p
+* Why rust? Good question, it seems the kids like it, but I still don't get it,
+  maybe one day I will, but it really takes a few years to dig a programming
   language.
-- I have seen some of this code already 🤨, yep being a noob i much digged
-  into the source code of (the super duper great)
+* I have seen some of this code already 🤨, yep being a noob I much digged
+  into the source code of (the super-duper great)
   [sharkdp/fd](https://github.com/sharkdp/fd)
 
 ## Copyright

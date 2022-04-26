@@ -26,23 +26,54 @@ struct Knative {
     other: BTreeMap<String, Value>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct Generic {
+    #[serde(flatten)]
+    other: BTreeMap<String, Value>,
+}
+
 pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>> {
     let time_format = config.time_format.as_str();
     let mut msg = HashMap::new();
-    let mut sample = rawline.to_string();
+
+    let mut line = String::from(rawline);
     let kali_re =
         Regex::new(r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)")
             .unwrap();
     let mut kali_msg_prefix = String::new();
-    if kali_re.is_match(rawline) {
-        let _result = kali_re.replace_all(rawline, "$line").to_string();
-        sample = _result;
+    if kali_re.is_match(line.as_str()) {
+        line = kali_re.replace_all(rawline, "$line").to_string();
         kali_msg_prefix = kali_re
             .replace_all(rawline, "$namespace/$pod[$container]")
             .to_string();
     }
 
-    if let Ok(p) = serde_json::from_str::<Pac>(sample.as_str()) {
+    if !config.json_keys.is_empty() {
+        if let Ok(p) = serde_json::from_str::<Generic>(line.as_str()) {
+            for (key, value) in p.other {
+                if config.json_keys.contains_key(key.as_str()) {
+                    if config.json_keys[key.as_str()].as_str() == "ts" {
+                        msg.insert(
+                            String::from("ts"),
+                            crate::utils::conver_ts_float_or_str(&value, time_format),
+                        );
+                    } else {
+                        msg.insert(
+                            config.json_keys[key.as_str()].clone(),
+                            value.as_str().unwrap().to_string(),
+                        );
+                    }
+                }
+            }
+            if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
+                *msg.get_mut("msg").unwrap() =
+                    format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"])
+            }
+            return Some(msg);
+        }
+    }
+
+    if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
         msg.insert("msg".to_string(), p.message.trim().to_string());
         msg.insert("level".to_string(), p.severity.to_uppercase());
         // parse timestamp to a unix timestamp
@@ -66,24 +97,17 @@ pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>
         }
     }
 
-    if let Ok(p) = serde_json::from_str::<Knative>(sample.as_str()) {
+    if let Ok(p) = serde_json::from_str::<Knative>(line.as_str()) {
         msg.insert("msg".to_string(), p.msg.trim().to_string());
         msg.insert("level".to_string(), p.level.to_uppercase());
         if let Some(ts) = p.other.get("ts") {
-            if ts.is_f64() {
-                msg.insert(
-                    "ts".to_string(),
-                    crate::utils::convert_unix_ts(ts.as_f64().unwrap() as i64, time_format),
-                );
-            } else if ts.as_str().is_some() {
-                msg.insert(
-                    "ts".to_string(),
-                    crate::utils::convert_str_to_ts(ts.as_str().unwrap(), time_format),
-                );
-            }
+            msg.insert(
+                String::from("ts"),
+                crate::utils::conver_ts_float_or_str(ts, time_format),
+            );
         };
     }
-    // TODO: no prefix
+
     if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
         *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"])
     }

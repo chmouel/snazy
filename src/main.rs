@@ -24,6 +24,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
     }
 
     let mut regexp_colours = HashMap::new();
+    let mut json_values = HashMap::new();
     if matches.occurrences_of("regexp") > 0 {
         let colours = vec![
             Color::Yellow,
@@ -39,6 +40,22 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
         }
     }
 
+    if matches.occurrences_of("json-keys") > 0 {
+        // split all json-keys matches by =
+        let json_keys: Vec<&str> = matches
+            .values_of("json-keys")
+            .unwrap()
+            .flat_map(|s| s.split('='))
+            .collect();
+        if !json_keys.contains(&"level")
+            || !json_keys.contains(&"msg")
+            || !json_keys.contains(&"ts")
+        {
+            eprintln!("you should have multiple json-keys containning a match for the keys 'level', 'msg' and 'ts'");
+            std::process::exit(1);
+        }
+    }
+
     Config {
         kail_no_prefix: matches.is_present("kail-no-prefix"),
         filter_levels: matches
@@ -48,6 +65,19 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
         time_format: matches.value_of("time_format").unwrap().to_string(),
         regexp_colours,
         colored_output,
+        // split json keys by '=' and store in a key, value hashmap
+        json_keys: matches
+            .values_of("json-keys")
+            .map(|v| {
+                for s in v {
+                    let mut parts = s.splitn(2, '=');
+                    let key = parts.next().unwrap().to_string();
+                    let value = parts.next().unwrap().to_string();
+                    json_values.insert(value, key);
+                }
+                json_values
+            })
+            .unwrap_or_else(HashMap::new),
     }
 }
 
