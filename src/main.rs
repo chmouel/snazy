@@ -1,4 +1,4 @@
-mod app;
+mod cli;
 mod config;
 mod parse;
 mod utils;
@@ -52,7 +52,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
 }
 
 fn main() {
-    let matches = crate::app::build_app().get_matches_from(env::args_os());
+    let matches = crate::cli::build_cli().get_matches_from(env::args_os());
     let config = construct_config(matches);
     crate::parse::read_from_stdin(Arc::new(config))
 }

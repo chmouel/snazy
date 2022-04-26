@@ -41,6 +41,7 @@ pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>
             .replace_all(rawline, "$namespace/$pod[$container]")
             .to_string();
     }
+
     if let Ok(p) = serde_json::from_str::<Pac>(sample.as_str()) {
         msg.insert("msg".to_string(), p.message.trim().to_string());
         msg.insert("level".to_string(), p.severity.to_uppercase());
