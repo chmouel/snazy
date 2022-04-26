@@ -11,10 +11,10 @@ pub fn build_cli() -> Command<'static> {
         .version(crate_version!())
         .color(clap_color_choice)
         .after_help(
-            r#"You just need to pipe to snazy some logs formatted as json to humm (sorry) snazzy them 💄
-eg: `kubectl logs -f controller-pod|snazy`"#
+            "You just need to pipe to snazy some logs formatted as json to humm (sorry) snazzy them 💄,eg:\n\
+            kubectl logs -f controller-pod|snazy\n\
+            Note: `fd -h` prints a short and concise overview while `fd --help` gives all details.",
         )
-
         .arg(
             Arg::new("regexp")
                 .long("regexp")
