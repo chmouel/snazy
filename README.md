@@ -78,11 +78,10 @@ If you want to highlight some pattern you can add the option `-r REGEXP` and
 `snazy` will highlight it. You can have multiple `-r` switches with multiple
 regexps and you get different highlight for each match.
 
-If you want to only show some levels, you can add the -f option with level
-separated by commas, for example:
+If you want to only show some levels, you can add the -f to filter by level or multiple -f for multiple levels :
 
 ```shell
-% kubectl log pod|snazy -f warning,error
+% kubectl log pod|snazy -f warning -f error
 ```
 
 will only show warning and error fro the log.

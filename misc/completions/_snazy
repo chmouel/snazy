@@ -17,9 +17,9 @@ _snazy() {
     _arguments "${_arguments_options[@]}" \
 '*-r+[highlight word in a message with a regexp]: : ' \
 '*--regexp=[highlight word in a message with a regexp]: : ' \
+'*-f+[filter by levels]: :(info debug warning error info fatal panic dpanic)' \
+'*--filter-levels=[filter by levels]: :(info debug warning error info fatal panic dpanic)' \
 '--time-format=[Time format]: : ' \
-'-f+[filter levels separated by commas, eg: info,debug]: :(info debug warning error info fatal panic dpanic)' \
-'--filter-levels=[filter levels separated by commas, eg: info,debug]: :(info debug warning error info fatal panic dpanic)' \
 '-c+[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '--color=[When to use colors: never, *auto*, always]:when:(never auto always)' \
 '-h[Print help information]' \

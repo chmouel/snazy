@@ -20,9 +20,9 @@ set edit:completion:arg-completer[snazy] = {|@words|
         &'snazy'= {
             cand -r 'highlight word in a message with a regexp'
             cand --regexp 'highlight word in a message with a regexp'
+            cand -f 'filter by levels'
+            cand --filter-levels 'filter by levels'
             cand --time-format 'Time format'
-            cand -f 'filter levels separated by commas, eg: info,debug'
-            cand --filter-levels 'filter levels separated by commas, eg: info,debug'
             cand -c 'When to use colors: never, *auto*, always'
             cand --color 'When to use colors: never, *auto*, always'
             cand -h 'Print help information'

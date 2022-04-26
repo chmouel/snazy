@@ -29,20 +29,25 @@ eg: `kubectl logs -f controller-pod|snazy`"#
                 ),
         )
         .arg(
+            Arg::new("filter-levels")
+            .help("filter by levels")
+            .long_help("You can have multiple -f if you need to filter by multiple levels")
+            .takes_value(true)
+            .min_values(1)
+            .multiple_occurrences(true)
+            .short('f')
+            .possible_values(&["info", "debug", "warning", "error", "info", "fatal", "panic", "dpanic"])
+            .long("filter-levels"),
+        )
+        .arg(
             Arg::new("time_format")
                 .long("time-format")
                 .help("Time format")
                 .default_value("%H:%M:%S")
+                .takes_value(true)
                 .long_help(
                     "Specify a timeformat as documented in the strftime(3) manpage."
                 ),
-        )
-        .arg(
-            Arg::new("filter-levels")
-                .help("filter levels separated by commas, eg: info,debug")
-                .short('f')
-                .possible_values(&["info", "debug", "warning", "error", "info", "fatal", "panic", "dpanic"])
-                .long("filter-levels"),
         )
         .arg(
             Arg::new("kail-no-prefix")

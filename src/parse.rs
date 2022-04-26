@@ -1,9 +1,12 @@
+use crate::config::Config;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::io::{self, BufRead};
-use yansi::{Color, Paint, Style}; // 0.6.5
+use std::sync::Arc;
+use yansi::{Paint, Style}; // 0.6.5
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Pac {
@@ -23,11 +26,8 @@ struct Knative {
     other: BTreeMap<String, Value>,
 }
 
-pub fn getinfo(
-    rawline: &str,
-    kail_no_prefix: bool,
-    time_format: Option<&str>,
-) -> Option<HashMap<String, String>> {
+pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>> {
+    let time_format = config.time_format.as_str();
     let mut msg = HashMap::new();
     let mut sample = rawline.to_string();
     let kali_re =
@@ -47,7 +47,7 @@ pub fn getinfo(
         // parse timestamp to a unix timestamp
         msg.insert(
             "ts".to_string(),
-            crate::utils::convert_str_to_ts(p.timestamp.as_str(), time_format.unwrap()),
+            crate::utils::convert_str_to_ts(p.timestamp.as_str(), config.time_format.as_str()),
         );
         let mut others = String::new();
         if p.other.contains_key("provider") {
@@ -72,84 +72,25 @@ pub fn getinfo(
             if ts.is_f64() {
                 msg.insert(
                     "ts".to_string(),
-                    crate::utils::convert_unix_ts(
-                        ts.as_f64().unwrap() as i64,
-                        time_format.unwrap(),
-                    ),
+                    crate::utils::convert_unix_ts(ts.as_f64().unwrap() as i64, time_format),
                 );
             } else if ts.as_str().is_some() {
                 msg.insert(
                     "ts".to_string(),
-                    crate::utils::convert_str_to_ts(ts.as_str().unwrap(), time_format.unwrap()),
+                    crate::utils::convert_str_to_ts(ts.as_str().unwrap(), time_format),
                 );
             }
         };
     }
     // TODO: no prefix
-    if !kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
+    if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
         *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"])
     }
     Some(msg)
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_get_line() {
-        let line = r#"{"severity":"INFO","timestamp":"2022-04-25T10:24:30.155404234Z","logger":"pipelinesascode","caller":"kubeinteraction/secrets.go:114","message":"hello moto"}"#;
-        let msg = super::getinfo(line, false, Some("%H:%M")).unwrap();
-        assert_eq!(msg["msg"], "hello moto");
-    }
-    #[test]
-    fn test_kail_prefix() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(line, false, Some("%H:%M")).unwrap();
-        assert!(msg["msg"].contains("ns/pod[container]"));
-        assert!(msg["msg"].contains("updated"));
-    }
-    #[test]
-    fn test_kail_no_prefix() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(line, true, Some("%H:%M")).unwrap();
-        assert_eq!(msg["msg"], "updated");
-    }
-    #[test]
-    fn test_pac_provider_icon() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(line, true, Some("%H:%M")).unwrap();
-        assert!(msg.contains_key("others"));
-        assert!(msg["others"].contains(" "));
-    }
-}
-
-pub fn read_from_stdin(matches: &clap::ArgMatches) {
+pub fn read_from_stdin(config: Arc<Config>) {
     let stdin = io::stdin();
-    // check if filter-levels is specified
-    let mut filter_levels = Vec::new();
-    let mut regexp_colours = HashMap::new();
-
-    if matches.is_present("filter-levels") {
-        filter_levels = matches
-            .value_of("filter-levels")
-            .unwrap()
-            .split(',')
-            .map(|s| s.to_string())
-            .collect();
-    }
-    if matches.occurrences_of("regexp") > 0 {
-        let colours = vec![
-            Color::Yellow,
-            Color::Magenta,
-            Color::Cyan,
-            Color::Red,
-            Color::Blue,
-        ];
-        let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
-        // assign a colour to each regexp
-        for (i, regexp) in regexps.iter().enumerate() {
-            regexp_colours.insert(regexp.to_string(), colours[i % colours.len()]);
-        }
-    }
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
         // exclude lines with only space or empty
@@ -157,11 +98,7 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
             continue;
         }
 
-        if let Some(msg) = crate::parse::getinfo(
-            parseline,
-            matches.is_present("kail-no-prefix"),
-            matches.value_of("time_format"),
-        ) {
+        if let Some(msg) = crate::parse::getinfo(parseline, &config) {
             let unwrapped = serde_json::to_string(&msg).unwrap();
             //check if unwrapped is not an empty hashmap
             if unwrapped == "{}" {
@@ -169,7 +106,9 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
                 continue;
             }
 
-            if !filter_levels.is_empty() && !filter_levels.contains(&msg["level"].to_lowercase()) {
+            if !config.filter_levels.is_empty()
+                && !config.filter_levels.contains(&msg["level"].to_lowercase())
+            {
                 continue;
             }
 
@@ -185,11 +124,10 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
             };
             let mut themsg = msg.get("msg").unwrap().to_string();
 
-            if matches.occurrences_of("regexp") > 0 {
-                let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
-                for r in regexps {
-                    let re = Regex::new(format!(r"(?P<r>{})", r).as_str()).unwrap();
-                    let style = Style::new(regexp_colours[r]);
+            if !config.regexp_colours.is_empty() {
+                for (key, value) in config.regexp_colours.iter() {
+                    let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
+                    let style = Style::new(*value);
                     let _result = re
                         .replace_all(&themsg, style.paint("$r").to_string())
                         .to_string();
@@ -199,5 +137,65 @@ pub fn read_from_stdin(matches: &clap::ArgMatches) {
 
             println!("{} {} {}{}", Paint::wrapping(level), ts, other, themsg);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::config::Config;
+
+    #[test]
+    fn test_get_line() {
+        let line = r#"{"severity":"INFO","timestamp":"2022-04-25T10:24:30.155404234Z","logger":"pipelinesascode","caller":"kubeinteraction/secrets.go:114","message":"hello moto"}"#;
+        let msg = super::getinfo(
+            line,
+            &Config {
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(msg["msg"], "hello moto");
+    }
+    #[test]
+    fn test_kail_prefix() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(
+            line,
+            &Config {
+                kail_no_prefix: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(msg["msg"].contains("ns/pod[container]"));
+        assert!(msg["msg"].contains("updated"));
+    }
+    #[test]
+    fn test_kail_no_prefix() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(
+            line,
+            &Config {
+                kail_no_prefix: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        assert_eq!(msg["msg"], "updated");
+    }
+    #[test]
+    fn test_pac_provider_icon() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = super::getinfo(
+            line,
+            &Config {
+                kail_no_prefix: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(msg.contains_key("others"));
+        assert!(msg["others"].contains(" "));
     }
 }

@@ -23,9 +23,9 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
         'snazy' {
             [CompletionResult]::new('-r', 'r', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
             [CompletionResult]::new('--regexp', 'regexp', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
+            [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter by levels')
+            [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
-            [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
-            [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter levels separated by commas, eg: info,debug')
             [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'When to use colors: never, *auto*, always')
             [CompletionResult]::new('--color', 'color', [CompletionResultType]::ParameterName, 'When to use colors: never, *auto*, always')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information')
