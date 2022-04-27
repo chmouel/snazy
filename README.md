@@ -55,54 +55,52 @@ check out the source and run `cargo build`.
 
 ## Usage
 
-You use `snazy` by "piping" logs into it :
+* You use `snazy` by "piping" logs into it :
 
 ```shell
 kubectl logs deployment/controller|snazy
 ```
 
-It supports streaming too. When you have a `kubectl logs -f` it would just wait
+* It supports streaming too. When you have a `kubectl logs -f` it would just wait
 for input and snazzily print your logs.
 
-If you need to parse a file you simply can use the shell with `snazy < FILE`
+* If you need to parse a file you simply can use the shell with `snazy < FILE`
 
-If your input comes from <https://github.com/boz/kail> it will automatically
+* If your input comes from <https://github.com/boz/kail> it will automatically
 detect it and print the namespace/pod[container] :
 
 ![screenshot](./.github/screenshot-kail.png)
 
-If you don't want to have the namespace/pod[container] printed you can add the
+* If you don't want to have the namespace/pod[container] printed you can add the
 flag `--kail-no-prefix`.
 
-If you want to highlight some pattern you can add the option `-r REGEXP` and
+* If you want to highlight some patterns you can add the option `-r REGEXP` and
 `snazy` will highlight it. You can have multiple `-r` switches with multiple
 regexps, and you get different highlight for each match.
 
-If you want to only show some levels, you can add the -f to filter by level or multiple -f for multiple levels :
+* If you want to only show some levels, you can add the flag `-f` to filter by level or multiple `-f` for multiple levels, for example, this only show warning and error from the log:
 
 ```shell
 % kubectl log pod|snazy -f warning -f error
 ```
 
-Will only show warning and error from the log.
-
-If you pass the flag "--level-symbols" or set the environement variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+* If you pass the flag `--level-symbols` or set the environement variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
-You can customize the time printed with the `-t` option which respect the
+* You can customize the time printed with the `-t` option which respect the
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
-You can do your own field matching with the -k/--json-keys, it accepts the
+* You can do your own field matching with the `-k/--json-keys` flag, it accepts the
 field `msg`, `level` and `ts`. Those fields target a key in json to be used for
-parsing. The value should be:
+parsing. The values should be:
 
-* `msg`: The message text (string)
-* `level`: The log level (eg: info) (string)
-* `ts`: The timestamp, a float or a datetime
+  * `msg`: The message text (string)
+  * `level`: The log level (eg: info) (string)
+  * `ts`: The timestamp, a float or a datetime
 
-If any of those are missing the parser will fails.
+  If any of those fields are missing the parser will fails.
 
 ## Shell completions
 
