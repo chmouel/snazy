@@ -6,3 +6,4 @@ complete -c snazy -s c -l color -d 'When to use colors: never, *auto*, always' -
 complete -c snazy -s h -l help -d 'Print help information'
 complete -c snazy -s V -l version -d 'Print version information'
 complete -c snazy -l kail-no-prefix -d 'Hide container prefix when showing the log with kail'
+complete -c snazy -l level-symbols -d 'Replace log level with pretty symbols'

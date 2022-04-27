@@ -2,6 +2,18 @@ use chrono::NaiveDateTime;
 use serde_json::Value;
 use yansi::Paint;
 
+/// replace info level DEBUG, WARNING, ERROR, INFO, FATAL by pretty characters
+pub fn level_symbols(level: &str) -> String {
+    match level {
+        "DEBUG" => "🐛".to_string(),
+        "WARNING" => "⚠️".to_string(),
+        "ERROR" => "🚨".to_string(),
+        "INFO" => "💡".to_string(),
+        "FATAL" => "💀".to_string(),
+        _ => "∙".to_string(),
+    }
+}
+
 pub fn color_by_level(level: &str) -> String {
     match level {
         "DEBUG" => format!("{:<19}", Paint::fixed(14, "DEBUG").to_string()),

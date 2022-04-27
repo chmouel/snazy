@@ -35,6 +35,7 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version information')
             [CompletionResult]::new('--kail-no-prefix', 'kail-no-prefix', [CompletionResultType]::ParameterName, 'Hide container prefix when showing the log with kail')
+            [CompletionResult]::new('--level-symbols', 'level-symbols', [CompletionResultType]::ParameterName, 'Replace log level with pretty symbols')
             break
         }
     })

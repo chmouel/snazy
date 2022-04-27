@@ -29,6 +29,7 @@ _snazy() {
 '-V[Print version information]' \
 '--version[Print version information]' \
 '--kail-no-prefix[Hide container prefix when showing the log with kail]' \
+'--level-symbols[Replace log level with pretty symbols]' \
 && ret=0
 }
 

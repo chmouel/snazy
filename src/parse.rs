@@ -1,12 +1,16 @@
-use crate::config::Config;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::io::{self, BufRead};
 use std::sync::Arc;
-use yansi::{Paint, Style}; // 0.6.5
+
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use yansi::{Paint, Style};
+
+use crate::config::Config;
+
+// 0.6.5
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Pac {
@@ -123,7 +127,7 @@ pub fn read_from_stdin(config: Arc<Config>) {
             continue;
         }
 
-        if let Some(msg) = crate::parse::getinfo(parseline, &config) {
+        if let Some(msg) = getinfo(parseline, &config) {
             let unwrapped = serde_json::to_string(&msg).unwrap();
             //check if unwrapped is not an empty hashmap
             if unwrapped == "{}" {
@@ -137,7 +141,10 @@ pub fn read_from_stdin(config: Arc<Config>) {
                 continue;
             }
 
-            let level = crate::utils::color_by_level(msg.get("level").unwrap());
+            let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
+            if config.level_symbols {
+                level = crate::utils::level_symbols(msg.get("level").unwrap());
+            }
             let mut ts = String::new();
             if msg.contains_key("ts") {
                 ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
@@ -160,7 +167,7 @@ pub fn read_from_stdin(config: Arc<Config>) {
                 }
             }
 
-            println!("{} {} {}{}", Paint::wrapping(level), ts, other, themsg);
+            println!("{} {} {}{}", level, ts, other, themsg);
         }
     }
 }
@@ -181,6 +188,7 @@ mod tests {
         .unwrap();
         assert_eq!(msg["msg"], "hello moto");
     }
+
     #[test]
     fn test_kail_prefix() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
@@ -195,6 +203,7 @@ mod tests {
         assert!(msg["msg"].contains("ns/pod[container]"));
         assert!(msg["msg"].contains("updated"));
     }
+
     #[test]
     fn test_kail_no_prefix() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
@@ -209,6 +218,7 @@ mod tests {
 
         assert_eq!(msg["msg"], "updated");
     }
+
     #[test]
     fn test_pac_provider_icon() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;

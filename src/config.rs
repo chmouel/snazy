@@ -11,6 +11,7 @@ pub struct Config {
     pub filter_levels: Vec<String>,
     pub regexp_colours: HashMap<String, Color>,
     pub json_keys: HashMap<String, String>,
+    pub level_symbols: bool,
 }
 
 impl Default for Config {
@@ -22,6 +23,7 @@ impl Default for Config {
             filter_levels: Vec::new(),
             regexp_colours: HashMap::new(),
             json_keys: HashMap::new(),
+            level_symbols: bool::default(),
         }
     }
 }

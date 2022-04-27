@@ -55,6 +55,11 @@ pub fn build_cli() -> Command<'static> {
                 .help("Hide container prefix when showing the log with kail"),
         )
         .arg(
+            Arg::new("level-symbols")
+                .long("level-symbols")
+                .help("Replace log level with pretty symbols")
+        )
+        .arg(
             Arg::new("json-keys")
                 .long("json-keys")
                 .short('k')

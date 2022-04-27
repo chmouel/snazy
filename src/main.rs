@@ -58,6 +58,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
 
     Config {
         kail_no_prefix: matches.is_present("kail-no-prefix"),
+        level_symbols: matches.is_present("level-symbols"),
         filter_levels: matches
             .values_of("filter-levels")
             .map(|v| v.map(String::from).collect())
@@ -82,7 +83,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
 }
 
 fn main() {
-    let matches = crate::cli::build_cli().get_matches_from(env::args_os());
+    let matches = cli::build_cli().get_matches_from(env::args_os());
     let config = construct_config(matches);
-    crate::parse::read_from_stdin(Arc::new(config))
+    parse::read_from_stdin(Arc::new(config))
 }
