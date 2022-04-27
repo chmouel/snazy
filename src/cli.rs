@@ -57,6 +57,8 @@ pub fn build_cli() -> Command<'static> {
         .arg(
             Arg::new("level-symbols")
                 .long("level-symbols")
+                .long_help("This will replace the level with a pretty emoji instead of the label.\n\
+                You can set the enviroment variable `SNAZY_LEVEL_SYMBOLS` to always have it.\n")
                 .help("Replace log level with pretty symbols")
         )
         .arg(
