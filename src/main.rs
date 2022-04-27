@@ -55,10 +55,17 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
             std::process::exit(1);
         }
     }
+    let mut level_symbols = false;
+    // if the env SNAZY_LEVEL_SYMBOLS is set, we use it to set the level symbols
+    if let Ok(level_symbols_env) = env::var("SNAZY_LEVEL_SYMBOLS") {
+        level_symbols = level_symbols_env.parse::<bool>().unwrap();
+    }
+    if matches.is_present("level-symbols") {
+        level_symbols = true;
+    }
 
     Config {
         kail_no_prefix: matches.is_present("kail-no-prefix"),
-        level_symbols: matches.is_present("level-symbols"),
         filter_levels: matches
             .values_of("filter-levels")
             .map(|v| v.map(String::from).collect())
@@ -66,6 +73,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
         time_format: matches.value_of("time_format").unwrap().to_string(),
         regexp_colours,
         colored_output,
+        level_symbols,
         // split json keys by '=' and store in a key, value hashmap
         json_keys: matches
             .values_of("json-keys")

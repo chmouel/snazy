@@ -86,6 +86,10 @@ If you want to only show some levels, you can add the -f to filter by level or m
 
 Will only show warning and error from the log.
 
+If you pass the flag "--level-symbols" or set the environement variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+
+![snazy level symbols](.github/screenshot-level-symbols.png)
+
 You can customize the time printed with the `-t` option which respect the
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
