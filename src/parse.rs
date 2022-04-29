@@ -37,7 +37,8 @@ struct Generic {
     other: BTreeMap<String, Value>,
 }
 
-struct Info {
+#[derive(Debug)]
+pub struct Info {
     level: String,
     msg: String,
     timestamp: String,
@@ -126,7 +127,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
     Some(msg)
 }
 
-fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
+pub(crate) fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
@@ -142,7 +143,6 @@ fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
             );
             return None;
         }
-
         if !config.filter_levels.is_empty()
             && !config.filter_levels.contains(&msg["level"].to_lowercase())
         {
@@ -178,7 +178,7 @@ fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
     }
 }
 
-fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
+pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
     let mut ret = msg;
     for (key, value) in regexps.iter() {
         let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
@@ -222,89 +222,5 @@ pub fn read_from_files(config: Arc<Config>) {
                 );
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::config::Config;
-    use regex::Regex;
-    use std::collections::HashMap;
-    use yansi::Color;
-
-    #[test]
-    fn test_get_line() {
-        let line = r#"{"severity":"INFO","timestamp":"2022-04-25T10:24:30.155404234Z","logger":"pipelinesascode","caller":"kubeinteraction/secrets.go:114","message":"hello moto"}"#;
-        let msg = super::extract_info(
-            line,
-            &Config {
-                ..Default::default()
-            },
-        )
-        .unwrap();
-        assert_eq!(msg["msg"], "hello moto");
-    }
-
-    #[test]
-    fn test_kail_prefix() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::extract_info(
-            line,
-            &Config {
-                kail_no_prefix: false,
-                ..Default::default()
-            },
-        )
-        .unwrap();
-        assert!(msg["msg"].contains("ns/pod[container]"));
-        assert!(msg["msg"].contains("updated"));
-    }
-
-    #[test]
-    fn test_kail_no_prefix() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::extract_info(
-            line,
-            &Config {
-                kail_no_prefix: true,
-                ..Default::default()
-            },
-        )
-        .unwrap();
-
-        assert_eq!(msg["msg"], "updated");
-    }
-
-    #[test]
-    fn test_pac_provider_icon() {
-        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::extract_info(
-            line,
-            &Config {
-                kail_no_prefix: false,
-                ..Default::default()
-            },
-        )
-        .unwrap();
-        assert!(msg.contains_key("others"));
-        assert!(msg["others"].contains(" "));
-    }
-    #[test]
-    fn test_apply_regexps() {
-        let line = String::from("red blue normal");
-        // define a regexp
-        let regexp = Regex::new(r"\b(b.ue)\b").unwrap();
-        let mut map = HashMap::new();
-        map.insert(String::from("red"), Color::Red);
-        map.insert(regexp.to_string(), Color::Blue);
-        let ret = super::apply_regexps(&map, line);
-        assert_eq!(
-            ret,
-            format!(
-                "{} {} normal",
-                Color::Red.paint("red"),
-                Color::Blue.paint("blue")
-            )
-        )
     }
 }

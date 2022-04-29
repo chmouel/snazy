@@ -14,6 +14,9 @@ mod config;
 mod parse;
 mod utils;
 
+#[cfg(test)]
+mod parse_test;
+
 fn construct_config(matches: clap::ArgMatches) -> Config {
     let interactive_terminal = atty::is(Stream::Stdout);
     let colored_output = match matches.value_of("color") {
