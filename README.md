@@ -8,7 +8,9 @@ nice colors.
 As a [`tekton`](http://tekton.dev) developer who has to dig into controller/webhook logs I wanted
 something that is a bit easier to look in the eyes and identify error/info/warning statements easily.
 
-It's not only for `tekton` but would work well with projects using [`go-uber/zap`](https://github.com/uber-go/zap) library like [`knative`](https://knative.dev) and many others.
+You do not have to use it only with `tekton` but work well with projects that uses
+[`go-uber/zap`](https://github.com/uber-go/zap) library like
+[`knative`](https://knative.dev) and many others.
 
 ## Screenshot
 
@@ -18,12 +20,12 @@ It's not only for `tekton` but would work well with projects using [`go-uber/zap
 
 ### [Binaries](https://github.com/chmouel/snazy/releases)
 
-Go to the [release](https://github.com/chmouel/snazy/releases) page and choose
-your archive or package for your platform.
+Go to the [release](https://github.com/chmouel/snazy/releases) page and grab
+the archive or package targeting your platform.
 
 ### [Arch](https://aur.archlinux.org/packages/snazy-bin)
 
-With your favourite aurhelper like [yay](https://github.com/Jguer/yay) :
+With your favourite aurhelper for example [yay](https://github.com/Jguer/yay) :
 
 ```shell
 yay -S snazy-bin
@@ -50,8 +52,8 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
 
 ## Build from [source](https://github.com/chmouel/snazy)
 
-Snazy is using rust, if you want to compile it directly you just need to
-check out the source and run `cargo build`.
+Snazy is built with rust, if you want to compile it directly you just need to
+grab the source and run `cargo build`.
 
 ## Usage
 
@@ -61,39 +63,41 @@ check out the source and run `cargo build`.
 kubectl logs deployment/controller|snazy
 ```
 
-* It supports streaming too. When you have a `kubectl logs -f` it would just wait
+* It supports streaming too. When you have a `kubectl logs -f` it will just wait
 for input and snazzily print your logs.
 
-* If you need to parse a file you simply can use the shell with `snazy < FILE`
+* If you need to parse a file you can just use the shell redirection for that `snazy < FILE`
 
 * If your input comes from <https://github.com/boz/kail> it will automatically
-detect it and print the namespace/pod[container] :
+detect it and print the `namespace/pod[container]` :
 
 ![screenshot](./.github/screenshot-kail.png)
 
-* If you don't want to have the namespace/pod[container] printed you can add the
+* If you do not want to have the `namespace/pod[container]` information printed you can add the
 flag `--kail-no-prefix`.
 
 * If you want to highlight some patterns you can add the option `-r REGEXP` and
-`snazy` will highlight it. You can have multiple `-r` switches with multiple
+`snazy` will highlight it. You can have many `-r` switches with many
 regexps, and you get different highlight for each match.
 
-* If you want to only show some levels, you can add the flag `-f` to filter by level or multiple `-f` for multiple levels, for example, this only show warning and error from the log:
+* If you want to only show some levels, you can add the flag `-f` to filter by
+  level or many `-f` for many levels, for example, this only show warning and
+  error from the log:
 
 ```shell
 % kubectl log pod|snazy -f warning -f error
 ```
 
-* If you pass the flag `--level-symbols` or set the environement variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+* If you pass the flag `--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
-* You can customize the time printed with the `-t` option which respect the
+* You can customize the time printed with the `-t` option, which respect the
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
 * You can do your own field matching with the `-k/--json-keys` flag, it accepts the
-field `msg`, `level` and `ts`. Those fields target a key in json to be used for
+field `msg`, `level` and `ts`. Those fields target a key in json used for
 parsing. The values should be:
 
   * `msg`: The message text (string)
@@ -104,7 +108,7 @@ parsing. The values should be:
 
 ## Shell completions
 
-Shell completions are available for most shells in the [misc/completions](./misc/completions) and it should be automatically installed with the aur/brew package.
+Shell completions are available for most shells in the [misc/completions](./misc/completions) and it will be automatically installed with the aur/brew package.
 
 ## FAQ
 
