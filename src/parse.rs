@@ -7,7 +7,7 @@ use std::sync::Arc;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use yansi::{Paint, Style};
+use yansi::{Color, Paint, Style};
 
 use crate::config::Config;
 
@@ -162,14 +162,7 @@ fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
         let mut themsg = msg.get("msg").unwrap().to_string();
 
         if !config.regexp_colours.is_empty() {
-            for (key, value) in config.regexp_colours.iter() {
-                let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
-                let style = Style::new(*value);
-                let _result = re
-                    .replace_all(&themsg, style.paint("$r").to_string())
-                    .to_string();
-                themsg = _result;
-            }
+            themsg = apply_regexps(&config.regexp_colours, themsg)
         }
         Some(Info {
             level,
@@ -180,6 +173,18 @@ fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
     } else {
         None
     }
+}
+
+fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
+    let mut ret = msg;
+    for (key, value) in regexps.iter() {
+        let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
+        let style = Style::new(*value);
+        ret = re
+            .replace_all(&ret, style.paint("$r").to_string())
+            .to_string();
+    }
+    ret
 }
 
 pub fn read_from_stdin(config: Arc<Config>) {
@@ -220,6 +225,9 @@ pub fn read_from_files(config: Arc<Config>) {
 #[cfg(test)]
 mod tests {
     use crate::config::Config;
+    use regex::Regex;
+    use std::collections::HashMap;
+    use yansi::Color;
 
     #[test]
     fn test_get_line() {
@@ -277,5 +285,23 @@ mod tests {
         .unwrap();
         assert!(msg.contains_key("others"));
         assert!(msg["others"].contains(" "));
+    }
+    #[test]
+    fn test_apply_regexps() {
+        let line = String::from("red blue normal");
+        // define a regexp
+        let regexp = Regex::new(r"\b(b.ue)\b").unwrap();
+        let mut map = HashMap::new();
+        map.insert(String::from("red"), Color::Red);
+        map.insert(regexp.to_string(), Color::Blue);
+        let ret = super::apply_regexps(&map, line);
+        assert_eq!(
+            ret,
+            format!(
+                "{} {} normal",
+                Color::Red.paint("red"),
+                Color::Blue.paint("blue")
+            )
+        )
     }
 }
