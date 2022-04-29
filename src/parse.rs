@@ -36,7 +36,14 @@ struct Generic {
     other: BTreeMap<String, Value>,
 }
 
-pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>> {
+struct Info {
+    level: String,
+    msg: String,
+    timestamp: String,
+    others: String,
+}
+
+pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, String>> {
     let time_format = config.time_format.as_str();
     let mut msg = HashMap::new();
 
@@ -118,56 +125,72 @@ pub fn getinfo(rawline: &str, config: &Config) -> Option<HashMap<String, String>
     Some(msg)
 }
 
+fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
+    // exclude lines with only space or empty
+    if line.trim().is_empty() {
+        return None;
+    }
+
+    if let Some(msg) = extract_info(line, &config) {
+        let unwrapped = serde_json::to_string(&msg).unwrap();
+        //check if unwrapped is not an empty hashmap
+        if unwrapped == "{}" {
+            println!("{}", line);
+            return None;
+        }
+
+        if !config.filter_levels.is_empty()
+            && !config.filter_levels.contains(&msg["level"].to_lowercase())
+        {
+            return None;
+        }
+
+        let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
+        if config.level_symbols {
+            level = crate::utils::level_symbols(msg.get("level").unwrap());
+        }
+        let mut ts = String::new();
+        if msg.contains_key("ts") {
+            ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
+        }
+        let other = if msg.contains_key("others") {
+            format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
+        } else {
+            "".to_string()
+        };
+        let mut themsg = msg.get("msg").unwrap().to_string();
+
+        if !config.regexp_colours.is_empty() {
+            for (key, value) in config.regexp_colours.iter() {
+                let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
+                let style = Style::new(*value);
+                let _result = re
+                    .replace_all(&themsg, style.paint("$r").to_string())
+                    .to_string();
+                themsg = _result;
+            }
+        }
+        Some(Info {
+            level,
+            timestamp: ts,
+            others: other,
+            msg: themsg,
+        })
+    } else {
+        None
+    }
+}
+
 pub fn read_from_stdin(config: Arc<Config>) {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
-        // exclude lines with only space or empty
-        if parseline.trim().is_empty() {
-            continue;
-        }
 
-        if let Some(msg) = getinfo(parseline, &config) {
-            let unwrapped = serde_json::to_string(&msg).unwrap();
-            //check if unwrapped is not an empty hashmap
-            if unwrapped == "{}" {
-                println!("{}", parseline);
-                continue;
-            }
-
-            if !config.filter_levels.is_empty()
-                && !config.filter_levels.contains(&msg["level"].to_lowercase())
-            {
-                continue;
-            }
-
-            let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
-            if config.level_symbols {
-                level = crate::utils::level_symbols(msg.get("level").unwrap());
-            }
-            let mut ts = String::new();
-            if msg.contains_key("ts") {
-                ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
-            }
-            let other = if msg.contains_key("others") {
-                format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
-            } else {
-                "".to_string()
-            };
-            let mut themsg = msg.get("msg").unwrap().to_string();
-
-            if !config.regexp_colours.is_empty() {
-                for (key, value) in config.regexp_colours.iter() {
-                    let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
-                    let style = Style::new(*value);
-                    let _result = re
-                        .replace_all(&themsg, style.paint("$r").to_string())
-                        .to_string();
-                    themsg = _result;
-                }
-            }
-
-            println!("{} {} {}{}", level, ts, other, themsg);
+        if let Some(info) = parse_line(config.clone(), parseline) {
+            println!(
+                "{} {} {}{}",
+                info.level, info.timestamp, info.others, info.msg
+            );
         }
     }
 }
@@ -179,7 +202,7 @@ mod tests {
     #[test]
     fn test_get_line() {
         let line = r#"{"severity":"INFO","timestamp":"2022-04-25T10:24:30.155404234Z","logger":"pipelinesascode","caller":"kubeinteraction/secrets.go:114","message":"hello moto"}"#;
-        let msg = super::getinfo(
+        let msg = super::extract_info(
             line,
             &Config {
                 ..Default::default()
@@ -192,7 +215,7 @@ mod tests {
     #[test]
     fn test_kail_prefix() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(
+        let msg = super::extract_info(
             line,
             &Config {
                 kail_no_prefix: false,
@@ -207,7 +230,7 @@ mod tests {
     #[test]
     fn test_kail_no_prefix() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(
+        let msg = super::extract_info(
             line,
             &Config {
                 kail_no_prefix: true,
@@ -222,7 +245,7 @@ mod tests {
     #[test]
     fn test_pac_provider_icon() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
-        let msg = super::getinfo(
+        let msg = super::extract_info(
             line,
             &Config {
                 kail_no_prefix: false,
