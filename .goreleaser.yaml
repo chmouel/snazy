@@ -67,6 +67,7 @@ changelog:
       - Merge branch
       - go mod tidy
       - Update README.md
+      - "[release] "
 
 universal_binaries:
   - replace: true

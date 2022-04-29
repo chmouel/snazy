@@ -32,7 +32,7 @@ bumpversion() {
        echo "could not bump version automatically"
        exit
    }
-   echo "Releasing ${VERSION}"
+   echo "[release] Releasing ${VERSION}"
 }
 
 [[ $(git rev-parse --abbrev-ref HEAD) != main ]] && {
