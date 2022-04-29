@@ -13,7 +13,7 @@ pub fn build_cli() -> Command<'static> {
         .after_help(
             "You just need to pipe to snazy some logs formatted as json to humm (sorry) snazzy them 💄,eg:\n\
             kubectl logs -f controller-pod|snazy\n\
-            Note: `fd -h` prints a short and concise overview while `fd --help` gives all details.",
+            Note: `snazy -h` prints a short and concise overview while `snazy --help` gives all details.",
         )
         .arg(
             Arg::new("regexp")
