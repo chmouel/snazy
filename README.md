@@ -82,6 +82,8 @@ flag `--kail-no-prefix`.
 `snazy` will highlight it. You can have many `-r` switches with many
 regexps, and you get different highlight for each match.
 
+* If `snazy` don't recognize the line as json it will symply straight print it. It will still apply regexp highlighting of the `-r` option.
+
 * If you want to only show some levels, you can add the flag `-f` to filter by
   level or many `-f` for many levels, for example, this only show warning and
   error from the log:

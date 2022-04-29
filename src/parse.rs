@@ -136,7 +136,10 @@ fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
         let unwrapped = serde_json::to_string(&msg).unwrap();
         //check if unwrapped is not an empty hashmap
         if unwrapped == "{}" {
-            println!("{}", line);
+            println!(
+                "{}",
+                apply_regexps(&config.regexp_colours, line.to_string())
+            );
             return None;
         }
 
