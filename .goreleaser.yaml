@@ -73,7 +73,7 @@ universal_binaries:
     name_template: "snazy"
 
 release:
-  prerelease: true
+  prerelease: false
 
 aurs:
   - name: snazy-bin
