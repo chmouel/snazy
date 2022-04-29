@@ -67,11 +67,21 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
     if let Ok(level_symbols_env) = env::var("SNAZY_LEVEL_SYMBOLS") {
         level_symbols = level_symbols_env.parse::<bool>().unwrap();
     }
-    if matches.is_present("level-symbols") {
+    if matches.occurrences_of("level-symbols") > 0 {
         level_symbols = true;
     }
 
+    let mut kail_prefix_format = String::new();
+    if let Ok(kail_prefix_format_env) = env::var("SNAZY_KAIL_PREFIX_FORMAT") {
+        kail_prefix_format = kail_prefix_format_env.parse::<String>().unwrap();
+    }
+
+    if matches.occurrences_of("kail-prefix-format") > 0 {
+        kail_prefix_format = matches.value_of("kail-prefix-format").unwrap().to_string();
+    }
+
     Config {
+        kail_prefix_format,
         files: matches
             .values_of("files")
             .map(|v| v.map(String::from).collect())

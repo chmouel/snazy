@@ -33,7 +33,7 @@ yay -S snazy-bin
 
 ### [Nix/NixOS](https://nixos.org/)
 
-This repository comes with a `flake` (see [NixOS Wiki on
+This repository includes a `flake` (see [NixOS Wiki on
 Flakes](https://nixos.wiki/wiki/Flakes)).
 
 If you have the `nix flake` command enabled (currenty on
@@ -43,7 +43,7 @@ nixos-unstable, `nixos-version` >= 22.05)
 nix run github:chmouel/snazy -- --help # your args are here
 ```
 
-You can also use it to test and develop the source code: 
+You can also use it to test and develop the source code:
 
 ```shell
 nix develop # drops you in a shell with all the thing needed
@@ -93,6 +93,14 @@ for input and snazzily print your logs from the stream (one line at a time).
 `namespace/pod[container]` as prefix :
 
 ![screenshot](./.github/screenshot-kail.png)
+
+* If you want to customize the kail format, you can do it with the flag
+  `--kail-prefix-format` it will replace the variable `{namespace} {pod}
+  {container}` by its value. If you for example only want to print the `pod` you can do :
+
+     --kail-prefix-format "{pod}"
+
+  or set the environement variable `SNAZY_KAIL_PREFIX_FORMAT` to make it permanent.
 
 * If you do not want to have the `namespace/pod[container]` information printed you can add the
 flag `--kail-no-prefix`.

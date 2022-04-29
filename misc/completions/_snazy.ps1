@@ -26,6 +26,7 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
+            [CompletionResult]::new('--kail-prefix-format', 'kail-prefix-format', [CompletionResultType]::ParameterName, 'Kail prefix format')
             [CompletionResult]::new('-k', 'k', [CompletionResultType]::ParameterName, 'key to use for json parsing')
             [CompletionResult]::new('--json-keys', 'json-keys', [CompletionResultType]::ParameterName, 'key to use for json parsing')
             [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'When to use colors: never, *auto*, always')

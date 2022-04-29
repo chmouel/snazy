@@ -19,7 +19,7 @@ _snazy() {
 
     case "${cmd}" in
         snazy)
-            opts="-h -V -r -f -k -c --help --version --regexp --filter-levels --time-format --kail-no-prefix --level-symbols --json-keys --color <files>..."
+            opts="-h -V -r -f -k -c --help --version --regexp --filter-levels --time-format --kail-prefix-format --kail-no-prefix --level-symbols --json-keys --color <files>..."
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -42,6 +42,10 @@ _snazy() {
                     return 0
                     ;;
                 --time-format)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --kail-prefix-format)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;

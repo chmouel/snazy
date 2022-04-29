@@ -13,6 +13,7 @@ pub struct Config {
     pub regexp_colours: HashMap<String, Color>,
     pub json_keys: HashMap<String, String>,
     pub level_symbols: bool,
+    pub kail_prefix_format: String,
 }
 
 impl Default for Config {
@@ -20,6 +21,7 @@ impl Default for Config {
         Config {
             files: vec![],
             kail_no_prefix: false,
+            kail_prefix_format: String::from("{namespace}/{pod}[{container}]"),
             time_format: String::from("%H:%M:%S"),
             colored_output: false,
             filter_levels: Vec::new(),

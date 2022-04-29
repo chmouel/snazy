@@ -50,6 +50,17 @@ pub fn build_cli() -> Command<'static> {
                 ),
         )
         .arg(
+            Arg::new("kail-prefix-format")
+                .long("kail-prefix-format")
+                .help("Kail prefix format")
+                .default_value("{namespace}/{pod}[{container}]")
+                .takes_value(true)
+                .long_help(
+                    "Specify the format on how to print the kail prefix.\n\
+                     You can set the enviroment variable `SNAZY_KAIL_PREFIX_FORMAT` to have it set permanently.\n"
+                ),
+        )
+        .arg(
             Arg::new("kail-no-prefix")
                 .long("kail-no-prefix")
                 .help("Hide container prefix when showing the log with kail"),

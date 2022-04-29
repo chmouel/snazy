@@ -23,6 +23,7 @@ set edit:completion:arg-completer[snazy] = {|@words|
             cand -f 'filter by levels'
             cand --filter-levels 'filter by levels'
             cand --time-format 'Time format'
+            cand --kail-prefix-format 'Kail prefix format'
             cand -k 'key to use for json parsing'
             cand --json-keys 'key to use for json parsing'
             cand -c 'When to use colors: never, *auto*, always'

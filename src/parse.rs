@@ -53,12 +53,17 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
     let kali_re =
         Regex::new(r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)")
             .unwrap();
-    let mut kali_msg_prefix = String::new();
+    let mut kali_msg_prefix = config.kail_prefix_format.clone();
     if kali_re.is_match(line.as_str()) {
         line = kali_re.replace_all(rawline, "$line").to_string();
-        kali_msg_prefix = kali_re
-            .replace_all(rawline, "$namespace/$pod[$container]")
-            .to_string();
+        let capture = kali_re.captures(rawline).unwrap();
+        let namespace = capture.name("namespace").unwrap().as_str();
+        let pod = capture.name("pod").unwrap().as_str();
+        let container = capture.name("container").unwrap().as_str();
+        kali_msg_prefix = kali_msg_prefix
+            .replace("{namespace}", namespace)
+            .replace("{pod}", pod)
+            .replace("{container}", container);
     }
 
     if !config.json_keys.is_empty() {
