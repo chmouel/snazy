@@ -5,6 +5,7 @@ use yansi::Color;
 /// Configuration options for *snazy*.
 #[derive(Debug)]
 pub struct Config {
+    pub files: Vec<String>,
     pub kail_no_prefix: bool,
     pub time_format: String,
     pub colored_output: bool,
@@ -17,6 +18,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
+            files: vec![],
             kail_no_prefix: false,
             time_format: String::from("%H:%M:%S"),
             colored_output: false,

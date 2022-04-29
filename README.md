@@ -52,24 +52,26 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
 
 ## Build from [source](https://github.com/chmouel/snazy)
 
-Snazy is built with rust, if you want to compile it directly you just need to
+Snazy is build with rust, if you want to compile it directly you just need to
 grab the source and run `cargo build`.
 
 ## Usage
 
-* You use `snazy` by "piping" logs into it :
+* Usually you use `snazy` by "piping" logs into it :
 
 ```shell
 kubectl logs deployment/controller|snazy
 ```
 
 * It supports streaming too. When you have a `kubectl logs -f` it will just wait
-for input and snazzily print your logs.
+for input and snazzily print your logs from the stream (one line at a time).
 
-* If you need to parse a file you can just use the shell redirection for that `snazy < FILE`
+* you can pass one or many files on the command line to `snazy` and it will
+  parse them rather than using the standard input.
 
-* If your input comes from <https://github.com/boz/kail> it will automatically
-detect it and print the `namespace/pod[container]` :
+* If you do not pass a file and your input comes from
+<https://github.com/boz/kail> it will automatically detect it and print the
+`namespace/pod[container]` as prefix :
 
 ![screenshot](./.github/screenshot-kail.png)
 

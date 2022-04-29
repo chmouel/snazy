@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::io::{self, BufRead};
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 use std::sync::Arc;
 
 use regex::Regex;
@@ -191,6 +192,27 @@ pub fn read_from_stdin(config: Arc<Config>) {
                 "{} {} {}{}",
                 info.level, info.timestamp, info.others, info.msg
             );
+        }
+    }
+}
+
+pub fn read_from_files(config: Arc<Config>) {
+    for f in &config.files {
+        // open file and parse each lines
+        let file = File::open(f).map_err(|e| {
+            eprintln!("file {}, {}", f, e);
+            std::process::exit(1);
+        });
+        let buf_reader = BufReader::new(file.unwrap());
+        for line in buf_reader.lines() {
+            let parseline = &line.unwrap();
+
+            if let Some(info) = parse_line(config.clone(), parseline) {
+                println!(
+                    "{} {} {}{}",
+                    info.level, info.timestamp, info.others, info.msg
+                );
+            }
         }
     }
 }

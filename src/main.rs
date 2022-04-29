@@ -1,15 +1,18 @@
 #![forbid(unsafe_code)]
+
+use std::collections::HashMap;
+use std::env;
+use std::sync::Arc;
+
+use atty::Stream;
+use yansi::{Color, Paint};
+
+use crate::config::Config;
+
 mod cli;
 mod config;
 mod parse;
 mod utils;
-
-use crate::config::Config;
-use atty::Stream;
-use std::collections::HashMap;
-use std::env;
-use std::sync::Arc;
-use yansi::{Color, Paint};
 
 fn construct_config(matches: clap::ArgMatches) -> Config {
     let interactive_terminal = atty::is(Stream::Stdout);
@@ -66,6 +69,10 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
     }
 
     Config {
+        files: matches
+            .values_of("files")
+            .map(|v| v.map(String::from).collect())
+            .unwrap_or_else(Vec::new),
         kail_no_prefix: matches.is_present("kail-no-prefix"),
         filter_levels: matches
             .values_of("filter-levels")
@@ -94,5 +101,9 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
 fn main() {
     let matches = cli::build_cli().get_matches_from(env::args_os());
     let config = construct_config(matches);
-    parse::read_from_stdin(Arc::new(config))
+    if config.files.is_empty() {
+        parse::read_from_stdin(Arc::new(config))
+    } else {
+        parse::read_from_files(Arc::new(config));
+    }
 }

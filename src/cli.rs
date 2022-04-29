@@ -36,7 +36,7 @@ pub fn build_cli() -> Command<'static> {
             .min_values(1)
             .multiple_occurrences(true)
             .short('f')
-            .possible_values(&["info", "debug", "warning", "error", "info", "fatal", "panic", "dpanic"])
+            .possible_values(&["info", "debug", "warning", "error", "info"])
             .long("filter-levels"),
         )
         .arg(
@@ -76,6 +76,18 @@ pub fn build_cli() -> Command<'static> {
                     will parse the json and use the message, level and timestamp keys\n\
                     from the (`message`, `level`, `ts`) json keys."
                 ),
+        )
+        .arg(
+            Arg::new("files")
+                .multiple_occurrences(true)
+                .help("files to read, if not specified, stdin is used")
+                .takes_value(true)
+                .long_help(
+                    "Specify one or multiple files to read.\n\
+                    If no files are specified, stdin is used.\n\
+                    If no files are specified and stdin is not a tty, stdin is used.\n\
+                    If no files are specified and stdin is a tty, stdin is used."
+                )
         )
         .arg(
             Arg::new("color")
