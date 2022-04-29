@@ -1,0 +1,16 @@
+on: [push, pull_request]
+
+name: Nix CI
+
+jobs:
+  test:
+    name: Build and Test using Nix
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - uses: cachix/install-nix-action@v15
+      with:
+        extra_nix_config: |
+          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+    - run: nix build
+    - run: nix flake check

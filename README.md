@@ -31,6 +31,25 @@ With your favourite aurhelper for example [yay](https://github.com/Jguer/yay) :
 yay -S snazy-bin
 ```
 
+### [Nix/NixOS](https://nixos.org/)
+
+This repository comes with a `flake` (see [NixOS Wiki on
+Flakes](https://nixos.wiki/wiki/Flakes)).
+
+If you have the `nix flake` command enabled (currenty on
+nixos-unstable, `nixos-version` >= 22.05)
+
+```shell
+nix run github:chmouel/snazy -- --help # your args are here
+```
+
+You can also use it to test and develop the source code: 
+
+```shell
+nix develop # drops you in a shell with all the thing needed
+nix flake check # runs cargo test, rustfmt, …
+```
+
 ### [Homebrew](https://homebrew.sh)
 
 ```shell
