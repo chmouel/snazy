@@ -98,12 +98,11 @@ for input and snazzily print your logs from the stream (one line at a time).
   `--kail-prefix-format` it will replace the variable `{namespace} {pod}
   {container}` by its value. If you for example only want to print the `pod` you can do :
 
-     --kail-prefix-format "{pod}"
+     `--kail-prefix-format "{pod}"`
 
   or set the environement variable `SNAZY_KAIL_PREFIX_FORMAT` to make it permanent.
 
-* If you do not want to have the `namespace/pod[container]` information printed you can add the
-flag `--kail-no-prefix`.
+* If you do not any prefix for kail you can pass the `--kail-no-prefix` flag.
 
 * If you want to highlight some patterns you can add the option `-r REGEXP` and
 `snazy` will highlight it. You can have many `-r` switches with many
