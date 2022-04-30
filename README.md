@@ -145,7 +145,6 @@ parsing. The values should be:
 
   ```shell
   snazy --action-regexp "pipelinerun(s)?\s*.*has success" --action-command "osascript -e 'display notification \"{}\"'"
-  ```
 
 ## Shell completions
 
