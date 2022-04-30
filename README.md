@@ -137,6 +137,16 @@ parsing. The values should be:
 
   If any of those fields are missing the parser will fails.
 
+* Snazy support action command on regexp, which mean if you have a regexp
+  matching a message it will run an action on it. It currently support only one
+  action one regexp. If you specify the string `"{}"` it will be expanded to
+  the matched string. For example on macOS this command will display a
+  notification with the pipelinerun that has succeede:
+
+  ```shell
+  snazy --action-regexp "pipelinerun(s)?\s*.*has success" --action-command "osascript -e 'display notification \"{}\"'"
+  ```
+
 ## Shell completions
 
 Shell completions are available for most shells in the [misc/completions](./misc/completions) and it will be automatically installed with the aur/brew package.

@@ -18,10 +18,7 @@ mod tests {
             },
         )
         .unwrap();
-        assert_eq!(
-            msg["msg"],
-            "\u{1b}[34m{namespace}/{pod}[{container}]\u{1b}[0m hello moto"
-        );
+        assert_eq!(msg["msg"], "hello moto");
     }
 
     #[test]
@@ -100,10 +97,7 @@ mod tests {
         };
         let line = r#"{"foo": "Bar", "bar": "info"}"#;
         let info = extract_info(line, &config).unwrap();
-        assert_eq!(
-            info.get("msg").unwrap(),
-            "\u{1b}[34m{namespace}/{pod}[{container}]\u{1b}[0m Bar"
-        );
+        assert_eq!(info.get("msg").unwrap(), "Bar");
         assert_eq!(info.get("level").unwrap(), "info")
     }
 

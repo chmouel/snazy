@@ -96,6 +96,7 @@ pub fn build_cli() -> Command<'static> {
                 .help("A regexp to match for action")
                 .takes_value(true)
                 .multiple_occurrences(true)
+                .long_help("The regexp to match for action")
         )
         .arg(
             Arg::new("action-command")
@@ -103,6 +104,9 @@ pub fn build_cli() -> Command<'static> {
                 .help("An action command to launch when action-regexp match")
                 .takes_value(true)
                 .multiple_occurrences(true)
+                .long_help("The comment to run after matching an action-regexp.\n\
+                            The string {} will be expanded to the match.\n\
+                            The command will be run with a `sh -c` ")
         )
         .arg(
             Arg::new("files")
