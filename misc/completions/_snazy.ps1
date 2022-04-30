@@ -29,6 +29,8 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('--kail-prefix-format', 'kail-prefix-format', [CompletionResultType]::ParameterName, 'Kail prefix format')
             [CompletionResult]::new('-k', 'k', [CompletionResultType]::ParameterName, 'key to use for json parsing')
             [CompletionResult]::new('--json-keys', 'json-keys', [CompletionResultType]::ParameterName, 'key to use for json parsing')
+            [CompletionResult]::new('--action-regexp', 'action-regexp', [CompletionResultType]::ParameterName, 'A regexp to match for action')
+            [CompletionResult]::new('--action-command', 'action-command', [CompletionResultType]::ParameterName, 'An action command to launch when action-regexp match')
             [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'When to use colors: never, *auto*, always')
             [CompletionResult]::new('--color', 'color', [CompletionResultType]::ParameterName, 'When to use colors: never, *auto*, always')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information')

@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+use std::process::Command;
 use std::sync::Arc;
 
 use regex::Regex;
@@ -64,6 +65,8 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
             .replace("{namespace}", namespace)
             .replace("{pod}", pod)
             .replace("{container}", container);
+    } else {
+        kali_msg_prefix = String::new()
     }
 
     if !config.json_keys.is_empty() {
@@ -132,7 +135,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
     Some(msg)
 }
 
-pub(crate) fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
+pub fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
@@ -152,6 +155,23 @@ pub(crate) fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
             && !config.filter_levels.contains(&msg["level"].to_lowercase())
         {
             return None;
+        }
+
+        if !config.action_regexp.is_empty() && !config.action_command.is_empty() {
+            let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
+            if let Some(reg) = action_regexp.captures(&msg["msg"]) {
+                let regexpmatch = reg.get(0).unwrap().as_str();
+                // replace {} by the actual match
+                let action_command = config.action_command.replace("{}", regexpmatch);
+                if Command::new("sh")
+                    .arg("-c")
+                    .arg(action_command)
+                    .spawn()
+                    .is_ok()
+                {
+                    println!("Spawned command for regexp: {}", Paint::cyan(action_regexp))
+                }
+            }
         }
 
         let mut level = crate::utils::color_by_level(msg.get("level").unwrap());

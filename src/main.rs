@@ -101,6 +101,12 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
                 json_values
             })
             .unwrap_or_else(HashMap::new),
+        action_regexp: matches
+            .value_of("action-regexp")
+            .map(String::from).unwrap_or_default(),
+        action_command: matches
+            .value_of("action-command")
+            .map(String::from).unwrap_or_default(),
     }
 }
 

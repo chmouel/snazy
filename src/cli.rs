@@ -91,6 +91,20 @@ pub fn build_cli() -> Command<'static> {
                 ),
         )
         .arg(
+            Arg::new("action-regexp")
+                .long("action-regexp")
+                .help("A regexp to match for action")
+                .takes_value(true)
+                .multiple_occurrences(true)
+        )
+        .arg(
+            Arg::new("action-command")
+                .long("action-command")
+                .help("An action command to launch when action-regexp match")
+                .takes_value(true)
+                .multiple_occurrences(true)
+        )
+        .arg(
             Arg::new("files")
                 .multiple_occurrences(true)
                 .help("files to read, if not specified, stdin is used")

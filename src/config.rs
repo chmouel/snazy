@@ -14,6 +14,8 @@ pub struct Config {
     pub json_keys: HashMap<String, String>,
     pub level_symbols: bool,
     pub kail_prefix_format: String,
+    pub action_regexp: String,
+    pub action_command: String,
 }
 
 impl Default for Config {
@@ -28,6 +30,8 @@ impl Default for Config {
             regexp_colours: HashMap::new(),
             json_keys: HashMap::new(),
             level_symbols: bool::default(),
+            action_regexp: String::new(),
+            action_command: String::new(),
         }
     }
 }
