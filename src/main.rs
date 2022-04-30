@@ -62,26 +62,13 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
             std::process::exit(1);
         }
     }
-    let mut level_symbols = false;
-    // if the env SNAZY_LEVEL_SYMBOLS is set, we use it to set the level symbols
-    if let Ok(level_symbols_env) = env::var("SNAZY_LEVEL_SYMBOLS") {
-        level_symbols = level_symbols_env.parse::<bool>().unwrap();
-    }
-    if matches.occurrences_of("level-symbols") > 0 {
-        level_symbols = true;
-    }
-
-    let mut kail_prefix_format = String::new();
-    if let Ok(kail_prefix_format_env) = env::var("SNAZY_KAIL_PREFIX_FORMAT") {
-        kail_prefix_format = kail_prefix_format_env.parse::<String>().unwrap();
-    }
-
-    if matches.occurrences_of("kail-prefix-format") > 0 {
-        kail_prefix_format = matches.value_of("kail-prefix-format").unwrap().to_string();
-    }
-
     Config {
-        kail_prefix_format,
+        kail_prefix_format: matches
+            .value_of("kail-prefix-format")
+            .map(String::from)
+            .or_else(|| env::var("SNAZY_KAIL_PREFIX_FORMAT").ok())
+            .and_then(|t| t.parse().ok())
+            .unwrap_or_default(),
         files: matches
             .values_of("files")
             .map(|v| v.map(String::from).collect())
@@ -91,10 +78,16 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
             .values_of("filter-levels")
             .map(|v| v.map(String::from).collect())
             .unwrap_or_else(Vec::new),
-        time_format: matches.value_of("time_format").unwrap().to_string(),
+        time_format: matches
+            .value_of("time_format")
+            .map(String::from)
+            .or_else(|| env::var("SNAZY_TIME_FORMAT").ok())
+            .and_then(|t| t.parse().ok())
+            .unwrap_or_default(),
         regexp_colours,
         colored_output,
-        level_symbols,
+        level_symbols: matches.is_present("level-symbols")
+            || env::var("SNAZY_LEVEL_SYMBOLS").is_ok(),
         // split json keys by '=' and store in a key, value hashmap
         json_keys: matches
             .values_of("json-keys")

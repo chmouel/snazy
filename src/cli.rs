@@ -46,7 +46,8 @@ pub fn build_cli() -> Command<'static> {
                 .default_value("%H:%M:%S")
                 .takes_value(true)
                 .long_help(
-                    "Specify a timeformat as documented in the strftime(3) manpage."
+                    "Specify a timeformat as documented in the strftime(3) manpage.\n\
+                     You can set the environement variable `SNAZY_TIME_FORMAT` to have it set permanently."
                 ),
         )
         .arg(
@@ -56,8 +57,9 @@ pub fn build_cli() -> Command<'static> {
                 .default_value("{namespace}/{pod}[{container}]")
                 .takes_value(true)
                 .long_help(
-                    "Specify the format on how to print the kail prefix.\n\
-                     You can set the enviroment variable `SNAZY_KAIL_PREFIX_FORMAT` to have it set permanently.\n"
+                    "Set the format on how to print the kail prefix.\n\
+                     The {namespace}, {pod} and {container} tags will be replaced by their values \n\
+                     You can set the enviroment variable `SNAZY_KAIL_PREFIX_FORMAT` to have it set permanently."
                 ),
         )
         .arg(

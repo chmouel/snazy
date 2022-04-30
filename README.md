@@ -122,7 +122,8 @@ regexps, and you get different highlight for each match.
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
-* You can customize the time printed with the `-t` option, which respect the
+* You can customize the time printed with the `-t` flag (or the environment
+variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
