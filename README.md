@@ -141,7 +141,7 @@ parsing. The values should be:
   matching a message it will run an action on it. It currently support only one
   action one regexp. If you specify the string `"{}"` it will be expanded to
   the matched string. For example on macOS this command will display a
-  notification with the pipelinerun that has succeede:
+  notification with the pipelinerun that has succeeded:
 
   ```shell
   snazy --action-regexp "pipelinerun(s)?\s*.*has success" --action-command "osascript -e 'display notification \"{}\"'"
