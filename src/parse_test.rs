@@ -16,8 +16,7 @@ mod tests {
             &Config {
                 ..Default::default()
             },
-        )
-        .unwrap();
+        );
         assert_eq!(msg["msg"], "hello moto");
     }
 
@@ -30,8 +29,7 @@ mod tests {
                 kail_no_prefix: false,
                 ..Default::default()
             },
-        )
-        .unwrap();
+        );
         assert!(msg["msg"].contains("ns/pod[container]"));
         assert!(msg["msg"].contains("updated"));
     }
@@ -45,9 +43,7 @@ mod tests {
                 kail_no_prefix: true,
                 ..Default::default()
             },
-        )
-        .unwrap();
-
+        );
         assert_eq!(msg["msg"], "updated");
     }
 
@@ -60,8 +56,7 @@ mod tests {
                 kail_no_prefix: false,
                 ..Default::default()
             },
-        )
-        .unwrap();
+        );
         assert!(msg.contains_key("others"));
         assert!(msg["others"].contains(" "));
     }
@@ -96,7 +91,7 @@ mod tests {
             ..Default::default()
         };
         let line = r#"{"foo": "Bar", "bar": "info"}"#;
-        let info = extract_info(line, &config).unwrap();
+        let info = extract_info(line, &config);
         assert_eq!(info.get("msg").unwrap(), "Bar");
         assert_eq!(info.get("level").unwrap(), "info")
     }
@@ -111,7 +106,7 @@ mod tests {
             ..Default::default()
         };
         let line = r#"{"bar": 1650602040.6289625}"#;
-        let info = extract_info(line, &config).unwrap();
+        let info = extract_info(line, &config);
         assert_eq!(info.get("ts").unwrap(), "04:34:00")
     }
 }

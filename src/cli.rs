@@ -1,13 +1,13 @@
 use clap::{crate_version, Arg, ColorChoice, Command};
 
-pub fn build_cli() -> Command<'static> {
+pub fn build() -> Command<'static> {
     let clap_color_choice = if std::env::var_os("NO_COLOR").is_none() {
         ColorChoice::Auto
     } else {
         ColorChoice::Never
     };
 
-    let app = Command::new("snazy")
+    Command::new("snazy")
         .version(crate_version!())
         .color(clap_color_choice)
         .after_help(
@@ -135,6 +135,5 @@ pub fn build_cli() -> Command<'static> {
                        'never':     do not use colorized output\n  \
                        'always':    always use colorized output",
                 ),
-        );
-    app
+        )
 }

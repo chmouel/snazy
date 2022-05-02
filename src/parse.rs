@@ -46,7 +46,7 @@ pub struct Info {
     others: String,
 }
 
-pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, String>> {
+pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     let time_format = config.time_format.as_str();
     let mut msg = HashMap::new();
 
@@ -66,7 +66,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
             .replace("{pod}", pod)
             .replace("{container}", container);
     } else {
-        kali_msg_prefix = String::new()
+        kali_msg_prefix = String::new();
     }
 
     if !config.json_keys.is_empty() {
@@ -88,9 +88,9 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
             }
             if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
                 *msg.get_mut("msg").unwrap() =
-                    format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"])
+                    format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"]);
             }
-            return Some(msg);
+            return msg;
         }
     }
 
@@ -130,77 +130,74 @@ pub fn extract_info(rawline: &str, config: &Config) -> Option<HashMap<String, St
     }
 
     if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
-        *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"])
+        *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"]);
     }
-    Some(msg)
+    msg
 }
 
-pub fn parse_line(config: Arc<Config>, line: &str) -> Option<Info> {
+fn do_line(config: &Arc<Config>, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
     }
 
-    if let Some(msg) = extract_info(line, &config) {
-        let unwrapped = serde_json::to_string(&msg).unwrap();
-        //check if unwrapped is not an empty hashmap
-        if unwrapped == "{}" {
-            println!(
-                "{}",
-                apply_regexps(&config.regexp_colours, line.to_string())
-            );
-            return None;
-        }
-        if !config.filter_levels.is_empty()
-            && !config.filter_levels.contains(&msg["level"].to_lowercase())
-        {
-            return None;
-        }
+    let msg = extract_info(line, config);
+    let unwrapped = serde_json::to_string(&msg).unwrap();
+    //check if unwrapped is not an empty hashmap
+    if unwrapped == "{}" {
+        println!(
+            "{}",
+            apply_regexps(&config.regexp_colours, line.to_string())
+        );
+        return None;
+    }
+    if !config.filter_levels.is_empty()
+        && !config.filter_levels.contains(&msg["level"].to_lowercase())
+    {
+        return None;
+    }
 
-        if !config.action_regexp.is_empty() && !config.action_command.is_empty() {
-            let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
-            if let Some(reg) = action_regexp.captures(&msg["msg"]) {
-                let regexpmatch = reg.get(0).unwrap().as_str();
-                // replace {} by the actual match
-                let action_command = config.action_command.replace("{}", regexpmatch);
-                if Command::new("sh")
-                    .arg("-c")
-                    .arg(action_command)
-                    .spawn()
-                    .is_ok()
-                {
-                    println!("Spawned command for regexp: {}", Paint::cyan(action_regexp))
-                }
+    if !config.action_regexp.is_empty() && !config.action_command.is_empty() {
+        let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
+        if let Some(reg) = action_regexp.captures(&msg["msg"]) {
+            let regexpmatch = reg.get(0).unwrap().as_str();
+            // replace {} by the actual match
+            let action_command = config.action_command.replace("{}", regexpmatch);
+            if Command::new("sh")
+                .arg("-c")
+                .arg(action_command)
+                .spawn()
+                .is_ok()
+            {
+                println!("Spawned command for regexp: {}", Paint::cyan(action_regexp));
             }
         }
-
-        let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
-        if config.level_symbols {
-            level = crate::utils::level_symbols(msg.get("level").unwrap());
-        }
-        let mut ts = String::new();
-        if msg.contains_key("ts") {
-            ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
-        }
-        let other = if msg.contains_key("others") {
-            format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
-        } else {
-            "".to_string()
-        };
-        let mut themsg = msg.get("msg").unwrap().to_string();
-
-        if !config.regexp_colours.is_empty() {
-            themsg = apply_regexps(&config.regexp_colours, themsg)
-        }
-        Some(Info {
-            level,
-            timestamp: ts,
-            others: other,
-            msg: themsg,
-        })
-    } else {
-        None
     }
+
+    let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
+    if config.level_symbols {
+        level = crate::utils::level_symbols(msg.get("level").unwrap());
+    }
+    let mut ts = String::new();
+    if msg.contains_key("ts") {
+        ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
+    }
+    let other = if msg.contains_key("others") {
+        format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
+    } else {
+        "".to_string()
+    };
+    let mut themsg = msg.get("msg").unwrap().to_string();
+
+    if !config.regexp_colours.is_empty() {
+        themsg = apply_regexps(&config.regexp_colours, themsg);
+    }
+    Some(Info {
+        level,
+        timestamp: ts,
+        others: other,
+        msg: themsg,
+    })
 }
 
 pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
@@ -215,12 +212,12 @@ pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
     ret
 }
 
-pub fn read_from_stdin(config: Arc<Config>) {
+pub fn read_from_stdin(config: &Arc<Config>) {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
 
-        if let Some(info) = parse_line(config.clone(), parseline) {
+        if let Some(info) = do_line(config, parseline) {
             println!(
                 "{} {} {}{}",
                 info.level, info.timestamp, info.others, info.msg
@@ -229,7 +226,7 @@ pub fn read_from_stdin(config: Arc<Config>) {
     }
 }
 
-pub fn read_from_files(config: Arc<Config>) {
+pub fn read_from_files(config: &Arc<Config>) {
     for f in &config.files {
         // open file and parse each lines
         let file = File::open(f).map_err(|e| {
@@ -240,7 +237,7 @@ pub fn read_from_files(config: Arc<Config>) {
         for line in buf_reader.lines() {
             let parseline = &line.unwrap();
 
-            if let Some(info) = parse_line(config.clone(), parseline) {
+            if let Some(info) = do_line(config, parseline) {
                 println!(
                     "{} {} {}{}",
                     info.level, info.timestamp, info.others, info.msg

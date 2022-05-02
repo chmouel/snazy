@@ -1,3 +1,7 @@
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::map_unwrap_or)]
 #![forbid(unsafe_code)]
 
 use std::collections::HashMap;
@@ -17,7 +21,7 @@ mod utils;
 #[cfg(test)]
 mod parse_test;
 
-fn construct_config(matches: clap::ArgMatches) -> Config {
+fn construct_config(matches: &clap::ArgMatches) -> Config {
     let interactive_terminal = atty::is(Stream::Stdout);
     let colored_output = match matches.value_of("color") {
         Some("always") => true,
@@ -43,7 +47,7 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
         let regexps: Vec<&str> = matches.values_of("regexp").unwrap().collect();
         // assign a colour to each regexp
         for (i, regexp) in regexps.iter().enumerate() {
-            regexp_colours.insert(regexp.to_string(), colours[i % colours.len()]);
+            regexp_colours.insert((*regexp).to_string(), colours[i % colours.len()]);
         }
     }
 
@@ -113,11 +117,11 @@ fn construct_config(matches: clap::ArgMatches) -> Config {
 }
 
 fn main() {
-    let matches = cli::build_cli().get_matches_from(env::args_os());
-    let config = construct_config(matches);
+    let matches = cli::build().get_matches_from(env::args_os());
+    let config = construct_config(&matches);
     if config.files.is_empty() {
-        parse::read_from_stdin(Arc::new(config))
+        parse::read_from_stdin(&Arc::new(config));
     } else {
-        parse::read_from_files(Arc::new(config));
+        parse::read_from_files(&Arc::new(config));
     }
 }

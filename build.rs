@@ -11,7 +11,7 @@ fn main() {
         .join("completions/");
     fs::create_dir_all(&outdir).unwrap();
 
-    let mut app = build_cli();
+    let mut app = build();
     for shell in [Bash, Zsh, PowerShell, Fish, Elvish] {
         generate_to(shell, &mut app, "snazy", &outdir).unwrap();
     }
