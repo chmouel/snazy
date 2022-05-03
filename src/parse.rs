@@ -135,11 +135,33 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     msg
 }
 
+fn action_on_regexp(config: &Config, line: &str) {
+    if config.action_regexp.is_empty() || config.action_command.is_empty() {
+        return;
+    }
+    let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
+    if let Some(reg) = action_regexp.captures(&line) {
+        let regexpmatch = reg.get(0).unwrap().as_str();
+        // replace {} by the actual match
+        let action_command = config.action_command.replace("{}", regexpmatch);
+        if Command::new("sh")
+            .arg("-c")
+            .arg(action_command)
+            .spawn()
+            .is_ok()
+        {
+            println!("Spawned command for action: {}", Paint::cyan(action_regexp));
+        }
+    }
+}
+
 fn do_line(config: &Arc<Config>, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
     }
+
+    action_on_regexp(config, line);
 
     let msg = extract_info(line, config);
     let unwrapped = serde_json::to_string(&msg).unwrap();
@@ -151,27 +173,11 @@ fn do_line(config: &Arc<Config>, line: &str) -> Option<Info> {
         );
         return None;
     }
+
     if !config.filter_levels.is_empty()
         && !config.filter_levels.contains(&msg["level"].to_lowercase())
     {
         return None;
-    }
-
-    if !config.action_regexp.is_empty() && !config.action_command.is_empty() {
-        let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
-        if let Some(reg) = action_regexp.captures(&msg["msg"]) {
-            let regexpmatch = reg.get(0).unwrap().as_str();
-            // replace {} by the actual match
-            let action_command = config.action_command.replace("{}", regexpmatch);
-            if Command::new("sh")
-                .arg("-c")
-                .arg(action_command)
-                .spawn()
-                .is_ok()
-            {
-                println!("Spawned command for regexp: {}", Paint::cyan(action_regexp));
-            }
-        }
     }
 
     let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
