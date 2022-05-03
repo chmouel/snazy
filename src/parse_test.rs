@@ -1,12 +1,15 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::io::{Read, Write};
+    use std::sync::Arc;
+    use std::thread;
 
     use regex::Regex;
     use yansi::Color;
 
     use crate::config::{self, Config};
-    use crate::parse::extract_info;
+    use crate::parse::{action_on_regexp, extract_info, read_from_files};
 
     #[test]
     fn test_get_line() {
@@ -108,5 +111,49 @@ mod tests {
         let line = r#"{"bar": 1650602040.6289625}"#;
         let info = extract_info(line, &config);
         assert_eq!(info.get("ts").unwrap(), "04:34:00");
+    }
+
+    #[test]
+    fn test_custom_json_match() {
+        let mut keys = HashMap::new();
+        keys.insert(String::from("bar"), String::from("ts"));
+        keys.insert(String::from("foo"), String::from("msg"));
+        keys.insert(String::from("level"), String::from("level"));
+
+        let config = Config {
+            json_keys: keys,
+            ..config::Config::default()
+        };
+        let line =
+            r#"{"bar": "2022-04-22T04:34:00.628550164Z", "foo": "hello", "level": "lelevel"}"#;
+        let info = extract_info(line, &config);
+        assert_eq!(info.get("ts").unwrap(), "04:34:00");
+        assert_eq!(info.get("msg").unwrap(), "hello");
+        assert_eq!(info.get("level").unwrap(), "lelevel");
+
+        let line = r#"{"bar": 1650992726.6289625, "foo": "hello", "level": "lelevel"}"#;
+        let info = extract_info(line, &config);
+        assert_eq!(info.get("ts").unwrap(), "17:05:26");
+    }
+    #[test]
+    fn test_action_on_regexp() {
+        // create a temporary file to delete at the end of the test
+        let file = tempfile::NamedTempFile::new().unwrap();
+        let file_path = file.path().to_path_buf();
+        file.close().unwrap();
+
+        let config = Config {
+            action_regexp: String::from(r"HELLO\s\w+"),
+            action_command: String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap(),
+            ..config::Config::default()
+        };
+        let line = r#"un HELLO MOTO nono el petiot roboto"#;
+        action_on_regexp(&config, line);
+        // sleep for a bit to let the file be created
+        thread::sleep(core::time::Duration::from_millis(50));
+        let mut file = std::fs::File::open(file_path).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        assert_eq!(contents, "you said HELLO MOTO\n");
     }
 }

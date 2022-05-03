@@ -70,28 +70,8 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     }
 
     if !config.json_keys.is_empty() {
-        if let Ok(p) = serde_json::from_str::<Generic>(line.as_str()) {
-            for (key, value) in p.other {
-                if config.json_keys.contains_key(key.as_str()) {
-                    if config.json_keys[key.as_str()].as_str() == "ts" {
-                        msg.insert(
-                            String::from("ts"),
-                            crate::utils::conver_ts_float_or_str(&value, time_format),
-                        );
-                    } else {
-                        msg.insert(
-                            config.json_keys[key.as_str()].clone(),
-                            value.as_str().unwrap().to_string(),
-                        );
-                    }
-                }
-            }
-            if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
-                *msg.get_mut("msg").unwrap() =
-                    format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"]);
-            }
-            return msg;
-        }
+        msg = custom_json_match(config, time_format, kali_msg_prefix.as_str(), line.as_str())
+            .unwrap();
     }
 
     if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
@@ -135,7 +115,42 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     msg
 }
 
-fn action_on_regexp(config: &Config, line: &str) {
+fn custom_json_match(
+    config: &Config,
+    time_format: &str,
+    kali_msg_prefix: &str,
+    line: &str,
+) -> Option<HashMap<String, String>> {
+    let mut dico = HashMap::new();
+    if let Ok(p) = serde_json::from_str::<Generic>(line) {
+        for (key, value) in p.other {
+            if config.json_keys.contains_key(key.as_str()) {
+                match config.json_keys[key.as_str()].as_str() {
+                    "ts" => {
+                        dico.insert(
+                            String::from("ts"),
+                            crate::utils::conver_ts_float_or_str(&value, time_format),
+                        );
+                    }
+                    _ => {
+                        dico.insert(
+                            config.json_keys[key.as_str()].clone(),
+                            value.as_str().unwrap().to_string(),
+                        );
+                    }
+                }
+            }
+        }
+        if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && dico.contains_key("msg") {
+            *dico.get_mut("msg").unwrap() =
+                format!("{} {}", Paint::blue(kali_msg_prefix), dico["msg"]);
+        }
+        return Some(dico);
+    }
+    None
+}
+
+pub fn action_on_regexp(config: &Config, line: &str) {
     if config.action_regexp.is_empty() || config.action_command.is_empty() {
         return;
     }
@@ -150,7 +165,11 @@ fn action_on_regexp(config: &Config, line: &str) {
             .spawn()
             .is_ok()
         {
-            println!("Spawned command for action: {}", Paint::cyan(action_regexp));
+            println!(
+                "Spawned command: {} for action: {}",
+                Paint::yellow(&config.action_command),
+                Paint::cyan(action_regexp)
+            );
         }
     }
 }
