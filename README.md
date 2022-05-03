@@ -24,6 +24,19 @@ It can work as a super-"[tail](https://man7.org/linux/man-pages/man1/tail.1.html
 Go to the [release](https://github.com/chmouel/snazy/releases) page and grab
 the archive or package targeting your platform.
 
+### [Homebrew](https://homebrew.sh)
+
+```shell
+brew tap chmouel/snazy https://github.com/chmouel/snazy
+brew install snazy
+```
+
+### [Crates.io](https://crates.io/crates/snazy)
+
+```shell
+cargo install snazy
+```
+
 ### [Arch](https://aur.archlinux.org/packages/snazy-bin)
 
 With your favourite aurhelper for example [yay](https://github.com/Jguer/yay) :
@@ -49,19 +62,6 @@ You can also use it to test and develop the source code:
 ```shell
 nix develop # drops you in a shell with all the thing needed
 nix flake check # runs cargo test, rustfmt, …
-```
-
-### [Homebrew](https://homebrew.sh)
-
-```shell
-brew tap chmouel/snazy https://github.com/chmouel/snazy
-brew install snazy
-```
-
-### [Crates.io](https://crates.io/crates/snazy)
-
-```shell
-cargo install snazy
 ```
 
 ### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
