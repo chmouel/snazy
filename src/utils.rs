@@ -24,6 +24,22 @@ pub fn color_by_level(level: &str) -> String {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_level_symbols() {
+        // auto generated :D
+        assert_eq!(level_symbols("DEBUG"), "🐛");
+        assert_eq!(level_symbols("WARNING"), "⚠️");
+        assert_eq!(level_symbols("ERROR"), "🚨");
+        assert_eq!(level_symbols("INFO"), "💡");
+        assert_eq!(level_symbols("FATAL"), "💀");
+        assert_eq!(level_symbols("UNKNOWN"), "∙");
+    }
+}
+
 pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
     // TODO: don't unwrap blindly, try to some more parsing
     let ts = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ").unwrap();
