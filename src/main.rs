@@ -117,6 +117,42 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
     }
 }
 
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_construct_config() {
+        let args = vec![
+            "snazy",
+            "--regexp",
+            "foo.*",
+            "--time-format",
+            "%S",
+            "-f",
+            "info",
+            "--json-keys",
+            "level=level",
+            "--json-keys",
+            "msg=msg",
+            "--json-keys",
+            "ts=ts",
+            "test.log",
+        ];
+
+        let matches = cli::build().get_matches_from(args);
+        let config = construct_config(&matches);
+        assert_eq!(config.files, vec!["test.log".to_string()]);
+        assert!(!config.kail_no_prefix);
+        assert_eq!(config.filter_levels, vec!["info".to_string()]);
+        assert_eq!(config.time_format, "%S".to_string());
+        assert_eq!(config.json_keys.len(), 3);
+        assert_eq!(config.action_regexp, "".to_string());
+        assert_eq!(config.action_command, "".to_string());
+    }
+}
+
 fn main() {
     let matches = cli::build().get_matches_from(env::args_os());
     let config = construct_config(&matches);
