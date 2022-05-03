@@ -1,16 +1,17 @@
 [![codecov](https://codecov.io/gh/chmouel/snazy/branch/main/graph/badge.svg?token=71R8DKNQVS)](https://codecov.io/gh/chmouel/snazy) [![Version](https://img.shields.io/crates/v/snazy.svg)](https://crates.io/crates/snazy) [![AUR](https://img.shields.io/aur/version/snazy-bin)](https://aur.archlinux.org/packages/snazy-bin) [![CICD](https://github.com/chmouel/snazy/actions/workflows/rust.yaml/badge.svg)](https://github.com/chmouel/snazy/actions/workflows/rust.yaml) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-# snazy - a snazzy json log viewer
+# snazy - a snazzy log viewer
 
-Snazy is a simple tool to parse json logs and output them in a nice format with
+Snazy is a simple tool to parse json or other type of logs and output them in a nice format with
 nice colors.
 
-As a [`tekton`](http://tekton.dev) developer who has to dig into controller/webhook logs I wanted
-something that is a bit easier to look in the eyes and identify error/info/warning statements easily.
+As a [`tekton`](http://tekton.dev) and [`pipelines-as-code`](https://pipelinesascode.com/) developer who has to dig into controller/webhook logs all the time I wanted something that is a bit easier to look in the eyes and identify error/info/warning statements easily.
 
 You do not have to use it only with `tekton` but work well with projects that uses
 [`go-uber/zap`](https://github.com/uber-go/zap) library like
 [`knative`](https://knative.dev) and many others.
+
+It can work as a super-"[tail](https://man7.org/linux/man-pages/man1/tail.1.html)" too if you want to stream logs and being able to have "actions" or "highlights" on a regexp match.
 
 ## Screenshot
 
