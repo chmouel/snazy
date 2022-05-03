@@ -140,7 +140,7 @@ fn action_on_regexp(config: &Config, line: &str) {
         return;
     }
     let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
-    if let Some(reg) = action_regexp.captures(&line) {
+    if let Some(reg) = action_regexp.captures(line) {
         let regexpmatch = reg.get(0).unwrap().as_str();
         // replace {} by the actual match
         let action_command = config.action_command.replace("{}", regexpmatch);

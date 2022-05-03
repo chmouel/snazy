@@ -5,7 +5,7 @@ mod tests {
     use regex::Regex;
     use yansi::Color;
 
-    use crate::config::Config;
+    use crate::config::{self, Config};
     use crate::parse::extract_info;
 
     #[test]
@@ -14,7 +14,7 @@ mod tests {
         let msg = extract_info(
             line,
             &Config {
-                ..Default::default()
+                ..config::Config::default()
             },
         );
         assert_eq!(msg["msg"], "hello moto");
@@ -27,7 +27,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: false,
-                ..Default::default()
+                ..config::Config::default()
             },
         );
         assert!(msg["msg"].contains("ns/pod[container]"));
@@ -41,7 +41,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: true,
-                ..Default::default()
+                ..config::Config::default()
             },
         );
         assert_eq!(msg["msg"], "updated");
@@ -54,7 +54,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: false,
-                ..Default::default()
+                ..config::Config::default()
             },
         );
         assert!(msg.contains_key("others"));
@@ -77,7 +77,7 @@ mod tests {
                 Color::Red.paint("red"),
                 Color::Blue.paint("blue")
             )
-        )
+        );
     }
 
     #[test]
@@ -88,12 +88,12 @@ mod tests {
 
         let config = Config {
             json_keys: keys,
-            ..Default::default()
+            ..config::Config::default()
         };
         let line = r#"{"foo": "Bar", "bar": "info"}"#;
         let info = extract_info(line, &config);
         assert_eq!(info.get("msg").unwrap(), "Bar");
-        assert_eq!(info.get("level").unwrap(), "info")
+        assert_eq!(info.get("level").unwrap(), "info");
     }
 
     #[test]
@@ -103,10 +103,10 @@ mod tests {
 
         let config = Config {
             json_keys: keys,
-            ..Default::default()
+            ..config::Config::default()
         };
         let line = r#"{"bar": 1650602040.6289625}"#;
         let info = extract_info(line, &config);
-        assert_eq!(info.get("ts").unwrap(), "04:34:00")
+        assert_eq!(info.get("ts").unwrap(), "04:34:00");
     }
 }
