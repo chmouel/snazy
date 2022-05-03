@@ -9,10 +9,10 @@ fn main() {
     let outdir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("misc/")
         .join("completions/");
-    fs::create_dir_all(&outdir).unwrap();
+    fs::create_dir_all(&outdir).expect("cannot create directory");
 
     let mut app = build();
     for shell in [Bash, Zsh, PowerShell, Fish, Elvish] {
-        generate_to(shell, &mut app, "snazy", &outdir).unwrap();
+        generate_to(shell, &mut app, "snazy", &outdir).expect("cannot generate completions");
     }
 }
