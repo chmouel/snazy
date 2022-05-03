@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/crates/v/snazy.svg)](https://crates.io/crates/snazy) [![AUR](https://img.shields.io/aur/version/snazy-bin)](https://aur.archlinux.org/packages/snazy-bin) [![CICD](https://github.com/chmouel/snazy/actions/workflows/rust.yaml/badge.svg)](https://github.com/chmouel/snazy/actions/workflows/rust.yaml) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![codecov](https://codecov.io/gh/chmouel/snazy/branch/main/graph/badge.svg?token=71R8DKNQVS)](https://codecov.io/gh/chmouel/snazy) [![Version](https://img.shields.io/crates/v/snazy.svg)](https://crates.io/crates/snazy) [![AUR](https://img.shields.io/aur/version/snazy-bin)](https://aur.archlinux.org/packages/snazy-bin) [![CICD](https://github.com/chmouel/snazy/actions/workflows/rust.yaml/badge.svg)](https://github.com/chmouel/snazy/actions/workflows/rust.yaml) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 # snazy - a snazzy json log viewer
 
