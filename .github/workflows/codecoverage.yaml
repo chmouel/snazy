@@ -15,6 +15,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - uses: Swatinem/rust-cache@v1
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1

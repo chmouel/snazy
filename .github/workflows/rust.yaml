@@ -17,6 +17,8 @@ jobs:
           toolchain: stable
           override: true
 
+      - uses: Swatinem/rust-cache@v1
+
       - name: Run cargo check
         uses: actions-rs/cargo@v1
         with:
@@ -35,6 +37,8 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: Swatinem/rust-cache@v1
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
@@ -55,6 +59,7 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v1
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
