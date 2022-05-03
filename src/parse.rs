@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::process::Command;
@@ -174,7 +175,7 @@ pub fn action_on_regexp(config: &Config, line: &str) {
     }
 }
 
-fn do_line(config: &Arc<Config>, line: &str) -> Option<Info> {
+fn do_line(config: &Config, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
@@ -251,23 +252,34 @@ pub fn read_from_stdin(config: &Arc<Config>) {
     }
 }
 
+// read from a bunch files and pass read_from_stdin to stdout
 pub fn read_from_files(config: &Arc<Config>) {
-    for f in &config.files {
-        // open file and parse each lines
-        let file = File::open(f).map_err(|e| {
-            eprintln!("file {}, {}", f, e);
-            std::process::exit(1);
-        });
-        let buf_reader = BufReader::new(file.unwrap());
-        for line in buf_reader.lines() {
-            let parseline = &line.unwrap();
+    for filename in &config.files {
+        // write to a BufWriter that output to stdout
+        let stdout = io::stdout();
+        let stdout = stdout.lock();
+        let mut stdout = io::BufWriter::new(stdout);
+        read_from_file(config, filename, &mut stdout);
+    }
+}
 
-            if let Some(info) = do_line(config, parseline) {
-                println!(
-                    "{} {} {}{}",
-                    info.level, info.timestamp, info.others, info.msg
-                );
-            }
+// read from file and output to the writer. This makes it easy to unittest
+pub fn read_from_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
+    let file = File::open(filename).map_err(|e| {
+        eprintln!("file {}, {}", filename, e);
+        std::process::exit(1);
+    });
+    let buf_reader = BufReader::new(file.unwrap());
+    for line in buf_reader.lines() {
+        let parseline = &line.unwrap();
+
+        if let Some(info) = do_line(config, parseline) {
+            writeln!(
+                writeto,
+                "{} {} {}{}",
+                info.level, info.timestamp, info.others, info.msg
+            )
+            .unwrap();
         }
     }
 }

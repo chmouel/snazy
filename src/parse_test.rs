@@ -2,14 +2,13 @@
 mod tests {
     use std::collections::HashMap;
     use std::io::{Read, Write};
-    use std::sync::Arc;
     use std::thread;
 
     use regex::Regex;
     use yansi::Color;
 
     use crate::config::{self, Config};
-    use crate::parse::{action_on_regexp, extract_info, read_from_files};
+    use crate::parse::{action_on_regexp, extract_info, read_from_file};
 
     #[test]
     fn test_get_line() {
@@ -155,5 +154,27 @@ mod tests {
         let mut contents = String::new();
         file.read_to_string(&mut contents).unwrap();
         assert_eq!(contents, "you said HELLO MOTO\n");
+    }
+    #[test]
+    fn test_read_from_file() {
+        let mut file: tempfile::NamedTempFile = tempfile::NamedTempFile::new().unwrap();
+        let file_path = file.path().to_path_buf();
+        let line = r#"{"level":"INFO","ts":"2022-04-25T14:20:32.505637358Z", "msg":"hello world"}
+{"level":"DEBUG","ts":"2022-04-25T14:20:32.505637358Z", "msg":"debug"}"#;
+
+        Write::write_all(&mut file, line.as_bytes()).unwrap();
+
+        let config = Config {
+            files: vec![file_path.to_str().unwrap().to_string()],
+            colored_output: false,
+            ..config::Config::default()
+        };
+        let writeto = &mut Vec::new();
+        read_from_file(&config, file_path.to_str().unwrap(), writeto);
+        file.close().unwrap();
+        assert_eq!(
+            "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
+            std::str::from_utf8(&writeto).unwrap()
+        );
     }
 }

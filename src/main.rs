@@ -28,6 +28,7 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
         Some("never") => false,
         _ => env::var_os("NO_COLOR").is_none() && interactive_terminal,
     };
+    // enable colored output if set
     if colored_output {
         Paint::enable();
     } else {
