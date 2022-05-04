@@ -174,7 +174,7 @@ mod tests {
         file.close().unwrap();
         assert_eq!(
             "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
-            std::str::from_utf8(&writeto).unwrap()
+            std::str::from_utf8(writeto).unwrap()
         );
     }
 }
