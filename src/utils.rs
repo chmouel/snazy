@@ -40,6 +40,16 @@ mod tests {
     }
 }
 
+pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
+    match provider {
+        "github" => " ",
+        "gitlab" => " ",
+        "bitbucket-cloud" => " ",
+        "bitbucket-server" => " Server",
+        _ => provider,
+    }
+}
+
 pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
     // TODO: don't unwrap blindly, try to some more parsing
     let ts = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ").unwrap();

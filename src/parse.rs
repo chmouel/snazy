@@ -86,15 +86,9 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         let mut others = String::new();
         if p.other.contains_key("provider") {
             // append provider icon to others
-            others.push_str(
-                &(match p.other["provider"].as_str() {
-                    Some("github") => " ".to_string(),
-                    Some("gitlab") => " ".to_string(),
-                    Some("bitbucket-cloud") => " ".to_string(),
-                    Some("bitbucket-server") => " Server".to_string(),
-                    _ => p.other["provider"].to_string(),
-                }),
-            );
+            others.push_str(crate::utils::convert_pac_provider_to_fa_icon(
+                p.other["provider"].as_str().unwrap(),
+            ));
             msg.insert("others".to_string(), format!("{} ", others));
         }
     }
