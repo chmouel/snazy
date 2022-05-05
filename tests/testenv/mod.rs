@@ -44,7 +44,7 @@ pub fn find_snazy() -> PathBuf {
 }
 
 /// Format an error message for when *snazy* did not exit successfully.
-fn format_exit_error(args: &[&str], output: &process::Output) -> String {
+pub fn format_exit_error(args: &[&str], output: &process::Output) -> String {
     format!(
         "`snazy {}` did not exit successfully.\nstdout:\n---\n{}---\nstderr:\n---\n{}---",
         args.join(" "),
@@ -54,7 +54,7 @@ fn format_exit_error(args: &[&str], output: &process::Output) -> String {
 }
 
 pub struct TestEnv {
-    snazy_exe: PathBuf,
+    pub snazy_exe: PathBuf,
 }
 
 impl TestEnv {
@@ -64,8 +64,6 @@ impl TestEnv {
         }
     }
 
-    /// Assert that calling *snazy* with the specificied file with the specified
-    /// arguments produces the expected output.
     pub fn assert_success_and_get_output(&self, args: &[&str]) -> process::Output {
         let mut cmd = process::Command::new(&self.snazy_exe);
         cmd.args(args);
@@ -80,14 +78,6 @@ impl TestEnv {
         output
     }
 
-    /// assert command with the specified arguments produces the expected output.
-    /// This is a shorthand for `assert_success_and_get_output`.
-    /// # Example
-    /// ```
-    /// use snazy::testenv::TestEnv;
-    /// let env = TestEnv::new();
-    /// env.assert_command_with_output(["snazy", "--help"], "snazy --help");
-    /// ```
     pub fn assert_command_with_output(&self, args: &[&str], expected: &str) {
         let output = self.assert_success_and_get_output(args);
         assert_eq!(String::from_utf8_lossy(&output.stdout), expected);

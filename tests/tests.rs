@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::process;
 
 mod testenv;
 
@@ -108,3 +109,17 @@ snazytest!(
     "INFO                14:20:32 message\nDEBUG               04:34:00 anotherone\n",
     false
 );
+
+#[test]
+#[should_panic]
+fn all_json_keys_need_tobe_specified() {
+    let tenv = testenv::TestEnv::new();
+    let mut cmd = process::Command::new(tenv.snazy_exe);
+    let args = &["-k", "msg=/foo"];
+    cmd.args(args);
+    // Run *snazy*.
+    let output = cmd.output().expect("snazy output");
+    if !output.status.success() {
+        panic!("{}", testenv::format_exit_error(args, &output));
+    }
+}
