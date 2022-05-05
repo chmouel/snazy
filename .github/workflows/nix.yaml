@@ -8,6 +8,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2.4.0
+    # from https://github.com/cachix/install-nix-action/issues/56#issuecomment-1030697681
+    - run: |
+        # Create with liberal rights, otherwise cache action will complain
+        # about permission errors.
+        sudo mkdir -p /nix/store
+        sudo chmod -R 777 /nix
+
+    - name: Cache nix env take N+1
+      uses: actions/cache@v2
+      with:
+        path: |
+          # See https://github.com/actions/cache/pull/726
+          /nix/store/**
+          # Missing something?
+          /nix/var/nix/*/*
     - uses: cachix/install-nix-action@v15
       with:
         extra_nix_config: |
