@@ -91,3 +91,20 @@ snazytest!(
     "INFO                14:20:32  \u{f171} Server bitbucket-server\n",
     false
 );
+
+snazytest!(
+    custom_level,
+    [
+        "-k",
+        "msg=/the/msg/is",
+        "-k",
+        "level=/the/level/is",
+        "-k",
+        "ts=/the/ts/is"
+    ],
+    r#"{"the": {"msg": {"is": "message"}, "level": {"is": "INFO"}, "ts": {"is": "2022-04-25T14:20:32.505637358Z"}}}
+{"the": {"msg": {"is": "anotherone"}, "level": {"is": "DEBUG"}, "ts": {"is": 1650602040.6289625}}}
+"#,
+    "INFO                14:20:32 message\nDEBUG               04:34:00 anotherone\n",
+    false
+);

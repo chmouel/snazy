@@ -85,8 +85,8 @@ mod tests {
     #[test]
     fn test_config_json_keys() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("foo"), String::from("msg"));
-        keys.insert(String::from("bar"), String::from("level"));
+        keys.insert(String::from("/foo"), String::from("msg"));
+        keys.insert(String::from("/bar"), String::from("level"));
 
         let config = Config {
             json_keys: keys,
@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn test_config_json_timestamp_float() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("bar"), String::from("ts"));
+        keys.insert(String::from("/bar"), String::from("ts"));
 
         let config = Config {
             json_keys: keys,
@@ -115,9 +115,9 @@ mod tests {
     #[test]
     fn test_custom_json_match() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("bar"), String::from("ts"));
-        keys.insert(String::from("foo"), String::from("msg"));
-        keys.insert(String::from("level"), String::from("level"));
+        keys.insert(String::from("/bar"), String::from("ts"));
+        keys.insert(String::from("/foo"), String::from("msg"));
+        keys.insert(String::from("/level"), String::from("level"));
 
         let config = Config {
             json_keys: keys,

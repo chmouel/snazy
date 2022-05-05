@@ -131,15 +131,21 @@ variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
-* You can do your own field matching with the `-k/--json-keys` flag, it accepts the
-field `msg`, `level` and `ts`. Those fields target a key in json used for
-parsing. The values should be:
+* You can do your own field matching with the `-k/--json-keys` flag, you need to pass the fields `msg`, `level` and `ts`.
+  The fields target a key in a json payload specified as [JSON Object notation](https://www.rfc-editor.org/rfc/rfc6901). The description of the fileds are:
 
   * `msg`: The message text (string)
   * `level`: The log level (eg: info) (string)
-  * `ts`: The timestamp, a float or a datetime
+  * `ts`: The timestamp, a float or a datetime.
 
   If any of those fields are missing the parser will fails.
+
+  **Example**:
+
+  ```shell
+  echo '{"the": {"msg": {"is": "message"}, "level": {"is": "INFO"}, "ts": [{"is": "2022-04-25T14:20:32.505637358Z"}]}}'| snazy -k msg=/the/msg/is -k level=/the/level/is -k ts=/the/ts/0/is
+  # => INFO  14:20:32 message
+  ```
 
 * Snazy support action command on regexp, which mean if you have a regexp
   matching a message it will run an action on it. It currently support only one

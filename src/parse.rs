@@ -69,8 +69,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     }
 
     if !config.json_keys.is_empty() {
-        msg = custom_json_match(config, time_format, kali_msg_prefix.as_str(), line.as_str())
-            .unwrap();
+        msg = custom_json_match(config, time_format, kali_msg_prefix.as_str(), line.as_str());
     }
 
     if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
@@ -113,34 +112,32 @@ fn custom_json_match(
     time_format: &str,
     kali_msg_prefix: &str,
     line: &str,
-) -> Option<HashMap<String, String>> {
+) -> HashMap<String, String> {
     let mut dico = HashMap::new();
-    if let Ok(p) = serde_json::from_str::<Generic>(line) {
-        for (key, value) in p.other {
-            if config.json_keys.contains_key(key.as_str()) {
-                match config.json_keys[key.as_str()].as_str() {
-                    "ts" => {
-                        dico.insert(
-                            String::from("ts"),
-                            crate::utils::conver_ts_float_or_str(&value, time_format),
-                        );
+    if let Ok(p) = serde_json::from_str::<Value>(line) {
+        for (key, value) in &config.json_keys {
+            if p.pointer(key).is_some() {
+                // if value  equal ts or timestamp or date then parse as timestamp
+                if value == "ts" || value == "timestamp" || value == "date" {
+                    // make a serde json Value
+                    let v = p.pointer(key).unwrap();
+                    let ts = crate::utils::conver_ts_float_or_str(v, time_format);
+                    dico.insert(value.to_string(), ts);
+                } else {
+                    let mut v = p.pointer(key).unwrap().to_string();
+                    if v.contains('"') {
+                        v = v.replace('"', "");
                     }
-                    _ => {
-                        dico.insert(
-                            config.json_keys[key.as_str()].clone(),
-                            value.as_str().unwrap().to_string(),
-                        );
-                    }
+
+                    dico.insert(value.to_string(), v);
                 }
             }
         }
-        if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && dico.contains_key("msg") {
-            *dico.get_mut("msg").unwrap() =
-                format!("{} {}", Paint::blue(kali_msg_prefix), dico["msg"]);
-        }
-        return Some(dico);
     }
-    None
+    if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && dico.contains_key("msg") {
+        *dico.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), dico["msg"]);
+    }
+    dico
 }
 
 pub fn action_on_regexp(config: &Config, line: &str) {
