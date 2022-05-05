@@ -13,8 +13,6 @@ use yansi::{Color, Paint, Style};
 
 use crate::config::Config;
 
-// 0.6.5
-
 #[derive(Serialize, Deserialize, Debug)]
 struct Pac {
     severity: String,
