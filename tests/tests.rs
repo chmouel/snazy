@@ -94,6 +94,18 @@ snazytest!(
 );
 
 snazytest!(
+    level_symbols,
+    ["--level-symbols"],
+    r#"{"level":"info","msg":"INFO"}
+    {"level":"warn","msg":"warn"}
+    {"level":"error","msg":"error"}
+    {"level":"fatal","msg":"fatal"}
+    "#,
+    "💡  INFO\n∙  warn\n🚨  error\n💀  fatal\n",
+    false
+);
+
+snazytest!(
     custom_level,
     [
         "-k",
