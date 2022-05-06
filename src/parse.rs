@@ -185,8 +185,8 @@ fn do_line(config: &Config, line: &str) -> Option<Info> {
         return None;
     }
 
-    if !config.filter_levels.is_empty()
-        && !config.filter_levels.contains(&msg["level"].to_lowercase())
+    if !config.filter_level.is_empty()
+        && !config.filter_level.contains(&msg["level"].to_lowercase())
     {
         return None;
     }

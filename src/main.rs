@@ -81,8 +81,8 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
             .map(|v| v.map(String::from).collect())
             .unwrap_or_else(Vec::new),
         kail_no_prefix: matches.is_present("kail-no-prefix"),
-        filter_levels: matches
-            .values_of("filter-levels")
+        filter_level: matches
+            .values_of("filter-level")
             .map(|v| v.map(String::from).collect())
             .unwrap_or_else(Vec::new),
         time_format: matches
@@ -147,7 +147,7 @@ mod tests {
         let config = construct_config(&matches);
         assert_eq!(config.files, vec!["test.log".to_string()]);
         assert!(!config.kail_no_prefix);
-        assert_eq!(config.filter_levels, vec!["info".to_string()]);
+        assert_eq!(config.filter_level, vec!["info".to_string()]);
         assert_eq!(config.time_format, "%S".to_string());
         assert_eq!(config.json_keys.len(), 3);
         assert_eq!(config.action_regexp, "".to_string());

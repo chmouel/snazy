@@ -29,7 +29,7 @@ pub fn build() -> Command<'static> {
                 ),
         )
         .arg(
-            Arg::new("filter-levels")
+            Arg::new("filter-level")
             .help("filter by levels")
             .long_help("You can have multiple -f if you need to filter by multiple levels")
             .takes_value(true)
@@ -37,7 +37,7 @@ pub fn build() -> Command<'static> {
             .multiple_occurrences(true)
             .short('f')
             .possible_values(&["info", "debug", "warning", "error", "info"])
-            .long("filter-levels"),
+            .long("filter-level"),
         )
         .arg(
             Arg::new("time_format")
@@ -70,6 +70,7 @@ pub fn build() -> Command<'static> {
         .arg(
             Arg::new("level-symbols")
                 .long("level-symbols")
+                .short('l')
                 .long_help("This will replace the level with a pretty emoji instead of the label.\n\
                 You can set the enviroment variable `SNAZY_LEVEL_SYMBOLS` to always have it.\n")
                 .help("Replace log level with pretty symbols")

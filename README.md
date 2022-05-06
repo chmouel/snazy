@@ -105,28 +105,28 @@ for input and snazzily print your logs from the stream (one line at a time).
 
 * If you do not any prefix for kail you can pass the `--kail-no-prefix` flag.
 
-* If you want to highlight some patterns you can add the option `-r REGEXP` and
-`snazy` will highlight it. You can have many `-r` switches with many
-regexps, and you get different highlight for each match.
+* If you want to highlight some patterns you can add the option `-r/--regexp`
+  followed by a REGEXP and `snazy` will highlight it. You can have many `-r`
+  switches with many regexps, and you get different highlight for each match.
 
 * If `snazy` don't recognize the line as json it will symply straight print
   it. Either way it will still apply regexp highlighting of the `-r` option or
   do the action commands matching (see below). This let you use it for any logs
   to do some regexp highlighting and action on pattern.
 
-* If you want to only show some levels, you can add the flag `-f` to filter by
-  level or many `-f` for many levels, for example, this only show warning and
-  error from the log:
+* If you want to only show some levels, you can add the flag
+  `-f`/`--filter-level` to filter by level or many `-f` for many levels, for
+  example, this only show warning and error from the log:
 
 ```shell
 % kubectl log pod|snazy -f warning -f error
 ```
 
-* If you pass the flag `--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+* If you pass the flag `-l/--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
-* You can customize the time printed with the `-t` flag (or the environment
+* You can customize the time printed with the `--time-format` flag (or the environment
 variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
@@ -148,7 +148,7 @@ strings.
   ```
 
 * Snazy support action command on regexp, which mean if you have a regexp
-  matching a message it will run an action on it. It currently support only one
+  matching a message it will run an action on it. It currently supports only one
   action one regexp. If you specify the string `"{}"` it will be expanded to
   the matched string. For example on macOS this command will display a
   notification with the pipelinerun that has succeeded:

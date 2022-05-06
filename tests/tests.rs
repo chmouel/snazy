@@ -122,6 +122,17 @@ snazytest!(
 );
 
 snazytest!(
+    filter_level,
+    ["--filter-level=info", "--filter-level=warning"],
+    r#"{"level":"info","msg":"INFO"}
+    {"level":"warning","msg":"warn"}
+    {"level":"fatal","msg":"fatal"}
+    "#,
+    "INFO                 INFO\nWARN                 warn\n",
+    false
+);
+
+snazytest!(
     custom_level,
     [
         "-k",

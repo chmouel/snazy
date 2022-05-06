@@ -24,7 +24,7 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('-r', 'r', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
             [CompletionResult]::new('--regexp', 'regexp', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
             [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter by levels')
-            [CompletionResult]::new('--filter-levels', 'filter-levels', [CompletionResultType]::ParameterName, 'filter by levels')
+            [CompletionResult]::new('--filter-level', 'filter-level', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
             [CompletionResult]::new('--kail-prefix-format', 'kail-prefix-format', [CompletionResultType]::ParameterName, 'Kail prefix format')
             [CompletionResult]::new('-k', 'k', [CompletionResultType]::ParameterName, 'key to use for json parsing')
@@ -38,6 +38,7 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version information')
             [CompletionResult]::new('--kail-no-prefix', 'kail-no-prefix', [CompletionResultType]::ParameterName, 'Hide container prefix when showing the log with kail')
+            [CompletionResult]::new('-l', 'l', [CompletionResultType]::ParameterName, 'Replace log level with pretty symbols')
             [CompletionResult]::new('--level-symbols', 'level-symbols', [CompletionResultType]::ParameterName, 'Replace log level with pretty symbols')
             break
         }

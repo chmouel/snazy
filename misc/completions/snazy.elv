@@ -21,7 +21,7 @@ set edit:completion:arg-completer[snazy] = {|@words|
             cand -r 'highlight word in a message with a regexp'
             cand --regexp 'highlight word in a message with a regexp'
             cand -f 'filter by levels'
-            cand --filter-levels 'filter by levels'
+            cand --filter-level 'filter by levels'
             cand --time-format 'Time format'
             cand --kail-prefix-format 'Kail prefix format'
             cand -k 'key to use for json parsing'
@@ -35,6 +35,7 @@ set edit:completion:arg-completer[snazy] = {|@words|
             cand -V 'Print version information'
             cand --version 'Print version information'
             cand --kail-no-prefix 'Hide container prefix when showing the log with kail'
+            cand -l 'Replace log level with pretty symbols'
             cand --level-symbols 'Replace log level with pretty symbols'
         }
     ]
