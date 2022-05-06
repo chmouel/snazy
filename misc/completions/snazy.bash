@@ -34,11 +34,11 @@ _snazy() {
                     return 0
                     ;;
                 --filter-level)
-                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "info debug warning error info" -- "${cur}"))
                     return 0
                     ;;
                 -f)
-                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "info debug warning error info" -- "${cur}"))
                     return 0
                     ;;
                 --time-format)
@@ -66,11 +66,11 @@ _snazy() {
                     return 0
                     ;;
                 --color)
-                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "never auto always" -- "${cur}"))
                     return 0
                     ;;
                 -c)
-                    COMPREPLY=($(compgen -W "" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "never auto always" -- "${cur}"))
                     return 0
                     ;;
                 *)
