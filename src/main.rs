@@ -35,6 +35,13 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
         Paint::disable();
     }
 
+    let mut kail_prefix_format = matches.value_of("kail-prefix-format").unwrap().to_string();
+    if matches.occurrences_of("kail-prefix-format") > 0 {
+        kail_prefix_format = matches.value_of("kail-prefix-format").unwrap().to_string();
+    } else if env::var("SNAZY_KAIL_PREFIX_FORMAT").is_ok() {
+        kail_prefix_format = env::var("SNAZY_KAIL_PREFIX_FORMAT").unwrap();
+    }
+
     let mut regexp_colours = HashMap::new();
     let mut json_values = HashMap::new();
     if matches.occurrences_of("regexp") > 0 {
@@ -68,12 +75,7 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
         }
     }
     Config {
-        kail_prefix_format: matches
-            .value_of("kail-prefix-format")
-            .map(String::from)
-            .or_else(|| env::var("SNAZY_KAIL_PREFIX_FORMAT").ok())
-            .and_then(|t| t.parse().ok())
-            .unwrap_or_default(),
+        kail_prefix_format,
         files: matches
             .values_of("files")
             .map(|v| v.map(String::from).collect())

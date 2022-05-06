@@ -10,6 +10,7 @@ macro_rules! snazytest {
             let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
             // unset SNAZY_LEVEL_SYMBOLS env variable to avoid test failures
             let _ = std::env::remove_var("SNAZY_LEVEL_SYMBOLS");
+            let _ = std::env::remove_var("SNAZY_KAIL_PREFIX_FORMAT");
             tmpfile.write_all($input.as_bytes()).unwrap();
             tmpfile.flush().unwrap();
             let filepath = tmpfile.path().to_str().unwrap().clone();

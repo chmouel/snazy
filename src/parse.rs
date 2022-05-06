@@ -13,6 +13,8 @@ use yansi::{Color, Paint, Style};
 
 use crate::config::Config;
 
+const KAIL_RE: &str = r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)";
+
 #[derive(Serialize, Deserialize, Debug)]
 struct Pac {
     severity: String,
@@ -31,12 +33,6 @@ struct Knative {
     other: BTreeMap<String, Value>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Generic {
-    #[serde(flatten)]
-    other: BTreeMap<String, Value>,
-}
-
 #[derive(Debug)]
 pub struct Info {
     level: String,
@@ -48,28 +44,17 @@ pub struct Info {
 pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     let time_format = config.time_format.as_str();
     let mut msg = HashMap::new();
+    let mut kail_msg_prefix = String::new();
+    let mut line = rawline.to_string();
 
-    let mut line = String::from(rawline);
-    let kali_re =
-        Regex::new(r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)")
-            .unwrap();
-    let mut kali_msg_prefix = config.kail_prefix_format.clone();
-    if kali_re.is_match(line.as_str()) {
-        line = kali_re.replace_all(rawline, "$line").to_string();
-        let capture = kali_re.captures(rawline).unwrap();
-        let namespace = capture.name("namespace").unwrap().as_str();
-        let pod = capture.name("pod").unwrap().as_str();
-        let container = capture.name("container").unwrap().as_str();
-        kali_msg_prefix = kali_msg_prefix
-            .replace("{namespace}", namespace)
-            .replace("{pod}", pod)
-            .replace("{container}", container);
-    } else {
-        kali_msg_prefix = String::new();
+    if let Some(prefix) = parse_kail_lines(config, rawline) {
+        let replacer = Regex::new(KAIL_RE).unwrap();
+        line = replacer.replace_all(rawline, "$line").to_string();
+        kail_msg_prefix = prefix;
     }
 
     if !config.json_keys.is_empty() {
-        msg = custom_json_match(config, time_format, kali_msg_prefix.as_str(), line.as_str());
+        msg = custom_json_match(config, time_format, &kail_msg_prefix, line.as_str());
     }
 
     if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
@@ -101,10 +86,27 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         };
     }
 
-    if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && msg.contains_key("msg") {
-        *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), msg["msg"]);
+    if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && msg.contains_key("msg") {
+        *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kail_msg_prefix), msg["msg"]);
     }
     msg
+}
+
+fn parse_kail_lines(config: &Config, rawline: &str) -> Option<String> {
+    let reg = Regex::new(KAIL_RE).unwrap();
+    if !reg.is_match(rawline) {
+        return None;
+    }
+    let mut kail_msg_prefix = config.kail_prefix_format.clone();
+    let capture = reg.captures(rawline).unwrap();
+    let namespace = capture.name("namespace").unwrap().as_str();
+    let pod = capture.name("pod").unwrap().as_str();
+    let container = capture.name("container").unwrap().as_str();
+    kail_msg_prefix = kail_msg_prefix
+        .replace("{namespace}", namespace)
+        .replace("{pod}", pod)
+        .replace("{container}", container);
+    Some(kail_msg_prefix)
 }
 
 fn custom_json_match(
