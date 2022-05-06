@@ -82,12 +82,14 @@ mod tests {
 
     #[test]
     fn test_color_by_level() {
-        // auto generated :D
-        assert_eq!(color_by_level("DEBUG"), "\u{1b}[38;5;14mDEBUG\u{1b}[0m");
-        assert_eq!(color_by_level("WARNING"), "\u{1b}[38;5;11mWARN\u{1b}[0m ");
-        assert_eq!(color_by_level("ERROR"), "\u{1b}[38;5;9mERROR\u{1b}[0m");
-        assert_eq!(color_by_level("INFO"), "\u{1b}[38;5;10mINFO\u{1b}[0m ");
-        assert_eq!(color_by_level("UNKNOWN"), "\u{1b}[38;5;10mUNKNOWN\u{1b}[0m");
+        // disable for CI to avoid color output
+        Paint::disable();
+        assert_eq!(color_by_level("DEBUG"), "DEBUG              ");
+        assert_eq!(color_by_level("WARNING"), "WARN               ");
+        assert_eq!(color_by_level("ERROR"), "ERROR             ");
+        assert_eq!(color_by_level("INFO"), "INFO               ");
+        assert_eq!(color_by_level("UNKNOWN"), "UNKNOWN            ");
+        Paint::enable();
     }
     #[test]
     fn test_convert_ts_float_or_str() {
