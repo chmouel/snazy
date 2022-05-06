@@ -24,22 +24,6 @@ pub fn color_by_level(level: &str) -> String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_level_symbols() {
-        // auto generated :D
-        assert_eq!(level_symbols("DEBUG"), "🐛");
-        assert_eq!(level_symbols("WARNING"), "⚠️");
-        assert_eq!(level_symbols("ERROR"), "🚨");
-        assert_eq!(level_symbols("INFO"), "💡");
-        assert_eq!(level_symbols("FATAL"), "💀");
-        assert_eq!(level_symbols("UNKNOWN"), "∙");
-    }
-}
-
 pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
     match provider {
         "github" => " ",
@@ -61,10 +45,59 @@ fn convert_unix_ts(value: i64, time_format: &str) -> String {
     ts.format(time_format).to_string()
 }
 
-pub fn conver_ts_float_or_str(value: &Value, time_format: &str) -> String {
+pub fn convert_ts_float_or_str(value: &Value, time_format: &str) -> String {
     match value {
         Value::String(s) => convert_str_to_ts(s.as_str(), time_format),
         Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format),
         _ => "".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_level_symbols() {
+        // auto generated :D
+        assert_eq!(level_symbols("DEBUG"), "🐛");
+        assert_eq!(level_symbols("WARNING"), "⚠️");
+        assert_eq!(level_symbols("ERROR"), "🚨");
+        assert_eq!(level_symbols("INFO"), "💡");
+        assert_eq!(level_symbols("FATAL"), "💀");
+        assert_eq!(level_symbols("UNKNOWN"), "∙");
+    }
+    #[test]
+    fn test_providers() {
+        // auto generated :D
+        assert_eq!(convert_pac_provider_to_fa_icon("github"), " ");
+        assert_eq!(convert_pac_provider_to_fa_icon("gitlab"), " ");
+        assert_eq!(convert_pac_provider_to_fa_icon("bitbucket-cloud"), " ");
+        assert_eq!(
+            convert_pac_provider_to_fa_icon("bitbucket-server"),
+            " Server"
+        );
+        assert_eq!(convert_pac_provider_to_fa_icon("UNKNOWN"), "UNKNOWN");
+    }
+
+    #[test]
+    fn test_color_by_level() {
+        // auto generated :D
+        assert_eq!(color_by_level("DEBUG"), "\u{1b}[38;5;14mDEBUG\u{1b}[0m");
+        assert_eq!(color_by_level("WARNING"), "\u{1b}[38;5;11mWARN\u{1b}[0m ");
+        assert_eq!(color_by_level("ERROR"), "\u{1b}[38;5;9mERROR\u{1b}[0m");
+        assert_eq!(color_by_level("INFO"), "\u{1b}[38;5;10mINFO\u{1b}[0m ");
+        assert_eq!(color_by_level("UNKNOWN"), "\u{1b}[38;5;10mUNKNOWN\u{1b}[0m");
+    }
+    #[test]
+    fn test_convert_ts_float_or_str() {
+        // auto generated :D
+        assert_eq!(
+            convert_ts_float_or_str(
+                &Value::String("2020-01-01T00:00:00.000Z".to_string()),
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "2020-01-01 00:00:00"
+        );
     }
 }

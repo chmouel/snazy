@@ -81,7 +81,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         if let Some(ts) = p.other.get("ts") {
             msg.insert(
                 String::from("ts"),
-                crate::utils::conver_ts_float_or_str(ts, time_format),
+                crate::utils::convert_ts_float_or_str(ts, time_format),
             );
         };
     }
@@ -123,7 +123,7 @@ fn custom_json_match(
                 if value == "ts" || value == "timestamp" || value == "date" {
                     // make a serde json Value
                     let v = p.pointer(key).unwrap();
-                    let ts = crate::utils::conver_ts_float_or_str(v, time_format);
+                    let ts = crate::utils::convert_ts_float_or_str(v, time_format);
                     dico.insert(value.to_string(), ts);
                 } else {
                     let mut v = p.pointer(key).unwrap().to_string();
