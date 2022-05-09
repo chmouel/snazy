@@ -81,17 +81,6 @@ mod tests {
     }
 
     #[test]
-    fn test_color_by_level() {
-        // disable for CI to avoid color output
-        Paint::disable();
-        assert_eq!(color_by_level("DEBUG"), "DEBUG              ");
-        assert_eq!(color_by_level("WARNING"), "WARN               ");
-        assert_eq!(color_by_level("ERROR"), "ERROR             ");
-        assert_eq!(color_by_level("INFO"), "INFO               ");
-        assert_eq!(color_by_level("UNKNOWN"), "UNKNOWN            ");
-        Paint::enable();
-    }
-    #[test]
     fn test_convert_ts_float_or_str() {
         // auto generated :D
         assert_eq!(
