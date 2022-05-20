@@ -143,7 +143,8 @@ strings.
   **Example**:
 
   ```shell
-  echo '{"the": {"msg": {"is": "message"}, "level": {"is": "INFO"}, "ts": [{"is": "2022-04-25T14:20:32.505637358Z"}]}}'| snazy -k msg=/the/msg/is -k level=/the/level/is -k ts=/the/ts/0/is
+  echo '{"the": {"msg": {"is": "message"}, "level": {"is": "INFO"}, "ts": [{"is": "2022-04-25T14:20:32.505637358Z"}]}}' | \
+        snazy -k msg=/the/msg/is -k level=/the/level/is -k ts=/the/ts/0/is
   # => INFO  14:20:32 message
   ```
 
