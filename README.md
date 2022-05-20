@@ -156,6 +156,16 @@ strings.
   ```shell
   snazy --action-regexp "pipelinerun(s)?\s*.*has success" --action-command "osascript -e 'display notification \"{}\"'"
 
+## Interactive filtering with fzf
+
+You can go even further with unix shell pipelines, and feed snazy to fzf for interactive filtering of the stream. for example to stream everything on a kubernetes cluster with kail, transforming the logs via snazy and finally using fzf to interactively select the patter to match:
+
+```shell
+kail --since=1h | snazy | fzf +s --ansi
+```
+
+This will give you a  prompt with [`fzf`](https://github.com/junegunn/fzf) where you can type the query you want.
+
 ## Shell completions
 
 Shell completions are available for most shells in the [misc/completions](./misc/completions) and it will be automatically installed with the aur/brew package.
