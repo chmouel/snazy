@@ -2,13 +2,13 @@
 mod tests {
     use std::collections::HashMap;
     use std::io::{Read, Write};
-    use std::thread;
+    use std::{thread, vec};
 
     use regex::Regex;
     use yansi::Color;
 
     use crate::config::{self, Config};
-    use crate::parse::{action_on_regexp, extract_info, read_from_file};
+    use crate::parse::{action_on_regexp, do_line, extract_info, read_from_file};
 
     #[test]
     fn test_get_line() {
@@ -48,6 +48,19 @@ mod tests {
             },
         );
         assert!(msg["msg"].contains("container\n"));
+    }
+
+    #[test]
+    fn test_skip_lines() {
+        let line = r#"{"level":"INFO","msg":"yolo"}"#;
+        let msg = do_line(
+            &Config {
+                skip_line_regexp: vec![Regex::new("yolo").unwrap()],
+                ..config::Config::default()
+            },
+            line,
+        );
+        assert!(msg.is_none());
     }
 
     #[test]

@@ -1,4 +1,5 @@
 complete -c snazy -s r -l regexp -d 'highlight word in a message with a regexp' -r
+complete -c snazy -s S -l skip-line-regexp -d 'skip line in a message if matching a regexp' -r
 complete -c snazy -s f -l filter-level -d 'filter by levels' -r -f -a "{info	,debug	,warning	,error	,info	}"
 complete -c snazy -l time-format -d 'Time format' -r
 complete -c snazy -l kail-prefix-format -d 'Kail prefix format' -r

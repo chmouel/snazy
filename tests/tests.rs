@@ -133,6 +133,14 @@ snazytest!(
 );
 
 snazytest!(
+    skip_lines,
+    ["-S", "yolo"],
+    r#"{"level":"info","msg":"yolo"}"#,
+    "",
+    false
+);
+
+snazytest!(
     custom_level,
     [
         "-k",

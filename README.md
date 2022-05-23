@@ -116,7 +116,7 @@ for input and snazzily print your logs from the stream (one line at a time).
   do the action commands matching (see below). This let you use it for any logs
   to do some regexp highlighting and action on pattern.
 
-* If you want to only show some levels, you can add the flag
+* If you want to only show some specific levels, you can add the flag
   `-f`/`--filter-level` to filter by level or many `-f` for many levels, for
   example, this only show warning and error from the log:
 
@@ -132,6 +132,11 @@ for input and snazzily print your logs from the stream (one line at a time).
 variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
+
+* If you want to skip showing some lines you can have one (or multiple of them)
+  with the flag `-S/--skip-line-regexp`. When it matches the word or regexp in
+  this value it will simply skip the line. You can have multiple flags to skip
+  multiple lines.
 
 * You can do your own field matching with the `-k/--json-keys` flag, you need to pass the fields `msg`, `level` and `ts`.
   The fields target a key in a json payload specified as [JSON Object notation](https://www.rfc-editor.org/rfc/rfc6901). The description of the fileds are:

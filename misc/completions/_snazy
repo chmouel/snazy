@@ -17,6 +17,8 @@ _snazy() {
     _arguments "${_arguments_options[@]}" \
 '*-r+[highlight word in a message with a regexp]: : ' \
 '*--regexp=[highlight word in a message with a regexp]: : ' \
+'*-S+[skip line in a message if matching a regexp]: : ' \
+'*--skip-line-regexp=[skip line in a message if matching a regexp]: : ' \
 '*-f+[filter by levels]: :(info debug warning error info)' \
 '*--filter-level=[filter by levels]: :(info debug warning error info)' \
 '--time-format=[Time format]: : ' \
