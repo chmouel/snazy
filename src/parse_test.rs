@@ -37,6 +37,20 @@ mod tests {
     }
 
     #[test]
+    fn test_kail_newline() {
+        let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":"updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
+        let msg = extract_info(
+            line,
+            &Config {
+                kail_no_prefix: false,
+                kail_prefix_format: String::from("{container}\n"),
+                ..config::Config::default()
+            },
+        );
+        assert!(msg["msg"].contains("container\n"));
+    }
+
+    #[test]
     fn test_kail_no_prefix() {
         let line = r#"ns/pod[container]: {"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" updated","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#;
         let msg = extract_info(
