@@ -105,7 +105,8 @@ fn parse_kail_lines(config: &Config, rawline: &str) -> Option<String> {
     kail_msg_prefix = kail_msg_prefix
         .replace("{namespace}", namespace)
         .replace("{pod}", pod)
-        .replace("{container}", container);
+        .replace("{container}", container)
+        .replace("\\n", "\n");
     Some(kail_msg_prefix)
 }
 
