@@ -29,6 +29,18 @@ pub fn build() -> Command<'static> {
                 ),
         )
         .arg(
+            Arg::new("skip-line-regexp")
+                .long("skip-line-regexp")
+                .short('S')
+                .help("skip line in a message if matching a regexp")
+                .takes_value(true)
+                .min_values(1)
+                .multiple_occurrences(true)
+                .long_help(
+                    "Specify a regexp to match a line in a message.\n\
+                        if matching a line, the line will be skipped"),
+        )
+        .arg(
             Arg::new("filter-level")
             .help("filter by levels")
             .long_help("You can have multiple -f if you need to filter by multiple levels")

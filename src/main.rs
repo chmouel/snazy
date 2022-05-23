@@ -59,6 +59,13 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
         }
     }
 
+    // collect match to a vec
+    let skip_line_regexp: Vec<regex::Regex> = matches
+        .values_of("skip-line-regexp")
+        .unwrap_or_default()
+        .map(|s| regex::Regex::new(s).unwrap())
+        .collect();
+
     if matches.occurrences_of("json-keys") > 0 {
         // split all json-keys matches by =
         let json_keys: Vec<&str> = matches
@@ -93,6 +100,7 @@ fn construct_config(matches: &clap::ArgMatches) -> Config {
             .unwrap_or_default(),
         regexp_colours,
         colored_output,
+        skip_line_regexp,
         level_symbols: matches.is_present("level-symbols")
             || env::var("SNAZY_LEVEL_SYMBOLS").is_ok(),
         // split json keys by '=' and store in a key, value hashmap

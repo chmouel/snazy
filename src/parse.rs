@@ -167,7 +167,7 @@ pub fn action_on_regexp(config: &Config, line: &str) {
     }
 }
 
-fn do_line(config: &Config, line: &str) -> Option<Info> {
+pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
@@ -183,6 +183,16 @@ fn do_line(config: &Config, line: &str) -> Option<Info> {
             "{}",
             apply_regexps(&config.regexp_colours, line.to_string())
         );
+        return None;
+    }
+
+    if config
+        .skip_line_regexp
+        .iter()
+        .filter(|r| r.is_match(msg["msg"].as_str()))
+        .count()
+        > 0
+    {
         return None;
     }
 

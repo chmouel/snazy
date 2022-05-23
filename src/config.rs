@@ -16,6 +16,7 @@ pub struct Config {
     pub kail_prefix_format: String,
     pub action_regexp: String,
     pub action_command: String,
+    pub skip_line_regexp: Vec<regex::Regex>,
 }
 
 impl Default for Config {
@@ -32,6 +33,7 @@ impl Default for Config {
             level_symbols: bool::default(),
             action_regexp: String::new(),
             action_command: String::new(),
+            skip_line_regexp: Vec::new(),
         }
     }
 }

@@ -23,6 +23,8 @@ Register-ArgumentCompleter -Native -CommandName 'snazy' -ScriptBlock {
         'snazy' {
             [CompletionResult]::new('-r', 'r', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
             [CompletionResult]::new('--regexp', 'regexp', [CompletionResultType]::ParameterName, 'highlight word in a message with a regexp')
+            [CompletionResult]::new('-S', 'S', [CompletionResultType]::ParameterName, 'skip line in a message if matching a regexp')
+            [CompletionResult]::new('--skip-line-regexp', 'skip-line-regexp', [CompletionResultType]::ParameterName, 'skip line in a message if matching a regexp')
             [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--filter-level', 'filter-level', [CompletionResultType]::ParameterName, 'filter by levels')
             [CompletionResult]::new('--time-format', 'time-format', [CompletionResultType]::ParameterName, 'Time format')
