@@ -98,10 +98,10 @@ for input and snazzily print your logs from the stream (one line at a time).
 * The flag "--kail-prefix-format" let you customize how to display the kail
   format, the templates `{namespace}`, `{pod}`, `{container}` will be replaced
   by its value and a "\n" will be replaced by a newline. As an example if you
-  want to only show the current pod following by a newline you can use the
+  want to only show the current pod followed by a newline you can use the
   following template:
 
-     `--kail-prefix-format "{pod}"`
+     `--kail-prefix-format "{pod}\n"`
 
   the environement variable `SNAZY_KAIL_PREFIX_FORMAT` let you make this setting permanent.
 
