@@ -133,10 +133,10 @@ variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
-* If you want to skip showing some lines you can have one (or multiple of them)
-  with the flag `-S/--skip-line-regexp`. When it matches the word or regexp in
-  this value it will simply skip the line. You can have multiple flags to skip
-  multiple lines.
+* If you want to skip showing some lines you can specify the flag 
+  `-S/--skip-line-regexp`. When it matches the word or regexp in
+  this value it will simply skipping printing the line. You can have multiple flags 
+  if you want to skip multiple lines.
 
 * You can do your own field matching with the `-k/--json-keys` flag, you need to pass the fields `msg`, `level` and `ts`.
   The fields target a key in a json payload specified as [JSON Object notation](https://www.rfc-editor.org/rfc/rfc6901). The description of the fileds are:
