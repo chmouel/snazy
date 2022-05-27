@@ -185,8 +185,8 @@ Shell completions are available for most shells in the [misc/completions](./misc
   [snazy](https://www.urbandictionary.com/define.php?term=snazy).
 * You missed a z to snazzy. True that. But snazy is easier to google than snazzy :p
 * Why rust? Good question, it seems the kids like it, but I still don't get it,
-  maybe one day I will, but it really takes a few years to dig a programming
-  language.
+  probably because I have the feeling my code is really not very hummm "rusty".
+  But like everything in life, you need to practice at some point to get better..
 * I have seen some of this code already 🤨, yep being a noob I much digged
   into the source code of (the super-duper great)
   [sharkdp/fd](https://github.com/sharkdp/fd)
