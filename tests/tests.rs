@@ -81,7 +81,7 @@ snazytest!(
     pac_output_github,
     [""],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
-    "INFO                14:20:32  \u{f09b}  github\n",
+    "INFO                14:20:32  \u{f09b} github\n",
     false
 );
 
@@ -89,7 +89,7 @@ snazytest!(
     pac_output_gitlab,
     [""],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" gitlab","provider":"gitlab","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
-    "INFO                14:20:32  \u{f296}  gitlab\n",
+    "INFO                14:20:32  \u{f296} gitlab\n",
     false
 );
 
@@ -97,7 +97,7 @@ snazytest!(
     pac_output_bitbucket_cloud,
     [""],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-cloud","provider":"bitbucket-cloud","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
-    "INFO                14:20:32  \u{f171}  bitbucket-cloud\n",
+    "INFO                14:20:32  \u{f171} bitbucket-cloud\n",
     false
 );
 
@@ -105,7 +105,7 @@ snazytest!(
     pac_output_bitbucket_server,
     [""],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-server","provider":"bitbucket-server","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
-    "INFO                14:20:32  \u{f171} Server bitbucket-server\n",
+    "INFO                14:20:32  \u{f171}S bitbucket-server\n",
     false
 );
 

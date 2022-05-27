@@ -26,10 +26,11 @@ pub fn color_by_level(level: &str) -> String {
 
 pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
     match provider {
-        "github" => " ",
-        "gitlab" => " ",
-        "bitbucket-cloud" => " ",
-        "bitbucket-server" => " Server",
+        "github" => "",
+        "gitlab" => "",
+        "bitbucket-cloud" => "",
+        "bitbucket-server" => "S",
+        "incoming" => "",
         _ => provider,
     }
 }
@@ -70,13 +71,11 @@ mod tests {
     #[test]
     fn test_providers() {
         // auto generated :D
-        assert_eq!(convert_pac_provider_to_fa_icon("github"), " ");
-        assert_eq!(convert_pac_provider_to_fa_icon("gitlab"), " ");
-        assert_eq!(convert_pac_provider_to_fa_icon("bitbucket-cloud"), " ");
-        assert_eq!(
-            convert_pac_provider_to_fa_icon("bitbucket-server"),
-            " Server"
-        );
+        assert_eq!(convert_pac_provider_to_fa_icon("github"), "");
+        assert_eq!(convert_pac_provider_to_fa_icon("gitlab"), "");
+        assert_eq!(convert_pac_provider_to_fa_icon("bitbucket-cloud"), "");
+        assert_eq!(convert_pac_provider_to_fa_icon("incoming"), "\u{f08b}");
+        assert_eq!(convert_pac_provider_to_fa_icon("bitbucket-server"), "S");
         assert_eq!(convert_pac_provider_to_fa_icon("UNKNOWN"), "UNKNOWN");
     }
 
