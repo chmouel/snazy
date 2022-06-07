@@ -19,7 +19,7 @@ serde_json = "1.0.79"
 chrono = "0.4.19"
 yansi = "0.5.1"
 clap = { version = "3.1", features = ["derive", "cargo"] }
-regex = "1.5.5"
+regex = "1.5.6"
 atty = "0.2.14"
 tempfile = "3.3.0"
 
