@@ -17,6 +17,11 @@ jobs:
       packages: write
 
     steps:
+      - uses: mxschmitt/action-tmate@v3
+        name: Debug
+        env:
+          AUR_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}
+          
       - name: Checkout repository
         uses: actions/checkout@v3
 
