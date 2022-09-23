@@ -14,7 +14,7 @@ keywords = ["json", "log", "viewer"]
 repository = "chmouel/snazy"
 
 [dependencies]
-serde = { version = "1.0.144", features = ["derive"] }
+serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
 chrono = "0.4.22"
 yansi = "0.5.1"
