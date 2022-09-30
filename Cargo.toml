@@ -18,11 +18,11 @@ serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
 chrono = "0.4.22"
 yansi = "0.5.1"
-clap = { version = "3.2", features = ["derive", "cargo"] }
+clap = { version = "4.0", features = ["derive", "cargo"] }
 regex = "1.5.6"
 atty = "0.2.14"
 tempfile = "3.3.0"
 
 [build-dependencies]
-clap = { version = "3.2", features = ["cargo"] }
+clap = { version = "4.0", features = ["cargo"] }
 clap_complete = "3.2"
