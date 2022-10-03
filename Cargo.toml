@@ -1,5 +1,5 @@
 [package]
-build = "build.rs"
+# build = "build.rs"
 authors = ["Chmouel Boudjnah <chmouel@chmouel.com>"]
 categories = ["command-line-utilities"]
 description = "snazy is a snazzy json log viewer"
@@ -18,11 +18,12 @@ serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
 chrono = "0.4.22"
 yansi = "0.5.1"
-clap = { version = "3.2", features = ["derive", "cargo"] }
+clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.5.6"
 atty = "0.2.14"
 tempfile = "3.3.0"
+clap_complete = "4.0.2"
 
-[build-dependencies]
-clap = { version = "3.2", features = ["cargo"] }
-clap_complete = "3.2"
+# [build-dependencies]
+# clap = { version = "3.2", features = ["cargo"] }
+# clap_complete = "3.2"

@@ -1,38 +1,64 @@
 use std::collections::HashMap;
 
+use clap::ValueEnum;
 use yansi::Color;
 
-/// Configuration options for *snazy*.
+#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum LogLevel {
+    Info,
+    Debug,
+    Warning,
+    Error,
+}
+pub fn level_from_str(level: &str) -> &'static LogLevel {
+    match level {
+        "debug" => &LogLevel::Debug,
+        "warning" => &LogLevel::Warning,
+        "error" => &LogLevel::Error,
+        _ => &LogLevel::Info,
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, ValueEnum)]
+pub enum ColorWhen {
+    /// show colors if the output goes to an interactive console (default)
+    Auto,
+    /// always use colorized output
+    Always,
+    /// do not use colorized output
+    Never,
+}
+
 #[derive(Debug)]
 pub struct Config {
-    pub files: Vec<String>,
-    pub kail_no_prefix: bool,
-    pub time_format: String,
-    pub colored_output: bool,
-    pub filter_level: Vec<String>,
-    pub regexp_colours: HashMap<String, Color>,
+    pub action_command: Option<String>,
+    pub action_regexp: Option<String>,
+    pub colouring: bool,
+    pub files: Option<Vec<String>>,
+    pub filter_levels: Vec<LogLevel>,
     pub json_keys: HashMap<String, String>,
-    pub level_symbols: bool,
+    pub kail_no_prefix: bool,
     pub kail_prefix_format: String,
-    pub action_regexp: String,
-    pub action_command: String,
-    pub skip_line_regexp: Vec<regex::Regex>,
+    pub level_symbols: bool,
+    pub regexp_colours: HashMap<String, Color>,
+    pub skip_line_regexp: Vec<String>,
+    pub time_format: String,
 }
 
 impl Default for Config {
     fn default() -> Config {
         Config {
-            files: vec![],
+            files: Some(vec![]),
             kail_no_prefix: false,
             kail_prefix_format: String::from("{namespace}/{pod}[{container}]"),
             time_format: String::from("%H:%M:%S"),
-            colored_output: false,
-            filter_level: Vec::new(),
+            colouring: false,
+            filter_levels: <Vec<LogLevel>>::new(),
             regexp_colours: HashMap::new(),
             json_keys: HashMap::new(),
             level_symbols: bool::default(),
-            action_regexp: String::new(),
-            action_command: String::new(),
+            action_regexp: Some(String::new()),
+            action_command: Some(String::new()),
             skip_line_regexp: Vec::new(),
         }
     }

@@ -8,7 +8,7 @@ mod tests {
     use yansi::Color;
 
     use crate::config::{self, Config};
-    use crate::parse::{action_on_regexp, do_line, extract_info, read_from_file};
+    use crate::parse::{action_on_regexp, do_line, extract_info};
 
     #[test]
     fn test_get_line() {
