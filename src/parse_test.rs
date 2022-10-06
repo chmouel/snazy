@@ -55,7 +55,7 @@ mod tests {
         let line = r#"{"level":"INFO","msg":"yolo"}"#;
         let msg = do_line(
             &Config {
-                skip_line_regexp: vec![Regex::new("yolo").unwrap()],
+                skip_line_regexp: vec![String::from("yolo")],
                 ..config::Config::default()
             },
             line,
@@ -169,8 +169,8 @@ mod tests {
         file.close().unwrap();
 
         let config = Config {
-            action_regexp: String::from(r"HELLO\s\w+"),
-            action_command: String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap(),
+            action_regexp: Some(String::from(r"HELLO\s\w+")),
+            action_command: Some(String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap()),
             ..config::Config::default()
         };
         let line = r#"un HELLO MOTO nono el petiot roboto"#;
@@ -192,12 +192,12 @@ mod tests {
         Write::write_all(&mut file, line.as_bytes()).unwrap();
 
         let config = Config {
-            files: vec![file_path.to_str().unwrap().to_string()],
-            colored_output: false,
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            colouring: false,
             ..config::Config::default()
         };
         let writeto = &mut Vec::new();
-        read_from_file(&config, file_path.to_str().unwrap(), writeto);
+        crate::parse::read_a_file(&config, file_path.to_str().unwrap().to_string(), writeto);
         file.close().unwrap();
         assert_eq!(
             "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
