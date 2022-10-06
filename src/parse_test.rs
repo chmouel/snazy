@@ -7,7 +7,7 @@ mod tests {
     use regex::Regex;
     use yansi::Color;
 
-    use crate::config::{Config};
+    use crate::config::Config;
     use crate::parse::{action_on_regexp, do_line, extract_info};
 
     #[test]
@@ -112,8 +112,8 @@ mod tests {
     #[test]
     fn test_config_json_keys() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/foo"), String::from("msg"));
-        keys.insert(String::from("/bar"), String::from("level"));
+        keys.insert(String::from("msg"), String::from("/foo"));
+        keys.insert(String::from("level"), String::from("/bar"));
 
         let config = Config {
             json_keys: keys,
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn test_config_json_timestamp_float() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/bar"), String::from("ts"));
+        keys.insert(String::from("ts"), String::from("/bar"));
 
         let config = Config {
             json_keys: keys,
@@ -142,9 +142,9 @@ mod tests {
     #[test]
     fn test_custom_json_match() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/bar"), String::from("ts"));
-        keys.insert(String::from("/foo"), String::from("msg"));
-        keys.insert(String::from("/level"), String::from("level"));
+        keys.insert(String::from("ts"), String::from("/bar"));
+        keys.insert(String::from("msg"), String::from("/foo"));
+        keys.insert(String::from("level"), String::from("/level"));
 
         let config = Config {
             json_keys: keys,
@@ -161,6 +161,7 @@ mod tests {
         let info = extract_info(line, &config);
         assert_eq!(info.get("ts").unwrap(), "17:05:26");
     }
+
     #[test]
     fn test_action_on_regexp() {
         // create a temporary file to delete at the end of the test
@@ -184,6 +185,7 @@ mod tests {
         file.read_to_string(&mut contents).unwrap();
         assert_eq!(contents, "you said HELLO MOTO\n");
     }
+
     #[test]
     fn test_read_from_file() {
         let mut file: tempfile::NamedTempFile = tempfile::NamedTempFile::new().unwrap();
@@ -199,11 +201,7 @@ mod tests {
             ..Config::default()
         };
         let writeto = &mut Vec::new();
-        crate::parse::read_a_file(
-            &config,
-            file_path.to_str().unwrap(),
-            writeto
-        );
+        crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto);
         file.close().unwrap();
         assert_eq!(
             "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",

@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{self, BufRead};
@@ -14,6 +13,7 @@ use yansi::{Color, Paint, Style};
 
 use crate::config;
 use crate::config::Config;
+
 const KAIL_RE: &str = r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)";
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -120,20 +120,20 @@ fn custom_json_match(
     let mut dico = HashMap::new();
     if let Ok(p) = serde_json::from_str::<Value>(line) {
         for (key, value) in &config.json_keys {
-            if p.pointer(key).is_some() {
+            if p.pointer(value).is_some() {
                 // if value  equal ts or timestamp or date then parse as timestamp
-                if value == "ts" || value == "timestamp" || value == "date" {
+                if key == "ts" || key == "timestamp" || key == "date" {
                     // make a serde json Value
-                    let v = p.pointer(key).unwrap();
+                    let v = p.pointer(value).unwrap();
                     let ts = crate::utils::convert_ts_float_or_str(v, time_format);
-                    dico.insert(value.to_string(), ts);
+                    dico.insert(key.to_string(), ts);
                 } else {
-                    let mut v = p.pointer(key).unwrap().to_string();
+                    let mut v = p.pointer(value).unwrap().to_string();
                     if v.contains('"') {
                         v = v.replace('"', "");
                     }
 
-                    dico.insert(value.to_string(), v);
+                    dico.insert(key.to_string(), v);
                 }
             }
         }

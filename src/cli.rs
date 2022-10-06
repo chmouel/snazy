@@ -4,7 +4,7 @@ use clap::{Command, CommandFactory, Parser};
 use clap_complete::{generate, Generator, Shell};
 use std::collections::HashMap;
 use std::{env, io};
-use yansi::Color;
+use yansi::{Color, Paint};
 
 /// Snazzy is a snazy log viewer
 #[derive(Parser, Debug)]
@@ -39,7 +39,7 @@ struct Args {
     #[arg(short = 'f', long, verbatim_doc_comment)]
     /// Filter by log level
     ///
-    /// Filter the json logs by log levels. You can have multiple log levels.
+    /// Filter the json logs by log level. You can have multiple log levels.
     pub filter_levels: Vec<LogLevel>,
 
     #[clap(
@@ -164,8 +164,16 @@ pub fn build_cli_config() -> Config {
         std::process::exit(0)
     }
 
+    if !args.json_keys.is_empty() && args.json_keys.len() != 3 {
+        eprintln!("you should have multiple json-keys containning a match for the keys 'level', 'msg' and 'ts'");
+        std::process::exit(1);
+    }
+
     let regexp_colours = regexp_colorize(&args.regexp);
     let colouring = colouring(args.color);
+    if !colouring {
+        Paint::disable();
+    }
     let json_keys = make_json_keys(&args.json_keys);
 
     Config {

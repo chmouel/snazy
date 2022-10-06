@@ -9,12 +9,15 @@ pub enum LogLevel {
     Debug,
     Warning,
     Error,
+    Fatal,
 }
+
 pub fn level_from_str(level: &str) -> &'static LogLevel {
     match level {
         "debug" => &LogLevel::Debug,
-        "warning" => &LogLevel::Warning,
-        "error" => &LogLevel::Error,
+        "warn" | "warning" => &LogLevel::Warning,
+        "err" | "error" => &LogLevel::Error,
+        "fatal" => &LogLevel::Fatal,
         _ => &LogLevel::Info,
     }
 }
