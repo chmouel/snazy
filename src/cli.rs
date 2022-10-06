@@ -1,152 +1,193 @@
-use clap::{crate_version, Arg, ColorChoice, Command};
+use crate::config::{ColorWhen, Config, LogLevel};
+use atty::Stream;
+use clap::{Command, CommandFactory, Parser};
+use clap_complete::{generate, Generator, Shell};
+use std::collections::HashMap;
+use std::{env, io};
+use yansi::{Color, Paint};
 
-pub fn build() -> Command<'static> {
-    let clap_color_choice = if std::env::var_os("NO_COLOR").is_none() {
-        ColorChoice::Auto
-    } else {
-        ColorChoice::Never
-    };
+/// Snazzy is a snazy log viewer
+#[derive(Parser, Debug)]
+#[command(
+    author,
+    version,
+    about,
+    after_help = "Snazzy let you watch logs. \
+It tries to be smart with Json logs by showing the levels, \n\
+the message and the date in a nice and visual way.\n\
+There is many more options to filter or highlight part of the logs or even launch some \n\
+actions when a match is found. \n\n\
+Try to stream some logs or specify a log file and let snazy, snazzy them!"
+)]
+struct Args {
+    #[arg(short = 'r', long, verbatim_doc_comment)]
+    /// regexp highlight
+    ///
+    /// Highlight a pattern in a message with a regexp
+    pub regexp: Vec<String>,
 
-    Command::new("snazy")
-        .version(crate_version!())
-        .color(clap_color_choice)
-        .after_help(
-            "You just need to pipe to snazy some logs formatted as json to humm (sorry) snazzy them 💄,eg:\n\
-            kubectl logs -f controller-pod|snazy\n\
-            Note: `snazy -h` prints a short and concise overview while `snazy --help` gives all details.",
-        )
-        .arg(
-            Arg::new("regexp")
-                .long("regexp")
-                .short('r')
-                .help("highlight word in a message with a regexp")
-                .takes_value(true)
-                .min_values(1)
-                .multiple_occurrences(true)
-                .long_help(
-                    "Specify one or multiple regexps to highligh in message.\n\
-                    each regexp match will be colored with a different color"
-                ),
-        )
-        .arg(
-            Arg::new("skip-line-regexp")
-                .long("skip-line-regexp")
-                .short('S')
-                .help("skip line in a message if matching a regexp")
-                .takes_value(true)
-                .min_values(1)
-                .multiple_occurrences(true)
-                .long_help(
-                    "Specify a regexp to match a line in a message.\n\
-                        if matching a line, the line will be skipped"),
-        )
-        .arg(
-            Arg::new("filter-level")
-            .help("filter by levels")
-            .long_help("You can have multiple -f if you need to filter by multiple levels")
-            .takes_value(true)
-            .min_values(1)
-            .multiple_occurrences(true)
-            .short('f')
-            .possible_values(&["info", "debug", "warning", "error", "info"])
-            .long("filter-level"),
-        )
-        .arg(
-            Arg::new("time_format")
-                .long("time-format")
-                .help("Time format")
-                .default_value("%H:%M:%S")
-                .takes_value(true)
-                .long_help(
-                    "Specify a timeformat as documented in the strftime(3) manpage.\n\
-                     You can set the environement variable `SNAZY_TIME_FORMAT` to have it set permanently."
-                ),
-        )
-        .arg(
-            Arg::new("kail-prefix-format")
-                .long("kail-prefix-format")
-                .help("Kail prefix format")
-                .default_value("{namespace}/{pod}[{container}]")
-                .takes_value(true)
-                .long_help(
-                    "Set the format on how to print the kail prefix.\n\
-                     The {namespace}, {pod} and {container} tags will be replaced by their values \n\
-                     You can set the enviroment variable `SNAZY_KAIL_PREFIX_FORMAT` to have it set permanently."
-                ),
-        )
-        .arg(
-            Arg::new("kail-no-prefix")
-                .long("kail-no-prefix")
-                .help("Hide container prefix when showing the log with kail"),
-        )
-        .arg(
-            Arg::new("level-symbols")
-                .long("level-symbols")
-                .short('l')
-                .long_help("This will replace the level with a pretty emoji instead of the label.\n\
-                You can set the enviroment variable `SNAZY_LEVEL_SYMBOLS` to always have it.\n")
-                .help("Replace log level with pretty symbols")
-        )
-        .arg(
-            Arg::new("json-keys")
-                .long("json-keys")
-                .short('k')
-                .help("key to use for json parsing")
-                .takes_value(true)
-                .multiple_occurrences(true)
-                .long_help(
-                    "Specify multiple keys for json parsing.\n\
-                    keys needed are: msg (message), level (logging level), ts (timestamp).\n\
-                    all keys are needed to be present, eg: \n\n\
-                    `snazy -k msg=message -k level=level -k ts=ts`\n \n\
-                    will parse the json and use the message, level and timestamp keys\n\
-                    from the (`message`, `level`, `ts`) json keys."
-                ),
-        )
-        .arg(
-            Arg::new("action-regexp")
-                .long("action-regexp")
-                .help("A regexp to match for action")
-                .takes_value(true)
-                .multiple_occurrences(true)
-                .long_help("The regexp to match for action")
-        )
-        .arg(
-            Arg::new("action-command")
-                .long("action-command")
-                .help("An action command to launch when action-regexp match")
-                .takes_value(true)
-                .multiple_occurrences(true)
-                .long_help("The comment to run after matching an action-regexp.\n\
-                            The string {} will be expanded to the match.\n\
-                            The command will be run with a `sh -c` ")
-        )
-        .arg(
-            Arg::new("files")
-                .multiple_occurrences(true)
-                .help("files to read, if not specified, stdin is used")
-                .takes_value(true)
-                .long_help(
-                    "Specify one or multiple files to read.\n\
-                    If no files are specified, stdin is used.\n\
-                    If no files are specified and stdin is not a tty, stdin is used.\n\
-                    If no files are specified and stdin is a tty, stdin is used."
-                )
-        )
-        .arg(
-            Arg::new("color")
-                .long("color")
-                .short('c')
-                .takes_value(true)
-                .value_name("when")
-                .possible_values(&["never", "auto", "always"])
-                .hide_possible_values(true)
-                .help("When to use colors: never, *auto*, always")
-                .long_help(
-                    "Declare when to use color for the pattern match output:\n  \
-                       'auto':      show colors if the output goes to an interactive console (default)\n  \
-                       'never':     do not use colorized output\n  \
-                       'always':    always use colorized output",
-                ),
-        )
+    #[arg(short = 'S', long)]
+    /// Skip a line matching a Regexp.
+    ///
+    /// Any lines matching the regexp, will be skipped to be printed.
+    pub skip_line_regexp: Vec<String>,
+
+    /// If provided, outputs the completion file for given shell
+    #[arg(long, value_enum)]
+    shell_completion: Option<Shell>,
+
+    #[arg(short = 'f', long, verbatim_doc_comment)]
+    /// Filter by log level
+    ///
+    /// Filter the json logs by log level. You can have multiple log levels.
+    pub filter_levels: Vec<LogLevel>,
+
+    #[clap(
+        long,
+        short = 'c',
+        value_enum,
+        default_value_t = ColorWhen::Auto,
+        value_name = "when",
+        hide_possible_values = true,
+        verbatim_doc_comment
+    )]
+    /// When to use colors
+    ///
+    /// 'auto':      show colors if the output goes to an interactive console (default)
+    /// 'never':     do not use colorized output
+    /// 'always':    always use colorized output
+    pub color: ColorWhen,
+
+    #[arg(long, default_value = "%H:%M:%S", env = "SNAZY_TIME_FORMAT")]
+    /// Filter by log level
+    ///
+    /// A timeformat as documented by the strftime(3) manpage.
+    pub time_format: String,
+
+    #[arg(
+        long,
+        verbatim_doc_comment,
+        default_value = "{namespace}/{pod}[{container}]",
+        env = "SNAZY_KAIL_PREFIX_FORMAT"
+    )]
+    /// Set the format on how to print the kail prefix.
+    ///
+    /// The {namespace}, {pod} and {container} tags will be replaced by their
+    /// values."
+    pub kail_prefix_format: String,
+
+    #[arg(long, action(clap::ArgAction::SetTrue))]
+    /// Hide container prefix when showing the log with kail
+    pub kail_no_prefix: bool,
+
+    /// Pretty emojis instead of boring text level
+    #[arg(long, action(clap::ArgAction::SetTrue), env = "SNAZY_LEVEL_SYMBOLS")]
+    pub level_symbols: bool,
+
+    #[arg(short = 'k', long, verbatim_doc_comment)]
+    /// Keys / Values for JSON Parsing
+    ///
+    /// The keys needed to be passed are: msg (message), level (logging level),
+    /// ts (timestamp).
+    ///
+    /// For example:
+    ///
+    /// `snazy -k msg=message -k level=level -k ts=ts`
+    ///
+    /// will parse the JSON log file and use the (`message`, `level`, `ts`) keys
+    /// from the json as (`msg`), (`level`) and (`ts`) for snazy.
+    pub json_keys: Vec<String>,
+
+    #[arg(long, verbatim_doc_comment)]
+    ///  A regexp to match an action on.
+    ///
+    ///  You can have an action matching a Regexp.
+    ///  A good example is when  you have to have a notification on your desktop
+    ///  when there is a match in a log.
+    pub action_regexp: Option<String>,
+
+    #[arg(long, verbatim_doc_comment)]
+    ///  The command to run when a regexp match the --action-match
+    pub action_command: Option<String>,
+
+    files: Option<Vec<String>>,
+}
+
+fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
+    let mut regexp_colours = HashMap::new();
+    let colours = vec![
+        Color::Cyan,
+        Color::Yellow,
+        Color::Red,
+        Color::Magenta,
+        Color::Blue,
+    ];
+    for (i, regexp) in regexps.iter().enumerate() {
+        regexp_colours.insert((*regexp).to_string(), colours[i % colours.len()]);
+    }
+    regexp_colours
+}
+
+fn colouring(color: ColorWhen) -> bool {
+    let interactive_terminal = atty::is(Stream::Stdout);
+    match color {
+        ColorWhen::Always => true,
+        ColorWhen::Never => false,
+        ColorWhen::Auto => env::var_os("NO_COLOR").is_none() && interactive_terminal,
+    }
+}
+
+/// Return a `HashMap` of a vector of splited by = string
+fn make_json_keys(json_keys: &[String]) -> HashMap<String, String> {
+    let ret: HashMap<String, String> = json_keys
+        .iter()
+        .map(|s| {
+            let mut parts = s.splitn(2, '=');
+            let key = parts.next().unwrap().to_string();
+            let value = parts.next().unwrap().to_string();
+            (key, value)
+        })
+        .collect();
+    ret
+}
+
+fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout());
+}
+
+pub fn build_cli_config() -> Config {
+    let args = Args::parse();
+
+    if let Some(generator) = args.shell_completion {
+        let mut cmd = Args::command();
+        print_completions(generator, &mut cmd);
+        std::process::exit(0)
+    }
+
+    if !args.json_keys.is_empty() && args.json_keys.len() != 3 {
+        eprintln!("you should have multiple json-keys containning a match for the keys 'level', 'msg' and 'ts'");
+        std::process::exit(1);
+    }
+
+    let regexp_colours = regexp_colorize(&args.regexp);
+    let colouring = colouring(args.color);
+    if !colouring {
+        Paint::disable();
+    }
+    let json_keys = make_json_keys(&args.json_keys);
+
+    Config {
+        level_symbols: args.level_symbols,
+        kail_prefix_format: args.kail_prefix_format,
+        kail_no_prefix: args.kail_no_prefix,
+        time_format: args.time_format,
+        skip_line_regexp: args.skip_line_regexp,
+        filter_levels: args.filter_levels,
+        action_command: args.action_command,
+        action_regexp: args.action_regexp,
+        files: args.files,
+        regexp_colours,
+        colouring,
+        json_keys,
+    }
 }

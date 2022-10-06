@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::BufReader;
+use std::io::{self, BufRead};
 use std::process::Command;
 use std::sync::Arc;
 
@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use yansi::{Color, Paint, Style};
 
+use crate::config;
 use crate::config::Config;
 
 const KAIL_RE: &str = r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)";
@@ -119,20 +120,20 @@ fn custom_json_match(
     let mut dico = HashMap::new();
     if let Ok(p) = serde_json::from_str::<Value>(line) {
         for (key, value) in &config.json_keys {
-            if p.pointer(key).is_some() {
+            if p.pointer(value).is_some() {
                 // if value  equal ts or timestamp or date then parse as timestamp
-                if value == "ts" || value == "timestamp" || value == "date" {
+                if key == "ts" || key == "timestamp" || key == "date" {
                     // make a serde json Value
-                    let v = p.pointer(key).unwrap();
+                    let v = p.pointer(value).unwrap();
                     let ts = crate::utils::convert_ts_float_or_str(v, time_format);
-                    dico.insert(value.to_string(), ts);
+                    dico.insert(key.to_string(), ts);
                 } else {
-                    let mut v = p.pointer(key).unwrap().to_string();
+                    let mut v = p.pointer(value).unwrap().to_string();
                     if v.contains('"') {
                         v = v.replace('"', "");
                     }
 
-                    dico.insert(value.to_string(), v);
+                    dico.insert(key.to_string(), v);
                 }
             }
         }
@@ -144,25 +145,22 @@ fn custom_json_match(
 }
 
 pub fn action_on_regexp(config: &Config, line: &str) {
-    if config.action_regexp.is_empty() || config.action_command.is_empty() {
-        return;
-    }
-    let action_regexp = Regex::new(config.action_regexp.as_str()).unwrap();
-    if let Some(reg) = action_regexp.captures(line) {
+    let reg = Regex::new(config.action_regexp.as_ref().unwrap()).unwrap();
+    if let Some(reg) = reg.captures(line) {
         let regexpmatch = reg.get(0).unwrap().as_str();
         // replace {} by the actual match
-        let action_command = config.action_command.replace("{}", regexpmatch);
+        let action_command = config
+            .action_command
+            .as_ref()
+            .unwrap()
+            .replace("{}", regexpmatch);
         if Command::new("sh")
             .arg("-c")
             .arg(action_command)
             .spawn()
             .is_ok()
         {
-            println!(
-                "Spawned command: {} for action: {}",
-                Paint::yellow(&config.action_command),
-                Paint::cyan(action_regexp)
-            );
+            println!("Spawned command: for action: {}", Paint::cyan(regexpmatch));
         }
     }
 }
@@ -173,7 +171,9 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         return None;
     }
 
-    action_on_regexp(config, line);
+    if config.action_regexp.is_some() {
+        action_on_regexp(config, line);
+    }
 
     let msg = extract_info(line, config);
     let unwrapped = serde_json::to_string(&msg).unwrap();
@@ -189,6 +189,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     if config
         .skip_line_regexp
         .iter()
+        .map(|s| Regex::new(s).unwrap())
         .filter(|r| r.is_match(msg["msg"].as_str()))
         .count()
         > 0
@@ -196,8 +197,10 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         return None;
     }
 
-    if !config.filter_level.is_empty()
-        && !config.filter_level.contains(&msg["level"].to_lowercase())
+    if !config.filter_levels.is_empty()
+        && !config
+            .filter_levels
+            .contains(config::level_from_str(&msg["level"].to_lowercase()))
     {
         return None;
     }
@@ -254,20 +257,9 @@ pub fn read_from_stdin(config: &Arc<Config>) {
     }
 }
 
-// read from a bunch files and pass read_from_stdin to stdout
-pub fn read_from_files(config: &Arc<Config>) {
-    for filename in &config.files {
-        // write to a BufWriter that output to stdout
-        let stdout = io::stdout();
-        let stdout = stdout.lock();
-        let mut stdout = io::BufWriter::new(stdout);
-        read_from_file(config, filename, &mut stdout);
-    }
-}
-
 // read from file and output to the writer. This makes it easy to unittest
-pub fn read_from_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
-    let file = File::open(filename).map_err(|e| {
+pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
+    let file = File::open(&filename).map_err(|e| {
         eprintln!("file {}, {}", filename, e);
         std::process::exit(1);
     });
@@ -283,5 +275,16 @@ pub fn read_from_file(config: &Config, filename: &str, writeto: &mut dyn io::Wri
             )
             .unwrap();
         }
+    }
+}
+
+// read from a bunch files and pass read_from_stdin to stdout
+pub fn read_from_files(config: &Arc<Config>) {
+    for filename in config.files.as_ref().unwrap() {
+        // write to a BufWriter that output to stdout
+        let stdout = io::stdout();
+        let stdout = stdout.lock();
+        let mut stdout = io::BufWriter::new(stdout);
+        read_a_file(config, filename, &mut stdout);
     }
 }

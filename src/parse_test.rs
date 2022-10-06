@@ -7,8 +7,8 @@ mod tests {
     use regex::Regex;
     use yansi::Color;
 
-    use crate::config::{self, Config};
-    use crate::parse::{action_on_regexp, do_line, extract_info, read_from_file};
+    use crate::config::Config;
+    use crate::parse::{action_on_regexp, do_line, extract_info};
 
     #[test]
     fn test_get_line() {
@@ -16,7 +16,7 @@ mod tests {
         let msg = extract_info(
             line,
             &Config {
-                ..config::Config::default()
+                ..Config::default()
             },
         );
         assert_eq!(msg["msg"], "hello moto");
@@ -29,7 +29,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: false,
-                ..config::Config::default()
+                ..Config::default()
             },
         );
         assert!(msg["msg"].contains("ns/pod[container]"));
@@ -44,7 +44,7 @@ mod tests {
             &Config {
                 kail_no_prefix: false,
                 kail_prefix_format: String::from("{container}\n"),
-                ..config::Config::default()
+                ..Config::default()
             },
         );
         assert!(msg["msg"].contains("container\n"));
@@ -55,8 +55,8 @@ mod tests {
         let line = r#"{"level":"INFO","msg":"yolo"}"#;
         let msg = do_line(
             &Config {
-                skip_line_regexp: vec![Regex::new("yolo").unwrap()],
-                ..config::Config::default()
+                skip_line_regexp: vec![String::from("yolo")],
+                ..Config::default()
             },
             line,
         );
@@ -70,7 +70,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: true,
-                ..config::Config::default()
+                ..Config::default()
             },
         );
         assert_eq!(msg["msg"], "updated");
@@ -83,7 +83,7 @@ mod tests {
             line,
             &Config {
                 kail_no_prefix: false,
-                ..config::Config::default()
+                ..Config::default()
             },
         );
         assert!(msg.contains_key("others"));
@@ -112,12 +112,12 @@ mod tests {
     #[test]
     fn test_config_json_keys() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/foo"), String::from("msg"));
-        keys.insert(String::from("/bar"), String::from("level"));
+        keys.insert(String::from("msg"), String::from("/foo"));
+        keys.insert(String::from("level"), String::from("/bar"));
 
         let config = Config {
             json_keys: keys,
-            ..config::Config::default()
+            ..Config::default()
         };
         let line = r#"{"foo": "Bar", "bar": "info"}"#;
         let info = extract_info(line, &config);
@@ -128,11 +128,11 @@ mod tests {
     #[test]
     fn test_config_json_timestamp_float() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/bar"), String::from("ts"));
+        keys.insert(String::from("ts"), String::from("/bar"));
 
         let config = Config {
             json_keys: keys,
-            ..config::Config::default()
+            ..Config::default()
         };
         let line = r#"{"bar": 1650602040.6289625}"#;
         let info = extract_info(line, &config);
@@ -142,13 +142,13 @@ mod tests {
     #[test]
     fn test_custom_json_match() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("/bar"), String::from("ts"));
-        keys.insert(String::from("/foo"), String::from("msg"));
-        keys.insert(String::from("/level"), String::from("level"));
+        keys.insert(String::from("ts"), String::from("/bar"));
+        keys.insert(String::from("msg"), String::from("/foo"));
+        keys.insert(String::from("level"), String::from("/level"));
 
         let config = Config {
             json_keys: keys,
-            ..config::Config::default()
+            ..Config::default()
         };
         let line =
             r#"{"bar": "2022-04-22T04:34:00.628550164Z", "foo": "hello", "level": "lelevel"}"#;
@@ -161,6 +161,7 @@ mod tests {
         let info = extract_info(line, &config);
         assert_eq!(info.get("ts").unwrap(), "17:05:26");
     }
+
     #[test]
     fn test_action_on_regexp() {
         // create a temporary file to delete at the end of the test
@@ -169,9 +170,11 @@ mod tests {
         file.close().unwrap();
 
         let config = Config {
-            action_regexp: String::from(r"HELLO\s\w+"),
-            action_command: String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap(),
-            ..config::Config::default()
+            action_regexp: Some(String::from(r"HELLO\s\w+")),
+            action_command: Some(
+                String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap(),
+            ),
+            ..Config::default()
         };
         let line = r#"un HELLO MOTO nono el petiot roboto"#;
         action_on_regexp(&config, line);
@@ -182,6 +185,7 @@ mod tests {
         file.read_to_string(&mut contents).unwrap();
         assert_eq!(contents, "you said HELLO MOTO\n");
     }
+
     #[test]
     fn test_read_from_file() {
         let mut file: tempfile::NamedTempFile = tempfile::NamedTempFile::new().unwrap();
@@ -192,12 +196,12 @@ mod tests {
         Write::write_all(&mut file, line.as_bytes()).unwrap();
 
         let config = Config {
-            files: vec![file_path.to_str().unwrap().to_string()],
-            colored_output: false,
-            ..config::Config::default()
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            colouring: false,
+            ..Config::default()
         };
         let writeto = &mut Vec::new();
-        read_from_file(&config, file_path.to_str().unwrap(), writeto);
+        crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto);
         file.close().unwrap();
         assert_eq!(
             "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
