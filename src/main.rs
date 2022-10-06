@@ -19,6 +19,6 @@ fn main() {
     if config.files.is_some() {
         parse::read_from_files(&Arc::new(config));
     } else {
-        parse::read_from_stdin(&Arc::new(config))
+        parse::read_from_stdin(&Arc::new(config));
     }
 }

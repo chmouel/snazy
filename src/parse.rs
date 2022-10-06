@@ -145,7 +145,7 @@ fn custom_json_match(
 }
 
 pub fn action_on_regexp(config: &Config, line: &str) {
-    let reg = Regex::new(&config.action_regexp.as_ref().unwrap()).unwrap();
+    let reg = Regex::new(config.action_regexp.as_ref().unwrap()).unwrap();
     if let Some(reg) = reg.captures(line) {
         let regexpmatch = reg.get(0).unwrap().as_str();
         // replace {} by the actual match
@@ -189,7 +189,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     if config
         .skip_line_regexp
         .iter()
-        .map(|s| regex::Regex::new(s).unwrap())
+        .map(|s| Regex::new(s).unwrap())
         .filter(|r| r.is_match(msg["msg"].as_str()))
         .count()
         > 0
@@ -258,7 +258,7 @@ pub fn read_from_stdin(config: &Arc<Config>) {
 }
 
 // read from file and output to the writer. This makes it easy to unittest
-pub fn read_a_file(config: &Config, filename: String, writeto: &mut dyn io::Write) {
+pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
     let file = File::open(&filename).map_err(|e| {
         eprintln!("file {}, {}", filename, e);
         std::process::exit(1);
@@ -285,6 +285,6 @@ pub fn read_from_files(config: &Arc<Config>) {
         let stdout = io::stdout();
         let stdout = stdout.lock();
         let mut stdout = io::BufWriter::new(stdout);
-        read_a_file(config, filename.to_string(), &mut stdout);
+        read_a_file(config, filename, &mut stdout);
     }
 }

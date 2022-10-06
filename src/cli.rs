@@ -113,7 +113,7 @@ struct Args {
     files: Option<Vec<String>>,
 }
 
-fn regexp_colorize(regexps: Vec<String>) -> HashMap<String, Color> {
+fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
     let mut regexp_colours = HashMap::new();
     let colours = vec![
         Color::Cyan,
@@ -137,15 +137,15 @@ fn colouring(color: ColorWhen) -> bool {
     }
 }
 
-/// Return a HashMap of a vector of splited by = string
-fn make_json_keys(json_keys: Vec<String>) -> HashMap<String, String> {
+/// Return a `HashMap` of a vector of splited by = string
+fn make_json_keys(json_keys: &[String]) -> HashMap<String, String> {
     let ret: HashMap<String, String> = json_keys
         .iter()
         .map(|s| {
             let mut parts = s.splitn(2, '=');
             let key = parts.next().unwrap().to_string();
             let value = parts.next().unwrap().to_string();
-            (String::from(key), String::from(value))
+            (key, value)
         })
         .collect();
     ret
@@ -164,9 +164,9 @@ pub fn build_cli_config() -> Config {
         std::process::exit(0)
     }
 
-    let regexp_colours = regexp_colorize(args.regexp);
+    let regexp_colours = regexp_colorize(&args.regexp);
     let colouring = colouring(args.color);
-    let json_keys = make_json_keys(args.json_keys);
+    let json_keys = make_json_keys(&args.json_keys);
 
     Config {
         level_symbols: args.level_symbols,
