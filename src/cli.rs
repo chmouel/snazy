@@ -116,10 +116,10 @@ struct Args {
 fn regexp_colorize(regexps: Vec<String>) -> HashMap<String, Color> {
     let mut regexp_colours = HashMap::new();
     let colours = vec![
-        Color::Yellow,
-        Color::Magenta,
         Color::Cyan,
+        Color::Yellow,
         Color::Red,
+        Color::Magenta,
         Color::Blue,
     ];
     for (i, regexp) in regexps.iter().enumerate() {
@@ -137,7 +137,7 @@ fn colouring(color: ColorWhen) -> bool {
     }
 }
 
-/// Return a HashMap of a vector of String
+/// Return a HashMap of a vector of splited by = string
 fn make_json_keys(json_keys: Vec<String>) -> HashMap<String, String> {
     let ret: HashMap<String, String> = json_keys
         .iter()
