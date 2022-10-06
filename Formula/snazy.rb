@@ -5,32 +5,44 @@
 class Snazy < Formula
   desc "snazy - a snazzy json log viewer"
   homepage "https://github.com/chmouel/snazy"
-  version "0.10.1"
+  version "0.50.0"
 
   on_macos do
-    url "https://github.com/chmouel/snazy/releases/download/0.10.1/snazy_0.10.1_macOS_all.tar.gz"
-    sha256 "1234e27a27f968e1505c7f8c3fd63ceb26603beff0f7fb9efb8ceef204aeccae"
+    url "https://github.com/chmouel/snazy/releases/download/0.50.0/snazy_0.50.0_macOS_all.tar.gz"
+    sha256 "7ea41d9b02d9eeeed4b9f8d183622ec24403506e045f05752943ec421cbfd4b8"
 
     def install
       bin.install "snazy" => "snazy"
       prefix.install_metafiles
-      bash_completion.install "completions/snazy.bash"
-      fish_completion.install "completions/snazy.fish"
-      zsh_completion.install "completions/_snazy"
+
+      output = Utils.popen_read("SHELL=bash #{bin}/snazy --shell-completion bash")
+      (bash_completion/"snazy").write output
+
+      output = Utils.popen_read("SHELL=zsh #{bin}/snazy --shell-completion zsh")
+      (zsh_completion/"_snazy").write output
+
+      output = Utils.popen_read("SHELL=fish #{bin}/snazy --shell-completion fish")
+      (fish_completion/"snazy.fish").write output
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/chmouel/snazy/releases/download/0.10.1/snazy_0.10.1_linux_amd64.tar.gz"
-      sha256 "3502d0f24ca79124a18499d2818c7ccb2ba98b2e0d6175d99d414798bb7369b7"
+      url "https://github.com/chmouel/snazy/releases/download/0.50.0/snazy_0.50.0_linux_amd64.tar.gz"
+      sha256 "dc3fc9d2271cf2b44ff50a86cf6827de5f8dc6c0cf25c4c7219cb0e56c963760"
 
       def install
         bin.install "snazy" => "snazy"
         prefix.install_metafiles
-        bash_completion.install "completions/snazy.bash"
-        fish_completion.install "completions/snazy.fish"
-        zsh_completion.install "completions/_snazy"
+
+        output = Utils.popen_read("SHELL=bash #{bin}/snazy --shell-completion bash")
+        (bash_completion/"snazy").write output
+
+        output = Utils.popen_read("SHELL=zsh #{bin}/snazy --shell-completion zsh")
+        (zsh_completion/"_snazy").write output
+
+        output = Utils.popen_read("SHELL=fish #{bin}/snazy --shell-completion fish")
+        (fish_completion/"snazy.fish").write output
       end
     end
   end
