@@ -72,7 +72,7 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
 
 ## Build from [source](https://github.com/chmouel/snazy)
 
-Snazy is build with rust, if you want to compile it directly you just need to
+Snazy is built with rust, if you want to compile it directly you just need to
 grab the source and run `cargo build`.
 
 ## Usage
@@ -117,7 +117,7 @@ for input and snazzily print your logs from the stream (one line at a time).
   to do some regexp highlighting and action on pattern.
 
 * If you want to only show some specific levels, you can add the flag
-  `-f`/`--filter-level` to filter by level or many `-f` for many levels, for
+  `-f`/`--filter-levels` to filter by level or many `-f` for many levels, for
   example, this only show warning and error from the log:
 
 ```shell
@@ -176,7 +176,7 @@ This will give you a  prompt with [`fzf`](https://github.com/junegunn/fzf) where
 
 ## Shell completions
 
-Shell completions are available for most shells in the [misc/completions](./misc/completions) and it will be automatically installed with the aur/brew package.
+Shell completions are available for most shells using the command `--shell-completion` for example `--shell-completion=zsh`. Many different shell are supported. I let the reader figure out how to use them with their respective shells. Brew and RPM packges should have them auto configured for bash/fish/zsh.
 
 ## FAQ
 
