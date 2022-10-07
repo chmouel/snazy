@@ -1,6 +1,6 @@
 use crate::config::{ColorWhen, Config, LogLevel};
 use atty::Stream;
-use clap::{Command, CommandFactory, Parser};
+use clap::{Command, CommandFactory, Parser, ValueHint};
 use clap_complete::{generate, Generator, Shell};
 use std::collections::HashMap;
 use std::{env, io};
@@ -110,6 +110,7 @@ struct Args {
     ///  The command to run when a regexp match the --action-match
     pub action_command: Option<String>,
 
+    #[arg(value_hint = ValueHint::FilePath)]
     files: Option<Vec<String>>,
 }
 
