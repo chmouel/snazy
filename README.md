@@ -184,11 +184,7 @@ Shell completions are available for most shells using the command `--shell-compl
   ([sugarjazy](https://github.com/chmouel/sugarjazy)) but I wanted to experiment with Rust, so I called this one
   [snazy](https://www.urbandictionary.com/define.php?term=snazy).
 * You missed a z to snazzy. True that. But snazy is easier to google than snazzy :p
-* Why rust? Good question, it seems the kids like it, but I still don't get it,
-  probably because I have the feeling my code is really not very hummm "rusty".
-  But like everything in life, you need to practice at some point to get better..
-* I have seen some of this code already 🤨, yep being a noob I much digged
-  into the source code of (the super-duper great)
+* Why rust? Good question, I guess i'll go by why not? it's kinda nice to program high level cli with low level language easily.
   [sharkdp/fd](https://github.com/sharkdp/fd)
 
 ## Copyright
