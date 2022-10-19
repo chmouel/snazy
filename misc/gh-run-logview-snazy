@@ -30,4 +30,7 @@ chosen=$(env GH_FORCE_TTY=80% CLICOLOR_FORCE=1 gh run list --limit 10|fzf --ansi
 
 runnumber=$(echo $chosen|awk '{print $(NF-2)}')
 
-gh run view ${flags[@]} ${runnumber} | sed --regexp-extended 's/.*[ ]*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{7}Z//' | tee /tmp/output|snazy --color=always -r "RUN:\s*\w+" -r "PASS:\s*\w+" -r "FAIL(:\s+\w+)?" -r "CONT\s*\w+" | bat -f
+gh run view ${flags[@]} ${runnumber} | \
+    sed --regexp-extended 's/.*[ ]*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{7}Z//' | \
+    snazy --color=always -r "RUN:\s*\w+" -r "PASS:\s*\w+" -r "FAIL(:\s+\w+)?" -r "CONT\s*\w+" | \
+    bat -f
