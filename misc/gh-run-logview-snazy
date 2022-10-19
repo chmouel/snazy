@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Copyright 2022 Chmouel Boudjnah <chmouel@chmouel.com>
+#
+# Ask for a Github actions run on the current repo with fzf, remove the extra
+# prefix suff gh add and pipe it to snazy with some pattern to highlight and bat
+# for pager.
+#
+# you can add a -a to get the whole logs not just the failed
+#
+# tools: gh, fzf, gnu sed, snazy, bat
+#
+set -euxfo pipefail
+flags=(--log-failed)
+while getopts "a" o; do
+    case "${o}" in
+        a)
+            flags=(--log)
+            ;;
+        *)
+            echo "Invalid option"; exit 1;
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+
+chosen=$(env GH_FORCE_TTY=80% CLICOLOR_FORCE=1 gh run list --limit 10|fzf --ansi --header-lines=1 --reverse)
+
+[[ -z ${chosen} ]] && { echo "no run is no news is good news"; exit 1 ;}
+
+runnumber=$(echo $chosen|awk '{print $(NF-2)}')
+
+gh run view ${flags[@]} ${runnumber} | sed --regexp-extended 's/.*[ ]*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{7}Z//' | tee /tmp/output|snazy --color=always -r "RUN:\s*\w+" -r "PASS:\s*\w+" -r "FAIL(:\s+\w+)?" -r "CONT\s*\w+" | bat -f
