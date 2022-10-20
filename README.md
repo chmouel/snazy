@@ -185,7 +185,7 @@ You will need to setup the [gh cli](https://github.com/cli/cli) and install
 
 Here is a video demoing it :
 
-![gh-run-logview-snazy](./.github/gh-actions-with-snazy.mp4)
+https://user-images.githubusercontent.com/98980/196889578-ab92d14b-72b1-4fdb-8276-bb9ebe4db544.mp4
 
 ## Shell completions
 
