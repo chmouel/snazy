@@ -133,9 +133,9 @@ variable `SNAZY_TIME_FORMAT`), the variable respect the UNIX
 [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
 strings.
 
-* If you want to skip showing some lines you can specify the flag 
+* If you want to skip showing some lines you can specify the flag
   `-S/--skip-line-regexp`. When it matches the word or regexp in
-  this value it will simply skipping printing the line. You can have multiple flags 
+  this value it will simply skipping printing the line. You can have multiple flags
   if you want to skip multiple lines.
 
 * You can do your own field matching with the `-k/--json-keys` flag, you need to pass the fields `msg`, `level` and `ts`.
@@ -173,6 +173,19 @@ kail --since=1h | snazy | fzf +s --ansi
 ```
 
 This will give you a  prompt with [`fzf`](https://github.com/junegunn/fzf) where you can type the query you want.
+
+## Show GH Action Runs logs with snazy
+
+An handy script located [here](./misc/gh-run-logview-snazy) let you show the log
+of a Github action runs through snazy and the
+[`bat`](https://github.com/sharkdp/bat) pager.
+
+You will need to setup the [gh cli](https://github.com/cli/cli) and install
+[fzf](https://github.com/junegunn/fzf) to make it works.
+
+Here is a video demoing it :
+
+![gh-run-logview-snazy](./.github/gh-actions-with-snazy.mp4)
 
 ## Shell completions
 
