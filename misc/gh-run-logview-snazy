@@ -9,12 +9,16 @@
 #
 # tools: gh, fzf, gnu sed, snazy, bat
 #
-set -euxfo pipefail
+LIMIT=10
+set -eufo pipefail
 flags=(--log-failed)
-while getopts "a" o; do
+while getopts "al:" o; do
     case "${o}" in
         a)
             flags=(--log)
+            ;;
+        l)
+            LIMIT=${OPTARG}
             ;;
         *)
             echo "Invalid option"; exit 1;
@@ -24,7 +28,7 @@ done
 shift $((OPTIND-1))
 
 
-chosen=$(env GH_FORCE_TTY=80% CLICOLOR_FORCE=1 gh run list --limit 10|fzf --ansi --header-lines=1 --reverse)
+chosen=$(env GH_FORCE_TTY=80% CLICOLOR_FORCE=1 gh run list --limit ${LIMIT}|fzf --ansi --header-lines=1 --reverse)
 
 [[ -z ${chosen} ]] && { echo "no run is no news is good news"; exit 1 ;}
 
