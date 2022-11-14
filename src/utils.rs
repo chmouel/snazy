@@ -50,7 +50,7 @@ pub fn convert_ts_float_or_str(value: &Value, time_format: &str) -> String {
     match value {
         Value::String(s) => convert_str_to_ts(s.as_str(), time_format),
         Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format),
-        _ => "".to_string(),
+        _ => String::new(),
     }
 }
 
