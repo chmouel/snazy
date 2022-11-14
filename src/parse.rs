@@ -216,7 +216,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     let other = if msg.contains_key("others") {
         format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
     } else {
-        "".to_string()
+        String::new()
     };
     let mut themsg = msg.get("msg").unwrap().to_string();
 
@@ -259,7 +259,7 @@ pub fn read_from_stdin(config: &Arc<Config>) {
 
 // read from file and output to the writer. This makes it easy to unittest
 pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
-    let file = File::open(&filename).map_err(|e| {
+    let file = File::open(filename).map_err(|e| {
         eprintln!("file {}, {}", filename, e);
         std::process::exit(1);
     });
