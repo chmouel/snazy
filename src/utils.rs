@@ -42,7 +42,7 @@ pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
 }
 
 fn convert_unix_ts(value: i64, time_format: &str) -> String {
-    let ts = NaiveDateTime::from_timestamp(value, 0);
+    let ts = NaiveDateTime::from_timestamp_opt(value, 0).unwrap();
     ts.format(time_format).to_string()
 }
 
