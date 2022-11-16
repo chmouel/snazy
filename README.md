@@ -183,8 +183,8 @@ of a Github action runs through snazy and the
 You will need to setup the [gh cli](https://github.com/cli/cli) and install
 [fzf](https://github.com/junegunn/fzf) to make it works.
 
- Here is a video showing the feature https://streamable.com/7sf1hq
- 
+Here is a video showing the feature <https://streamable.com/7sf1hq>
+
 ## Shell completions
 
 Shell completions are available for most shells using the command `--shell-completion` for example `--shell-completion=zsh`. Many different shell are supported. I let the reader figure out how to use them with their respective shells. Brew and RPM packges should have them auto configured for bash/fish/zsh.
