@@ -67,7 +67,7 @@ nix flake check # runs cargo test, rustfmt, …
 ### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
 
 ```shell
-kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/gosmee
+kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/snazy
 ```
 
 ## Build from [source](https://github.com/chmouel/snazy)
