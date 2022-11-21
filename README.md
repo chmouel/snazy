@@ -124,7 +124,7 @@ for input and snazzily print your logs from the stream (one line at a time).
 % kubectl log pod|snazy -f warning -f error
 ```
 
-* If you pass the flag `-l/--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+* If you pass the flag `-l/--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than the default plain log level label :
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
