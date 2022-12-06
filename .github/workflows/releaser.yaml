@@ -31,7 +31,7 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Build on ${{ matrix.job.target }}
         uses: actions-rs/cargo@v1
         with:
