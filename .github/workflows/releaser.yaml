@@ -63,7 +63,7 @@ jobs:
       # - uses: mxschmitt/action-tmate@v3
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           distribution: goreleaser
           version: latest
