@@ -72,7 +72,8 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
             others.push_str(crate::utils::convert_pac_provider_to_fa_icon(
                 p.other["provider"].as_str().unwrap(),
             ));
-            msg.insert("others".to_string(), format!("{} ", others));
+
+            msg.insert("others".to_string(), format!("{others} "));
         }
     }
 
@@ -260,7 +261,7 @@ pub fn read_from_stdin(config: &Arc<Config>) {
 // read from file and output to the writer. This makes it easy to unittest
 pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
     let file = File::open(filename).map_err(|e| {
-        eprintln!("file {}, {}", filename, e);
+        eprintln!("file {filename}, {e}");
         std::process::exit(1);
     });
     let buf_reader = BufReader::new(file.unwrap());
