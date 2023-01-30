@@ -70,10 +70,10 @@ nix flake check # runs cargo test, rustfmt, …
 kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/snazy
 ```
 
-## Build from [source](https://github.com/chmouel/snazy)
+### [Source](https://github.com/chmouel/snazy) install.
 
 Snazy is built with rust, if you want to compile it directly you just need to
-grab the source and run `cargo build`.
+grab the source and run `cargo build`. (assuming you have the rust toolchain [installed](https://rust-lang.github.io/rustup/installation/index.html))
 
 ## Usage
 
