@@ -22,4 +22,4 @@ clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.7.3"
 atty = "0.2.14"
 tempfile = "3.4.0"
-clap_complete = "4.1.6"
+clap_complete = "4.2.0"
