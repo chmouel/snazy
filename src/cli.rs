@@ -6,19 +6,26 @@ use std::collections::HashMap;
 use std::{env, io};
 use yansi::{Color, Paint};
 
+// `cstr!` converts tags to ANSI codes
+const AFTER_HELP: &str = color_print::cstr!(
+    r#"<bold>Snazzy</bold> let you watch logs nicely. 
+
+It tries to be smart with Json logs by showing the levels, 
+the message and the date in a nice and visual way.
+
+There is many more options to filter or highlight part of the logs or even launch some 
+actions when a match is found. 
+
+Try to stream some logs or specify a log file and let snazy, <red>snazzy them</red>!"#
+);
+
 /// Snazzy is a snazy log viewer
 #[derive(Parser, Debug)]
 #[command(
     author,
     version,
     about,
-    after_help = "Snazzy let you watch logs. \
-It tries to be smart with Json logs by showing the levels, \n\
-the message and the date in a nice and visual way.\n\
-There is many more options to filter or highlight part of the logs or even launch some \n\
-actions when a match is found. \n\n\
-Try to stream some logs or specify a log file and let snazy, snazzy them!"
-)]
+    after_help = AFTER_HELP)]
 struct Args {
     #[arg(short = 'r', long, verbatim_doc_comment)]
     /// regexp highlight
