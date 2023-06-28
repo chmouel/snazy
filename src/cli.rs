@@ -131,7 +131,8 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
         Color::Blue,
     ];
     for (i, regexp) in regexps.iter().enumerate() {
-        let mut chosen = colours[i % colours.len()];
+        let defchosen = colours[i % colours.len()];
+        let mut chosen = defchosen;
         let mut reg = regexp.to_string();
         if let Some(colour) = regexp.split(':').next() {
             // match colour in colours
@@ -144,9 +145,13 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
                 "green" => Color::Green,
                 "white" => Color::White,
                 "black" => Color::Black,
-                _ => chosen,
+                _ => Color::Default,
             };
-            reg = regexp.replace(format!("{colour}:").as_str(), "");
+            if chosen == Color::Default {
+                chosen = defchosen;
+            } else {
+                reg = regexp.replace(format!("{colour}:").as_str(), "");
+            }
         }
         regexp_colours.insert(reg, chosen);
     }
