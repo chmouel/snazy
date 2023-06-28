@@ -111,6 +111,12 @@ for input and snazzily print your logs from the stream (one line at a time).
   followed by a REGEXP and `snazy` will highlight it. You can have many `-r`
   switches with many regexps, and you get different highlight for each match.
 
+* If you want to have the highlight forced to some colors you can add the color at the begining of the regexp followed by a colon. The colors can be one of `yellow`, `red`, `green`, `blue`, `magenta`, `cyan`, `white`, `black`. For example if you want to highlight ERROR in red and WARNING in yellow you can do:
+
+```shell
+% kubectl log pod|snazy -r red:ERROR -r yellow:WARNING -r green:INFO
+```
+
 * If `snazy` don't recognize the line as json it will symply straight print
   it. Either way it will still apply regexp highlighting of the `-r` option or
   do the action commands matching (see below). This let you use it for any logs
