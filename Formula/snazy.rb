@@ -5,11 +5,11 @@
 class Snazy < Formula
   desc "snazy - a snazzy json log viewer"
   homepage "https://github.com/chmouel/snazy"
-  version "0.51.0"
+  version "0.51.1"
 
   on_macos do
-    url "https://github.com/chmouel/snazy/releases/download/0.51.0/snazy_0.51.0_macOS_all.tar.gz"
-    sha256 "2b10cc38a3cc62bc46ba61c7f6446e12284b1780066761b605db0dd10d1ab7cd"
+    url "https://github.com/chmouel/snazy/releases/download/0.51.1/snazy_0.51.1_macOS_all.tar.gz"
+    sha256 "ac5b8fe3911783b49628b6edfdc34cc87ce57f7565f578b573e6da6c1089c483"
 
     def install
       bin.install "snazy" => "snazy"
@@ -28,8 +28,8 @@ class Snazy < Formula
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/chmouel/snazy/releases/download/0.51.0/snazy_0.51.0_linux_amd64.tar.gz"
-      sha256 "e9b72c0778ea8c2259691df98336aaf27d4f83665229be97e16c6382a57616ba"
+      url "https://github.com/chmouel/snazy/releases/download/0.51.1/snazy_0.51.1_linux_amd64.tar.gz"
+      sha256 "838ea359e357d86ad1d8b2f29683cdb52b56af95ee60e3a4e18e24fe82e3a4ca"
 
       def install
         bin.install "snazy" => "snazy"
