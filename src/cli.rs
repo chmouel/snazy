@@ -144,7 +144,7 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
                 "green" => Color::Green,
                 "white" => Color::White,
                 "black" => Color::Black,
-                _ => Color::Default,
+                _ => chosen,
             };
             reg = regexp.replace(format!("{colour}:").as_str(), "");
         }
