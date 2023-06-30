@@ -557,7 +557,7 @@ dependencies = [
 
 [[package]]
 name = "snazy"
-version = "0.50.0"
+version = "0.51.2"
 dependencies = [
  "atty",
  "chrono",
