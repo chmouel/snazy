@@ -22,5 +22,5 @@ clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.8.4"
 atty = "0.2.14"
 tempfile = "3.6.0"
-clap_complete = "4.3.1"
+clap_complete = "4.3.2"
 color-print = "0.3.4"
