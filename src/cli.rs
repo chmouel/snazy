@@ -1,7 +1,7 @@
 use crate::config::{ColorWhen, Config, LogLevel};
-use atty::Stream;
 use clap::{Command, CommandFactory, Parser, ValueHint};
 use clap_complete::{generate, Generator, Shell};
+use is_terminal::IsTerminal;
 use std::collections::HashMap;
 use std::{env, io};
 use yansi::{Color, Paint};
@@ -159,11 +159,10 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
 }
 
 fn colouring(color: ColorWhen) -> bool {
-    let interactive_terminal = atty::is(Stream::Stdout);
     match color {
         ColorWhen::Always => true,
         ColorWhen::Never => false,
-        ColorWhen::Auto => env::var_os("NO_COLOR").is_none() && interactive_terminal,
+        ColorWhen::Auto => env::var_os("NO_COLOR").is_none() && std::io::stdout().is_terminal(),
     }
 }
 

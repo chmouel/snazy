@@ -487,6 +487,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "color-print",
+ "is-terminal",
  "regex",
  "serde",
  "serde_json",
