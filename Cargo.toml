@@ -20,7 +20,6 @@ chrono = { version = "0.4.26", default-features = false, features = ["clock"] }
 yansi = "0.5.1"
 clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.9.3"
-atty = "0.2.14"
 tempfile = "3.7.1"
 clap_complete = "4.3.2"
 color-print = "0.3.4"
