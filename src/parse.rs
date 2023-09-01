@@ -234,7 +234,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
 
 pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
     let mut ret = msg;
-    for (key, value) in regexps.iter() {
+    for (key, value) in regexps {
         let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
         let style = Style::new(*value);
         ret = re

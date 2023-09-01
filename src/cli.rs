@@ -123,7 +123,7 @@ struct Args {
 
 fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
     let mut regexp_colours = HashMap::new();
-    let colours = vec![
+    let colours = [
         Color::Cyan,
         Color::Yellow,
         Color::Red,
