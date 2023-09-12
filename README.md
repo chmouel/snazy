@@ -173,7 +173,7 @@ kubectl logs deployment/controller|snazy
 
 ## Interactive filtering with fzf
 
-You can go even further with unix shell pipelines, and feed snazy to fzf for interactive filtering of the stream. for example to stream everything on a kubernetes cluster with kail, transforming the logs via snazy and finally using fzf to interactively select the patter to match:
+You can go even further with UNIX shell pipelines, and feed snazy to fzf for interactive filtering of the stream. for example to stream everything on a kubernetes cluster with kail, transforming the logs via snazy and finally using fzf to interactively select the patter to match:
 
 ```shell
 kail --since=1h | snazy | fzf +s --ansi

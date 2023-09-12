@@ -4,7 +4,6 @@ ignorecase: true
 level: error
 link: https://redhat-documentation.github.io/vale-at-red-hat/docs/reference-guide/termserrors/
 message: "Use '%s' rather than '%s'."
-source: "https://redhat-documentation.github.io/supplementary-style-guide/glossary-terms-conventions; IBM - Appendix C. Word usage, p. 300"
 action:
   name: replace
 # swap maps tokens in form of bad: good
@@ -215,99 +214,3 @@ swap:
   on-premise: on-premises|off-premises|onsite|offsite
   on-ramp: access method
   op-code: opcode
-  open-source|OpenSource|opensource: open source
-  organise: organize
-  organised: organized
-  organising: organizing
-  over-ride|over ride: override
-  pain point: challenge|concern|difficulty|issue
-  parent task: parent process
-  perfcounter: performance counter
-  perimeter network: DMZ
-  plaintext|plain-text|cleartext|clear text: plain text
-  plugin|plugins|plug in|plug ins: plug-in # https://www.merriam-webster.com/dictionary/plug-in
-  power down: turn off
-  power off: turn off
-  power on: turn on
-  preload: preinstall|preinstalled
-  preloaded: preinstall|preinstalled
-  prepend: add a prefix to
-  proof of concepts: proofs of concept|proofs of concept
-  pseudo ops|pseudoops: pseudo-ops
-  pull-down: pulldown
-  recognise: recognize
-  remote-access server: remote access server
-  remote-access: remote access
-  right double-click: double right-click
-  right now: now
-  right-hand: right
-  round table: roundtable
-  rule of thumb: rule
-  run level|run-level: runlevel
-  sanity check: test|evaluate
-  screensaver: screen saver
-  scroll bar|scroll-bar: scrollbar
-  secondary storage: auxiliary storage
-  selection button: left mouse button
-  send out: emit
-  serial database: nonpartitioned database environment
-  sharename|Sharename: share name
-  shift-click: press Shift and click
-  ship: include|included
-  Simple Object Access Protocol: SOAP
-  single quote mark: single quotation mark
-  single quote: single quotation mark
-  SME routine: session management exit routine
-  soundcard|sound-card: sound card
-  specfile: spec file
-  spelt: spelled
-  stand-alone: standalone
-  start up: start
-  straight forward|straight-forward: straightforward
-  sub-command: subcommand
-  sub-directory: subdirectory
-  sub-menu: submenu
-  sub-package: subpackage
-  sunset: withdraw from service|withdraw from marketing|discontinue|no longer support
-  super-user|super user: superuser
-  swapspace: swap space
-  switch off: turn off
-  switch on: turn on
-  tarball: tar file
-  terminate: end|stop
-  text based: text-based
-  textmode|text-mode: text mode
-  the installer: installation program
-  thin provisioned|thinly provisioned|thinly-provisioned: thin-provisioned
-  thumbstick: USB flash drive
-  thus: therefore
-  tier-one|tier 1: tier-1
-  timeframe|time-frame: time frame
-  toggle off: toggle
-  tooling: tools
-  touchscreen: touch-sensitive screen
-  typo: typing error|typographical error
-  uncheck: clear
-  uncompress: decompress
-  undeploy: remove|withdraw
-  unjar: extract
-  unselect: clear|deselect
-  untar: extract
-  unzip: extract|decompress
-  up-grade|up grade: upgrade
-  up-sell: upsell
-  up-selling|up selling: upselling
-  up-stream|up stream: upstream
-  up-time|up time: uptime
-  upward compatible: compatible with later versions
-  utilize: use
-  versus: compared to
-  via: through
-  video-mode|videomode: video mode
-  virtualized: virtual
-  vs: compared to
-  warning notice: attention notice
-  web-enable: enable for the web
-  wish: want
-  wish|would like: want
-  zero out: zero
