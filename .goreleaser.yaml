@@ -10,9 +10,16 @@ builds:
     hooks:
       post: /bin/bash -c "install -m755 target/darwin_amd64/snazy/snazy dist/snazy_darwin_amd64_v1/snazy;install -m755 target/linux_amd64/snazy/snazy dist/snazy_linux_amd64_v1/snazy"
 archives:
-  - replacements:
-      darwin: macOS
-    name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - name_template: >-
+      {{ .Binary }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "darwin" }}MacOS
+      {{- else if eq .Arch "linux" }}Linux
+      {{- else if eq .Arch "windows" }}Windows
+      {{- else }}{{ .Arch }}{{ end }}
     files:
       - src: misc/completions/*
         dst: completions
@@ -44,7 +51,15 @@ brews:
       (fish_completion/"snazy.fish").write output
 
 nfpms:
-  - file_name_template: "snazy-{{.Version}}_{{.Os}}-{{.Arch}}"
+  - file_name_template: >-
+      tkn-pac-
+      {{- .Version}}_{{.Os}}-
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "darwin" }}MacOS
+      {{- else if eq .Arch "linux" }}Linux
+      {{- else if eq .Arch "windows" }}Windows
+      {{- else }}{{ .Arch }}{{ end }}
     homepage: https://github.com/chmouel/snazy
     description: snazy - a snazzy json log viewer
     maintainer: Chmouel Boudjnah <chmouel@chmouel.com>
@@ -53,15 +68,6 @@ nfpms:
       - deb
       - rpm
     bindir: /usr/bin
-    replacements:
-      amd64: 64bit
-      386: 32bit
-      arm: ARM
-      arm64: ARM64
-      darwin: macOS
-      linux: Linux
-      windows: Windows
-
 changelog:
   sort: asc
   use: github
