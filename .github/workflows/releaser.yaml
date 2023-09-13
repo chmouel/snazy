@@ -24,7 +24,7 @@ jobs:
           - {os: macos-latest, target: x86_64-apple-darwin}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Fetch all tags
         run: git fetch --force --tags
       - name: Check that the Cargo.yaml has been updated with tag
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/download-artifact@v3
