@@ -50,7 +50,7 @@ yay -S snazy-bin
 This repository includes a `flake` (see [NixOS Wiki on
 Flakes](https://nixos.wiki/wiki/Flakes)).
 
-If you have the `nix flake` command enabled (currenty on
+If you have the `nix flake` command enabled (currently on
 nixos-unstable, `nixos-version` >= 22.05)
 
 ```shell
@@ -73,7 +73,7 @@ kubectl logs deployment/pod foo|docker run -i ghcr.io/chmouel/snazy
 ### [Source](https://github.com/chmouel/snazy) install
 
 Snazy is built with rust, if you want to compile it directly you just need to
-grab the source and run `cargo build`. (assuming you have the rust toolchain [installed](https://rust-lang.github.io/rustup/installation/index.html))
+grab the source and run `cargo build`. (assuming you have the rust tool chain [installed](https://rust-lang.github.io/rustup/installation/index.html))
 
 ## Usage
 
@@ -103,7 +103,7 @@ kubectl logs deployment/controller|snazy
 
   `--kail-prefix-format "{pod}\n"`
 
-  the environement variable `SNAZY_KAIL_PREFIX_FORMAT` let you make this setting permanent.
+  the environment variable `SNAZY_KAIL_PREFIX_FORMAT` let you make this setting permanent.
 
 - If you do not any prefix for kail you can pass the `--kail-no-prefix` flag.
 
@@ -111,13 +111,17 @@ kubectl logs deployment/controller|snazy
   followed by a REGEXP and `snazy` will highlight it. You can have many `-r`
   switches with many regexps, and you get different highlight for each match.
 
-- If you want to have the highlight forced to some colors you can add the color at the begining of the regexp followed by a colon. The colors can be one of `yellow`, `red`, `green`, `blue`, `magenta`, `cyan`, `white`, `black`. For example if you want to highlight ERROR in red and WARNING in yellow you can do:
+- If you want to have the highlight forced to some colors you can add the color
+  at the beginning of the regexp followed by a colon. The colors can be one of
+  `yellow`, `red`, `green`, `blue`, `magenta`, `cyan`, `white`, `black` or an RGB
+  color model e.g: `88,48,235`. For example if you want to highlight ERROR in red
+  and WARNING in yellow you can do:
 
 ```shell
-% kubectl log pod|snazy -r red:ERROR -r yellow:WARNING -r green:INFO
+% kubectl log pod|snazy -r red:ERROR -r yellow:WARNING -r green:INFO -r 88,48,235:MITIGATED
 ```
 
-- If `snazy` don't recognize the line as json it will symply straight print
+- If `snazy` don't recognize the line as JSON it will simply straight print
   it. Either way it will still apply regexp highlighting of the `-r` option or
   do the action commands matching (see below). This let you use it for any logs
   to do some regexp highlighting and action on pattern.
@@ -130,7 +134,9 @@ kubectl logs deployment/controller|snazy
 % kubectl log pod|snazy -f warning -f error
 ```
 
-- If you pass the flag `-l/--level-symbols` or set the environment variable `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log level label :
+- If you pass the flag `-l/--level-symbols` or set the environment variable
+  `SNAZY_LEVEL_SYMBOLS`, snazy will show some pretty emojis rather than plain log
+  level label :
 
 ![snazy level symbols](.github/screenshot-level-symbols.png)
 
@@ -164,7 +170,7 @@ kubectl logs deployment/controller|snazy
 - Snazy support action command on regexp, which mean if you have a regexp
   matching a message it will run an action on it. It currently supports only one
   action one regexp. If you specify the string `"{}"` it will be expanded to
-  the matched string. For example on macOS this command will display a
+  the matched string. For example on MacOS this command will display a
   notification with the pipelinerun that has succeeded:
 
   ```shell
@@ -181,10 +187,10 @@ kail --since=1h | snazy | fzf +s --ansi
 
 This will give you a prompt with [`fzf`](https://github.com/junegunn/fzf) where you can type the query you want.
 
-## Show GH Action Runs logs with snazy
+## Show GitHub Action Runs logs with snazy
 
 An handy script located [here](./misc/gh-run-logview-snazy) let you show the log
-of a Github action runs through snazy and the
+of a GitHub action runs through snazy and the
 [`bat`](https://github.com/sharkdp/bat) pager.
 
 You will need to setup the [gh cli](https://github.com/cli/cli) and install
@@ -194,7 +200,7 @@ Here is a video showing the feature <https://streamable.com/7sf1hq>
 
 ## Shell completions
 
-Shell completions are available for most shells using the command `--shell-completion` for example `--shell-completion=zsh`. Many different shell are supported. I let the reader figure out how to use them with their respective shells. Brew and RPM packges should have them auto configured for bash/fish/zsh.
+Shell completions are available for most shells using the command `--shell-completion` for example `--shell-completion=zsh`. Many different shell are supported. I let the reader figure out how to use them with their respective shells. Brew and RPM packages should have them auto configured for bash/fish/zsh.
 
 ## FAQ
 

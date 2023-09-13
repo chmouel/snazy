@@ -46,6 +46,14 @@ snazytest!(
 );
 
 snazytest!(
+    regexp_colored,
+    ["-ryellow:Hello", "-r88,48,235:Moto", "--color", "always"],
+    "Hello Moto",
+    "\u{1b}[33mHello\u{1b}[0m \u{1b}[38;2;88;48;235mMoto\u{1b}[0m\n",
+    false
+);
+
+snazytest!(
     multiple_regexp_raw_json,
     ["-rHello", "-rMoto", "--color", "always"],
     "Hello Moto",

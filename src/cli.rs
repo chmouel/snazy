@@ -135,18 +135,28 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
         let mut chosen = defchosen;
         let mut reg = regexp.to_string();
         if let Some(colour) = regexp.split(':').next() {
-            // match colour in colours
-            chosen = match colour {
-                "yellow" => Color::Yellow,
-                "cyan" => Color::Cyan,
-                "red" => Color::Red,
-                "magenta" => Color::Magenta,
-                "blue" => Color::Blue,
-                "green" => Color::Green,
-                "white" => Color::White,
-                "black" => Color::Black,
-                _ => Color::Default,
-            };
+            // if we have three commas then it's a rgb
+            if colour.split(',').count() == 3 {
+                let mut parts = colour.split(',');
+                let r = parts.next().unwrap().parse::<u8>().unwrap();
+                let g = parts.next().unwrap().parse::<u8>().unwrap();
+                let b = parts.next().unwrap().parse::<u8>().unwrap();
+                chosen = Color::RGB(r, g, b);
+            } else {
+                // match colour in colours
+                chosen = match colour {
+                    "yellow" => Color::Yellow,
+                    "cyan" => Color::Cyan,
+                    "red" => Color::Red,
+                    "magenta" => Color::Magenta,
+                    "blue" => Color::Blue,
+                    "green" => Color::Green,
+                    "white" => Color::White,
+                    "black" => Color::Black,
+                    "grey" => Color::RGB(128, 128, 128),
+                    _ => Color::Default,
+                };
+            }
             if chosen == Color::Default {
                 chosen = defchosen;
             } else {
