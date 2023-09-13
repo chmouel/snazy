@@ -102,6 +102,14 @@ snazytest!(
 );
 
 snazytest!(
+    pac_output_fallback_ts,
+    [""],
+    r#"{"severity":"INFO","timestamp":"2022-04-25:FOO","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-cloud","provider":"bitbucket-cloud","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
+    "INFO                2022-04-25:FOO  \u{f171} bitbucket-cloud\n",
+    false
+);
+
+snazytest!(
     pac_output_bitbucket_server,
     [""],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-server","provider":"bitbucket-server","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
