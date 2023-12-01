@@ -47,21 +47,13 @@ yay -S snazy-bin
 
 ### [Nix/NixOS](https://nixos.org/)
 
-This repository includes a `flake` (see [NixOS Wiki on
-Flakes](https://nixos.wiki/wiki/Flakes)).
+The [`vdemeester/chick-group`](https://github.com/vdemeester/chick-group) includes this package.
 
 If you have the `nix flake` command enabled (currently on
 nixos-unstable, `nixos-version` >= 22.05)
 
 ```shell
-nix run github:chmouel/snazy -- --help # your args are here
-```
-
-You can also use it to test and develop the source code:
-
-```shell
-nix develop # drops you in a shell with all the thing needed
-nix flake check # runs cargo test, rustfmt, …
+nix run github:vdemeester/chick-group#snazy -- --help # your args are here
 ```
 
 ### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
