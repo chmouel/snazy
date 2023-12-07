@@ -47,13 +47,11 @@ yay -S snazy-bin
 
 ### [Nix/NixOS](https://nixos.org/)
 
-The [`vdemeester/chick-group`](https://github.com/vdemeester/chick-group) includes this package.
-
-If you have the `nix flake` command enabled (currently on
-nixos-unstable, `nixos-version` >= 22.05)
+Snazy is available from [`nixpkgs`](https://github.com/NixOS/nixpkgs).
 
 ```shell
-nix run github:vdemeester/chick-group#snazy -- --help # your args are here
+nix-env -iA snazy
+nix run nixpkgs#snazy -- --help # your args are here
 ```
 
 ### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
