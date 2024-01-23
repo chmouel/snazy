@@ -6,7 +6,7 @@ description = "snazy is a snazzy json log viewer"
 license = "Apache-2.0"
 readme = "README.md"
 name = "snazy"
-version = "0.52.2"
+version = "0.52.3"
 edition = "2021"
 keywords = ["json", "log", "viewer"]
 
