@@ -135,9 +135,10 @@ jobs:
           PKG_suffix=".tar.gz" ; 
           DIRNAME="${{ matrix.job.target }}"
           case ${DIRNAME} in
-            *-pc-windows-*) PKG_suffix=".zip" ;; 
-            *aarch64-unknown-linux-gnu) DIRNAME=${DIRNAME/aarch64-unknown-linux-gnu/linux-aarch64} ;;
+            *-pc-windows-*) PKG_suffix=".zip"; DIRNAME=${DIRNAME/x86_64-pc-windows-msvc/windows} ;;
+            *aarch64-unknown-linux-gnu) DIRNAME=${DIRNAME/aarch64-unknown-linux-gnu/linux-arm64} ;;
             *x86_64-unknown-linux-gnu) DIRNAME=${DIRNAME/x86_64-unknown-linux-gnu/linux-amd64} ;;
+            *x86_64-apple-darwin) DIRNAME=${DIRNAME/x86_64-apple-darwin/macos} ;;
           esac;
           PKG_BASENAME=${{ needs.crate_metadata.outputs.name }}-v${{ needs.crate_metadata.outputs.version }}-${DIRNAME}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
