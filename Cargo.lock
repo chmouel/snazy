@@ -447,7 +447,7 @@ dependencies = [
 
 [[package]]
 name = "snazy"
-version = "0.52.8"
+version = "0.52.9"
 dependencies = [
  "chrono",
  "clap",
