@@ -35,5 +35,5 @@ sed -e "s,%VERSION%,${VERSION},g" \
 [[ -n $(git status -s Formula/${project_name}.rb) ]] && {
 	git add Formula/${project_name}.rb
 	git commit -m "Formula Bump ${project_name} to ${VERSION}"
-	git push
+	[[ -n ${GITHUB_TOKEN:-""} ]] && git push https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} main
 }
