@@ -42,6 +42,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --force --tags
       - name: Check that the Cargo.yaml has been updated with tag
+        if: ${{ !inputs.debug_enabled }}
         run: |
           if ! grep -E "version[ ]*=[ ]*.${GITHUB_REF#refs/tags/}." Cargo.toml; then
             echo "Cargo.toml version does not match tag, version in current Cargo.toml:"
