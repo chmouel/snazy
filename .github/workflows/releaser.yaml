@@ -4,7 +4,14 @@ on:
   push:
     # run only against tags
     tags:
-      - '*'
+      - "*"
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -15,13 +22,20 @@ jobs:
   build:
     # runs-on: ubuntu-latest
     name: ${{ matrix.job.os }} (${{ matrix.job.target }})
+    env:
+      BUILD_CMD: cargo
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
       matrix:
         job:
-          - {os: ubuntu-latest, target: x86_64-unknown-linux-gnu}
-          - {os: macos-latest, target: x86_64-apple-darwin}
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu }
+          - { os: macos-latest, target: x86_64-apple-darwin }
+          - {
+              target: aarch64-unknown-linux-gnu,
+              os: ubuntu-20.04,
+              use-cross: true,
+            }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,12 +52,27 @@ jobs:
           toolchain: stable
           target: ${{ matrix.job.target }}
       - uses: Swatinem/rust-cache@v2
-      - name: Build on ${{ matrix.job.target }}
-        uses: actions-rs/cargo@v1
+      - name: Install cross
+        if: matrix.job.use-cross
+        uses: taiki-e/install-action@v2
         with:
-          command: build
-          args: --release --target=${{ matrix.job.target }}
-
+          tool: cross
+      - name: Overwrite build command env variable
+        if: matrix.job.use-cross
+        shell: bash
+        run: echo "BUILD_CMD=cross" >> $GITHUB_ENV
+      - name: Show version information (Rust, cargo, GCC)
+        shell: bash
+        run: |
+          gcc --version || true
+          rustup -V
+          rustup toolchain list
+          rustup default
+          cargo -V
+          rustc -V
+      - name: Build on ${{ matrix.job.target }}
+        shell: bash
+        run: $BUILD_CMD build --locked --release --target=${{ matrix.job.target }}
       - uses: actions/upload-artifact@v4
         with:
           name: snazy-${{ matrix.job.target }}
@@ -66,7 +95,11 @@ jobs:
           name: snazy-x86_64-apple-darwin
           path: target/darwin_amd64/snazy
 
-      # - uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
