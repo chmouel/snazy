@@ -12,10 +12,10 @@ builds:
     hooks:
       post: |
         /bin/bash -xc "
-        [[ -e dist/snazy_darwin_amd64_v1/snazy ]] || install -D -m755 target/darwin_amd64/snazy/snazy dist/snazy_darwin_amd64_v1/snazy
-        [[ -e dist/snazy_windows_amd64_v1/snazy.exe ]] || install -D -m755 target/windows_amd64/snazy.exe/snazy.exe dist/snazy_windows_amd64_v1/snazy.exe
-        [[ -e dist/snazy_linux_amd64_v1/snazy ]] || install -D -m755 target/linux_amd64/snazy/snazy dist/snazy_linux_amd64_v1/snazy
-        [[ -e dist/snazy_linux_arm64_v1/snazy ]] || install -D -m755 target/linux_arm64/snazy/snazy dist/snazy_linux_arm64_v1/snazy"
+        cp -f target/darwin_amd64/snazy/snazy dist/snazy_darwin_amd64_v1/snazy
+        cp -f target/windows_amd64/snazy.exe/snazy.exe dist/snazy_windows_amd64_v1/snazy.exe
+        cp -f target/linux_amd64/snazy/snazy dist/snazy_linux_amd64_v1/snazy
+        cp -f target/linux_arm64/snazy/snazy dist/snazy_linux_arm64_v1/snazy"
 archives:
   - name_template: >-
       {{ .Binary }}_
