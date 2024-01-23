@@ -83,7 +83,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: snazy-${{ matrix.job.target }}
-          path: target/${{ matrix.job.target }}/release/snazy
+          path: target/${{ matrix.job.target }}/release/snazy${{ env.EXTENSION }}
   goreleaser:
     name: Goreleaser over Rust
     needs: build
