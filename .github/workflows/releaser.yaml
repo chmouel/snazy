@@ -22,6 +22,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Check that the Cargo.yaml has been updated with tag
         if: ${{ !inputs.debug_enabled }}
         run: |
