@@ -19,9 +19,19 @@ permissions:
   issues: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that the Cargo.yaml has been updated with tag
+        if: ${{ !inputs.debug_enabled }}
+        run: |
+          if ! grep -E "version[ ]*=[ ]*.${GITHUB_REF#refs/tags/}." Cargo.toml; then
+            echo "Cargo.toml version does not match tag, version in current Cargo.toml:"
+            exit 1
+          fi
   build:
-    # runs-on: ubuntu-latest
     name: ${{ matrix.job.os }} (${{ matrix.job.target }})
+    needs: check
     env:
       BUILD_CMD: cargo
       EXTENSION: ""
@@ -43,13 +53,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Fetch all tags
         run: git fetch --force --tags
-      - name: Check that the Cargo.yaml has been updated with tag
-        if: ${{ !inputs.debug_enabled }}
-        run: |
-          if ! grep -E "version[ ]*=[ ]*.${GITHUB_REF#refs/tags/}." Cargo.toml; then
-            echo "Cargo.toml version does not match tag, version in current Cargo.toml:"
-            exit 1
-          fi
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
