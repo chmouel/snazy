@@ -1,6 +1,8 @@
 # typed: false
 # frozen_string_literal: true
 
+# Generated with script : misc/formula-bump/update-formula.sh
+# DO NOT EDIT
 class Snazy < Formula
   desc "snazy - a snazzy json log viewer"
   homepage "https://github.com/chmouel/snazy"
