@@ -1,4 +1,4 @@
-name: goreleaser
+name: Release Time
 
 on:
   push:
@@ -132,8 +132,14 @@ jobs:
         shell: bash
         run: |
           set -x
-          PKG_suffix=".tar.gz" ; case "${{ matrix.job.target }}" in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${{ needs.crate_metadata.outputs.name }}-v${{ needs.crate_metadata.outputs.version }}-${{ matrix.job.target }}
+          PKG_suffix=".tar.gz" ; 
+          DIRNAME="${{ matrix.job.target }}"
+          case ${DIRNAME} in
+            *-pc-windows-*) PKG_suffix=".zip" ;; 
+            *aarch64-unknown-linux-gnu) DIRNAME=${DIRNAME/aarch64-unknown-linux-gnu/linux-aarch64} ;;
+            *x86_64-unknown-linux-gnu) DIRNAME=${DIRNAME/x86_64-unknown-linux-gnu/linux-amd64} ;;
+          esac;
+          PKG_BASENAME=${{ needs.crate_metadata.outputs.name }}-v${{ needs.crate_metadata.outputs.version }}-${DIRNAME}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_OUTPUT
 
