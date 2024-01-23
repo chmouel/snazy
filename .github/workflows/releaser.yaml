@@ -95,7 +95,10 @@ jobs:
         with:
           name: snazy-x86_64-apple-darwin
           path: target/darwin_amd64/snazy
-
+      - uses: actions/download-artifact@v4
+        with:
+          name: snazy-aarch64-unknown-linux-gnu
+          path: target/linux_arm64/snazy
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
