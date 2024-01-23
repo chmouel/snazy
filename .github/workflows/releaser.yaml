@@ -107,7 +107,7 @@ jobs:
           path: target/linux_arm64/snazy
       - uses: actions/download-artifact@v4
         with:
-          name: snazy-windows-x86_64-pc-windows-msvc
+          name: snazy-x86_64-pc-windows-msvc
           path: target/windows_amd64/snazy.exe
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
