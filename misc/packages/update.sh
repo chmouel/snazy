@@ -15,6 +15,8 @@ get_sha256() {
 	cargo_release_version=$(grep '^version = "' Cargo.toml | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 }
 
+COMMIT_AUTHOR=${COMMIT_AUTHOR:-"Chmouel Boudjnah"}
+COMMIT_EMAIL=${COMMIT_EMAIL:-"chmouel@chmouel.com"}
 VERSION=${1:-$cargo_release_version}
 MACOS_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-macos.tar.gz"
 LINUX_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-linux-amd64.tar.gz"
@@ -23,6 +25,16 @@ LINUX_ARM_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VE
 MACOS_SHA256=$(get_sha256 "$MACOS_URL")
 LINUX_SHA256=$(get_sha256 "$LINUX_URL")
 LINUX_ARM_SHA256=$(get_sha256 "$LINUX_ARM_URL")
+
+function set_git_config() {
+	# make sure git config user.email and user.name is set if not set it
+	if [[ -z $(git config --global --get user.email) ]]; then
+		git config --global user.email $COMMIT_EMAIL
+	fi
+	if [[ -z $(git config --global --get user.name) ]]; then
+		git config --global user.name $COMMIT_AUTHOR
+	fi
+}
 
 function update_brew() {
 	sed -e "s,%VERSION%,${VERSION},g" \
@@ -69,5 +81,6 @@ EOF
 	)
 }
 
+set_git_config
 update_brew
 update_aur
