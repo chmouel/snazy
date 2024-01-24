@@ -48,7 +48,7 @@ function update_brew() {
 	[[ -n $(git status -s Formula/${project_name}.rb) ]] && {
 		git add Formula/${project_name}.rb
 		git commit -m "Formula Bump ${project_name} to ${VERSION}"
-		[[ -n ${GITHUB_TOKEN:-""} ]] && git push https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} main
+		[[ -n ${GITHUB_TOKEN:-""} ]] && git push -u https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} main:main
 	}
 }
 
