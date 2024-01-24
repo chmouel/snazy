@@ -54,6 +54,12 @@ nix-env -iA snazy
 nix run nixpkgs#snazy -- --help # your args are here
 ```
 
+### [Bin](https://github.com/marcosnils/bin/)
+
+```shell
+bin install github.com/chmouel/snazy 
+```
+
 ### [Docker](https://github.com/chmouel/snazy/pkgs/container/snazy)
 
 ```shell
