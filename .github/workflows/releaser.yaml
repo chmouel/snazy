@@ -193,6 +193,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update_packages:
+    if: startsWith(github.ref, 'refs/tags/')
     name: Update Homebrew formula
     needs: build
     runs-on: ubuntu-latest
@@ -201,7 +202,6 @@ jobs:
         with:
           fetch-depth: 1
       - name: Run update-formula.sh
-        if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUR_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}
