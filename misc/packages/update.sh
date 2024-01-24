@@ -68,6 +68,7 @@ ${AUR_PRIVATE_KEY}
 EOF
 	chmod 600 ${ssh_key}
 	rm -rf /tmp/${project_name}-bin
+	grep -q aur.archlinux.org ~/.ssh/known_hosts >/dev/null 2>/dev/null || ssh-keyscan aur.archlinux.org >>~/.ssh/known_hosts
 	ssh-agent bash -c "ssh-add ${ssh_key};git clone ssh://aur@aur.archlinux.org/${project_name}-bin.git /tmp/${project_name}-bin"
 	sed -e "s,%VERSION%,${VERSION},g" \
 		-e "s,%LINUX_URL%,${LINUX_URL},g" \
