@@ -49,7 +49,7 @@ function update_brew() {
 		git add Formula/${project_name}.rb
 		git commit -m "Formula Bump ${project_name} to ${VERSION}"
 		[[ -n ${GITHUB_TOKEN:-""} ]] && git push -u https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} main:main
-	}
+	} || true
 }
 
 function update_aur() {
