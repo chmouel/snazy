@@ -37,6 +37,13 @@ function set_git_config() {
 }
 
 function update_brew() {
+	targetFile=Formula/${project_name}.rb
+	if [[ -n ${GITHUB_TOKEN:-""} ]]; then
+		rm -rf /tmp/pac-repo
+		git clone --depth=1 https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} /tmp/pac-repo
+		targetFile=/tmp/pac-repo/${targetFile}
+		cd /tmp/pac-repo
+	fi
 	sed -e "s,%VERSION%,${VERSION},g" \
 		-e "s,%MACOS_URL%,${MACOS_URL},g" \
 		-e "s,%MACOS_SHA256%,${MACOS_SHA256},g" \
@@ -44,12 +51,13 @@ function update_brew() {
 		-e "s,%LINUX_SHA256%,${LINUX_SHA256},g" \
 		-e "s,%LINUX_ARM_URL%,${LINUX_ARM_URL},g" \
 		-e "s,%LINUX_ARM_SHA256%,${LINUX_ARM_SHA256},g" <${current_dir}/brews/${project_name}.tmpl.rb \
-		>Formula/${project_name}.rb
-	[[ -n $(git status -s Formula/${project_name}.rb) ]] && {
+		>${targetFile}
+
+	if [[ -n $(git status -s Formula/${project_name}.rb) ]]; then
 		git add Formula/${project_name}.rb
 		git commit -m "Formula Bump ${project_name} to ${VERSION}"
-		[[ -n ${GITHUB_TOKEN:-""} ]] && git push -u https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} main:main
-	} || true
+		[[ -n ${GITHUB_TOKEN:-""} ]] && git push
+	fi
 }
 
 function update_aur() {

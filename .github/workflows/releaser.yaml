@@ -154,10 +154,10 @@ jobs:
           cp "README.md" "LICENSE" "$ARCHIVE_DIR"
 
           # base compressed package
-          pushd "${PKG_STAGING}/" >/dev/null
+          pushd "${ARCHIVE_DIR}" >/dev/null
           case "${{ matrix.job.target }}" in
-            *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
-            *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
+            *-pc-windows-*) 7z -y a "${PKG_NAME}" * | tail -2 ;;
+            *) tar czf "${PKG_NAME}" * ;;
           esac;
           popd >/dev/null
 

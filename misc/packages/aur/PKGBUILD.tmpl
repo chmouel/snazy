@@ -21,7 +21,6 @@ source_x86_64=("${pkgname}_${pkgver}_x86_64.tar.gz::%LINUX_URL%")
 sha256sums_x86_64=('%LINUX_SHA256%')
 
 package() {
-	# bin
 	install -Dm755 "./snazy" "${pkgdir}/usr/bin/snazy"
 
 	# license
