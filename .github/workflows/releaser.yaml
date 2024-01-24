@@ -163,6 +163,7 @@ jobs:
 
           # Let subsequent steps know where to find the compressed package
           echo "PKG_PATH=${PKG_STAGING}/${PKG_NAME}" >> $GITHUB_OUTPUT
+          shasum "${PKG_STAGING}/${PKG_NAME}" > "${PKG_STAGING}/${PKG_NAME}.sha256"
 
       - name: "Artifact upload: tarball"
         uses: actions/upload-artifact@master
@@ -170,23 +171,18 @@ jobs:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
 
-      - name: Check for release
-        id: is-release
-        shell: bash
-        run: |
-          unset IS_RELEASE ; if [[ $GITHUB_REF =~ ^refs/tags/[0-9].* ]]; then IS_RELEASE='true' ; fi
-          echo "IS_RELEASE=${IS_RELEASE}" >> $GITHUB_OUTPUT
-
       - name: Publish archives and packages
         uses: softprops/action-gh-release@v1
-        if: steps.is-release.outputs.IS_RELEASE
+        if: startsWith(github.ref, 'refs/tags/')
         with:
+          generate_release_notes: true
           files: |
             ${{ steps.package.outputs.PKG_PATH }}
+            ${{ steps.package.outputs.PKG_PATH }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  update_formula:
+  update_packages:
     name: Update Homebrew formula
     needs: build
     runs-on: ubuntu-latest
