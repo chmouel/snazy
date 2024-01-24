@@ -24,7 +24,7 @@ bumpversion() {
 		read -p "Enter version: " -e VERSION
 		return
 	else
-		print "no or bad reply??"
+		echo "no or bad reply??"
 		exit
 	fi
 	VERSION=$(python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_${mode}()))" ${current})
