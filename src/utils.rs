@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, NaiveDateTime};
 use serde_json::Value;
 use yansi::Paint;
 
@@ -45,7 +45,7 @@ pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
 }
 
 fn convert_unix_ts(value: i64, time_format: &str) -> String {
-    let ts = NaiveDateTime::from_timestamp_opt(value, 0).unwrap();
+    let ts = DateTime::from_timestamp(value, 0).unwrap();
     ts.format(time_format).to_string()
 }
 

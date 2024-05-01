@@ -176,7 +176,7 @@ mod tests {
             ),
             ..Config::default()
         };
-        let line = r#"un HELLO MOTO nono el petiot roboto"#;
+        let line = r"un HELLO MOTO nono el petiot roboto";
         action_on_regexp(&config, line);
         // sleep for a bit to let the file be created
         thread::sleep(core::time::Duration::from_millis(50));
