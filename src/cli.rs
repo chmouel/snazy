@@ -226,7 +226,6 @@ pub fn build_cli_config() -> Config {
         action_regexp: args.action_regexp,
         files: args.files,
         regexp_colours,
-        colouring,
         json_keys,
     }
 }

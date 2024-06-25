@@ -197,7 +197,6 @@ mod tests {
 
         let config = Config {
             files: Some(vec![file_path.to_str().unwrap().to_string()]),
-            colouring: false,
             ..Config::default()
         };
         let writeto = &mut Vec::new();

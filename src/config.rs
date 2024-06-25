@@ -36,7 +36,6 @@ pub enum ColorWhen {
 pub struct Config {
     pub action_command: Option<String>,
     pub action_regexp: Option<String>,
-    pub colouring: bool,
     pub files: Option<Vec<String>>,
     pub filter_levels: Vec<LogLevel>,
     pub json_keys: HashMap<String, String>,
@@ -55,7 +54,6 @@ impl Default for Config {
             kail_no_prefix: false,
             kail_prefix_format: String::from("{namespace}/{pod}[{container}]"),
             time_format: String::from("%H:%M:%S"),
-            colouring: false,
             filter_levels: <Vec<LogLevel>>::new(),
             regexp_colours: HashMap::new(),
             json_keys: HashMap::new(),
