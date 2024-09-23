@@ -65,7 +65,7 @@ snazytest!(
     kail_log_and_regexp,
     ["-rHello", "-rMoto", "--color", "always"],
     r#"ns/pod[container]: {"level":"INFO","msg":"Hello Moto"}"#,
-    "\u{1b}[38;5;10mINFO\u{1b}[0m   \u{1b}[34mns/pod[container]\u{1b}[0m \u{1b}[36mHello\u{1b}[0m \u{1b}[33mMoto\u{1b}[0m\n",
+    "\u{1b}[32mINFO\u{1b}[0m        \u{1b}[34mns/pod[container]\u{1b}[0m \u{1b}[36mHello\u{1b}[0m \u{1b}[33mMoto\u{1b}[0m\n",
     false
 );
 

@@ -9,7 +9,7 @@ use std::sync::Arc;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use yansi::{Color, Paint, Style};
+use yansi::{Color, Paint};
 
 use crate::config;
 use crate::config::Config;
@@ -89,7 +89,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     }
 
     if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && msg.contains_key("msg") {
-        *msg.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kail_msg_prefix), msg["msg"]);
+        *msg.get_mut("msg").unwrap() = format!("{} {}", kail_msg_prefix.blue(), msg["msg"]);
     }
     msg
 }
@@ -212,7 +212,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     }
     let mut ts = String::new();
     if msg.contains_key("ts") {
-        ts = Paint::fixed(13, msg.get("ts").unwrap()).to_string();
+        ts = msg.get("ts").unwrap().fixed(13).to_string();
     }
     let other = if msg.contains_key("others") {
         format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
@@ -236,9 +236,12 @@ pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
     let mut ret = msg;
     for (key, value) in regexps {
         let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
-        let style = Style::new(*value);
+        // let style = Style::new(*value);
+        // ret = re
+        //     .replace_all(&ret, style.paint("$r").to_string())
+        //     .to_string();
         ret = re
-            .replace_all(&ret, style.paint("$r").to_string())
+            .replace_all(&ret, Paint::paint("$r", *value).to_string())
             .to_string();
     }
     ret

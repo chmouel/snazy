@@ -5,7 +5,7 @@ mod tests {
     use std::{thread, vec};
 
     use regex::Regex;
-    use yansi::Color;
+    use yansi::{Color, Paint};
 
     use crate::config::Config;
     use crate::parse::{action_on_regexp, do_line, extract_info};
@@ -103,8 +103,8 @@ mod tests {
             ret,
             format!(
                 "{} {} normal",
-                Color::Red.paint("red"),
-                Color::Blue.paint("blue")
+                "red".red().to_string(),
+                "blue".blue().to_string()
             )
         );
     }
@@ -203,7 +203,7 @@ mod tests {
         crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto);
         file.close().unwrap();
         assert_eq!(
-            "\u{1b}[38;5;10mINFO\u{1b}[0m  \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
+            "\u{1b}[32mINFO\u{1b}[0m       \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
             std::str::from_utf8(writeto).unwrap()
         );
     }

@@ -16,11 +16,11 @@ pub fn level_symbols(level: &str) -> String {
 
 pub fn color_by_level(level: &str) -> String {
     match level {
-        "DEBUG" => format!("{:<19}", Paint::fixed(14, "DEBUG").to_string()),
-        "WARNING" => format!("{:<19}", Paint::fixed(11, "WARN").to_string()),
-        "ERROR" => format!("{:<18}", Paint::fixed(9, "ERROR").to_string()),
-        "INFO" => format!("{:<19}", Paint::fixed(10, "INFO").to_string()),
-        _ => format!("{:<19}", Paint::fixed(10, level).to_string()),
+        "DEBUG" => format!("{:<19}", "DEBUG".fixed(14).to_string()),
+        "WARNING" => format!("{:<19}", "WARN".yellow().to_string()),
+        "ERROR" => format!("{:<18}", "ERROR".red().to_string()),
+        "INFO" => format!("{:<19}", "INFO".green().to_string()),
+        _ => format!("{:<19}", level.fixed(4).to_string()),
     }
 }
 

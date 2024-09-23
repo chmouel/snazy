@@ -4,7 +4,7 @@ use clap_complete::{generate, Generator, Shell};
 use is_terminal::IsTerminal;
 use std::collections::HashMap;
 use std::{env, io};
-use yansi::{Color, Paint};
+use yansi::Color;
 
 // `cstr!` converts tags to ANSI codes
 const AFTER_HELP: &str = color_print::cstr!(
@@ -141,7 +141,7 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
                 let r = parts.next().unwrap().parse::<u8>().unwrap();
                 let g = parts.next().unwrap().parse::<u8>().unwrap();
                 let b = parts.next().unwrap().parse::<u8>().unwrap();
-                chosen = Color::RGB(r, g, b);
+                chosen = Color::Rgb(r, g, b);
             } else {
                 // match colour in colours
                 chosen = match colour {
@@ -153,11 +153,11 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
                     "green" => Color::Green,
                     "white" => Color::White,
                     "black" => Color::Black,
-                    "grey" => Color::RGB(128, 128, 128),
-                    _ => Color::Default,
+                    "grey" => Color::Rgb(128, 128, 128),
+                    _ => Color::Primary,
                 };
             }
-            if chosen == Color::Default {
+            if chosen == Color::Primary {
                 chosen = defchosen;
             } else {
                 reg = regexp.replace(format!("{colour}:").as_str(), "");
@@ -211,7 +211,7 @@ pub fn build_cli_config() -> Config {
     let regexp_colours = regexp_colorize(&args.regexp);
     let colouring = colouring(args.color);
     if !colouring {
-        Paint::disable();
+        yansi::disable();
     }
     let json_keys = make_json_keys(&args.json_keys);
 
