@@ -142,6 +142,8 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
                 let g = parts.next().unwrap().parse::<u8>().unwrap();
                 let b = parts.next().unwrap().parse::<u8>().unwrap();
                 chosen = Color::Rgb(r, g, b);
+            } else if let Ok(col) = colour.parse::<u8>() {
+                chosen = Color::Fixed(col);
             } else {
                 // match colour in colours
                 chosen = match colour {

@@ -9,6 +9,7 @@ use std::sync::Arc;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use yansi::Style;
 use yansi::{Color, Paint};
 
 use crate::config;
@@ -236,13 +237,13 @@ pub fn apply_regexps(regexps: &HashMap<String, Color>, msg: String) -> String {
     let mut ret = msg;
     for (key, value) in regexps {
         let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
-        // let style = Style::new(*value);
-        // ret = re
-        //     .replace_all(&ret, style.paint("$r").to_string())
-        //     .to_string();
-        ret = re
-            .replace_all(&ret, Paint::paint("$r", *value).to_string())
-            .to_string();
+        let style = Style::new().fg(*value);
+        let matched = re.find(&ret);
+        if matched.is_none() {
+            continue;
+        }
+        let replace = matched.unwrap().as_str().paint(style).to_string();
+        ret = re.replace_all(&ret, replace).to_string();
     }
     ret
 }
