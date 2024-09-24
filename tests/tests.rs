@@ -46,10 +46,18 @@ snazytest!(
 );
 
 snazytest!(
-    regexp_colored,
+    regexp_rgb_colored,
     ["-ryellow:Hello", "-r88,48,235:Moto", "--color", "always"],
     "Hello Moto",
     "\u{1b}[33mHello\u{1b}[0m \u{1b}[38;2;88;48;235mMoto\u{1b}[0m\n",
+    false
+);
+
+snazytest!(
+    regexp_ansi_colored,
+    ["-ryellow:Hello", "-r3", "--color", "always"],
+    "Hello Moto",
+    "\u{1b}[33mHello\u{1b}[0m Moto\n",
     false
 );
 
