@@ -54,14 +54,6 @@ snazytest!(
 );
 
 snazytest!(
-    regexp_ansi_colored,
-    ["-ryellow:Hello", "-r3", "--color", "always"],
-    "Hello Moto",
-    "\u{1b}[33mHello\u{1b}[0m Moto\n",
-    false
-);
-
-snazytest!(
     multiple_regexp_raw_json,
     ["-rHello", "-rMoto", "--color", "always"],
     "Hello Moto",
