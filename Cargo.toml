@@ -20,7 +20,7 @@ serde_json = "1.0.127"
 chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 yansi = "1.0.1"
 clap = { version = "4", features = ["suggestions", "derive", "env"] }
-regex = "1.10.6"
+regex = "1.11.0"
 tempfile = "3.9.0"
 clap_complete = "4.5.24"
 color-print = "0.3.6"
