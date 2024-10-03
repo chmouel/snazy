@@ -46,6 +46,18 @@ snazytest!(
 );
 
 snazytest!(
+    regexp_color_fg_bg,
+    [
+        "-r",
+        "fg=yellow,bg=black:YellowOnBlack",
+        "--color",
+        "always"
+    ],
+    "YellowOnBlack",
+    "\u{1b}[40;33mYellowOnBlack\u{1b}[0m\n",
+    false
+);
+snazytest!(
     regexp_rgb_colored,
     ["-ryellow:Hello", "-r88,48,235:Moto", "--color", "always"],
     "Hello Moto",

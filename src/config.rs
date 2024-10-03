@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use clap::ValueEnum;
-use yansi::Color;
+use yansi::Style;
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum LogLevel {
@@ -42,7 +42,7 @@ pub struct Config {
     pub kail_no_prefix: bool,
     pub kail_prefix_format: String,
     pub level_symbols: bool,
-    pub regexp_colours: HashMap<String, Color>,
+    pub regexp_colours: HashMap<String, Style>,
     pub skip_line_regexp: Vec<String>,
     pub time_format: String,
 }

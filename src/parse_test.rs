@@ -5,7 +5,7 @@ mod tests {
     use std::{thread, vec};
 
     use regex::Regex;
-    use yansi::{Color, Paint};
+    use yansi::{Color, Paint, Style};
 
     use crate::config::Config;
     use crate::parse::{action_on_regexp, do_line, extract_info};
@@ -96,8 +96,8 @@ mod tests {
         // define a regexp
         let regexp = Regex::new(r"\b(b.ue)\b").unwrap();
         let mut map = HashMap::new();
-        map.insert(String::from("red"), Color::Red);
-        map.insert(regexp.to_string(), Color::Blue);
+        map.insert(String::from("red"), Style::new().fg(Color::Red));
+        map.insert(regexp.to_string(), Style::new().fg(Color::Blue));
         let ret = crate::parse::apply_regexps(&map, line);
         assert_eq!(
             ret,

@@ -4,7 +4,7 @@ use clap_complete::{generate, Generator, Shell};
 use is_terminal::IsTerminal;
 use std::collections::HashMap;
 use std::{env, io};
-use yansi::Color;
+use yansi::{Color, Style};
 
 // `cstr!` converts tags to ANSI codes
 const AFTER_HELP: &str = color_print::cstr!(
@@ -121,7 +121,7 @@ struct Args {
     files: Option<Vec<String>>,
 }
 
-fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
+fn regexp_colorize(regexps: &[String]) -> HashMap<String, Style> {
     let mut regexp_colours = HashMap::new();
     let colours = [
         Color::Cyan,
@@ -132,42 +132,68 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Color> {
     ];
     for (i, regexp) in regexps.iter().enumerate() {
         let defchosen = colours[i % colours.len()];
-        let mut chosen = defchosen;
+        let mut foreground = defchosen;
+        let mut background = None;
         let mut reg = regexp.to_string();
         if let Some(colour) = regexp.split(':').next() {
-            // if we have three commas then it's a rgb
-            if colour.split(',').count() == 3 {
+            if colour.contains("bg=") && colour.contains("fg=") && colour.split(',').count() == 2 {
+                let parts: Vec<&str> = colour.split(',').collect();
+                for part in parts {
+                    if let Some(colorsss) = part.strip_prefix("bg=") {
+                        background = Some(parse_color(colorsss));
+                    } else if let Some(colorsss) = part.strip_prefix("fg=") {
+                        foreground = parse_color(colorsss);
+                    }
+                }
+            } else if colour.split(',').count() == 3 {
                 let mut parts = colour.split(',');
                 let r = parts.next().unwrap().parse::<u8>().unwrap();
                 let g = parts.next().unwrap().parse::<u8>().unwrap();
                 let b = parts.next().unwrap().parse::<u8>().unwrap();
-                chosen = Color::Rgb(r, g, b);
+                foreground = Color::Rgb(r, g, b);
             } else if let Ok(col) = colour.parse::<u8>() {
-                chosen = Color::Fixed(col);
+                foreground = Color::Fixed(col);
             } else {
-                // match colour in colours
-                chosen = match colour {
-                    "yellow" => Color::Yellow,
-                    "cyan" => Color::Cyan,
-                    "red" => Color::Red,
-                    "magenta" => Color::Magenta,
-                    "blue" => Color::Blue,
-                    "green" => Color::Green,
-                    "white" => Color::White,
-                    "black" => Color::Black,
-                    "grey" => Color::Rgb(128, 128, 128),
-                    _ => Color::Primary,
-                };
+                foreground = match_color(colour, defchosen);
             }
-            if chosen == Color::Primary {
-                chosen = defchosen;
-            } else {
-                reg = regexp.replace(format!("{colour}:").as_str(), "");
-            }
+            reg = regexp.replace(format!("{colour}:").as_str(), "");
         }
-        regexp_colours.insert(reg, chosen);
+        let mut style = Style::new().fg(foreground);
+        if let Some(bg) = background {
+            style = style.bg(bg);
+        }
+        regexp_colours.insert(reg, style);
     }
     regexp_colours
+}
+
+fn parse_color(color: &str) -> Color {
+    if color.split(',').count() == 3 {
+        let mut parts = color.split(',');
+        let r = parts.next().unwrap().parse::<u8>().unwrap();
+        let g = parts.next().unwrap().parse::<u8>().unwrap();
+        let b = parts.next().unwrap().parse::<u8>().unwrap();
+        Color::Rgb(r, g, b)
+    } else if let Ok(col) = color.parse::<u8>() {
+        Color::Fixed(col)
+    } else {
+        match_color(color, Color::Primary)
+    }
+}
+
+fn match_color(color: &str, default: Color) -> Color {
+    match color.to_lowercase().as_str() {
+        "yellow" => Color::Yellow,
+        "cyan" => Color::Cyan,
+        "red" => Color::Red,
+        "magenta" => Color::Magenta,
+        "blue" => Color::Blue,
+        "green" => Color::Green,
+        "white" => Color::White,
+        "black" => Color::Black,
+        "grey" => Color::Rgb(128, 128, 128),
+        _ => default,
+    }
 }
 
 fn colouring(color: ColorWhen) -> bool {

@@ -117,6 +117,13 @@ kubectl logs deployment/controller|snazy
 % kubectl log pod|snazy -r red:ERROR -r yellow:WARNING -r green:INFO -r 88,48,235:MITIGATED
 ```
 
+- You can define a background color as well with this format, Only fixed colors
+are supported for now (ie: no rgb or fixed):
+
+```shell
+% kubectl log pod|snazy -r fg=black,bg=yellow:ERROR
+```
+
 - If `snazy` don't recognize the line as JSON it will simply straight print
   it. Either way it will still apply regexp highlighting of the `-r` option or
   do the action commands matching (see below). This let you use it for any logs
