@@ -22,6 +22,6 @@ yansi = "1.0.1"
 clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.11.1"
 tempfile = "3.14.0"
-clap_complete = "4.5.40"
+clap_complete = "4.5.44"
 color-print = "0.3.7"
 is-terminal = "0.4.13"
