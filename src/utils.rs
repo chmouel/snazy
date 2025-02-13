@@ -1,4 +1,5 @@
-use chrono::{DateTime, NaiveDateTime};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono_tz::Tz;
 use serde_json::Value;
 use yansi::Paint;
 
@@ -35,24 +36,35 @@ pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
     }
 }
 
-pub fn convert_str_to_ts(s: &str, time_format: &str) -> String {
-    // try to convert s to a nativdatetime if fail then return just the string
+pub fn convert_str_to_ts(s: &str, time_format: &str, timezone: Option<&str>) -> String {
     if let Ok(ts) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ") {
-        return ts.format(time_format).to_string();
+        let utc_dt = Utc.from_utc_datetime(&ts);
+        if let Some(tz) = timezone {
+            if let Ok(tz) = tz.parse::<Tz>() {
+                return utc_dt.with_timezone(&tz).format(time_format).to_string();
+            }
+        }
+        return utc_dt.format(time_format).to_string();
     }
-
     s.to_string()
 }
 
-fn convert_unix_ts(value: i64, time_format: &str) -> String {
-    let ts = DateTime::from_timestamp(value, 0).unwrap();
-    ts.format(time_format).to_string()
+fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> String {
+    if let Some(ts) = DateTime::from_timestamp(value, 0) {
+        if let Some(tz) = timezone {
+            if let Ok(tz) = tz.parse::<Tz>() {
+                return ts.with_timezone(&tz).format(time_format).to_string();
+            }
+        }
+        return ts.format(time_format).to_string();
+    }
+    value.to_string()
 }
 
-pub fn convert_ts_float_or_str(value: &Value, time_format: &str) -> String {
+pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Option<&str>) -> String {
     match value {
-        Value::String(s) => convert_str_to_ts(s.as_str(), time_format),
-        Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format),
+        Value::String(s) => convert_str_to_ts(s.as_str(), time_format, timezone),
+        Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format, timezone),
         _ => String::new(),
     }
 }
@@ -88,9 +100,22 @@ mod tests {
         assert_eq!(
             convert_ts_float_or_str(
                 &Value::String("2020-01-01T00:00:00.000Z".to_string()),
-                "%Y-%m-%d %H:%M:%S"
+                "%Y-%m-%d %H:%M:%S",
+                None
             ),
             "2020-01-01 00:00:00"
+        );
+    }
+
+    #[test]
+    fn test_convert_ts_float_or_str_with_timezone() {
+        assert_eq!(
+            convert_ts_float_or_str(
+                &Value::String("2020-01-01T00:00:00.000Z".to_string()),
+                "%Y-%m-%d %H:%M:%S",
+                Some("Europe/Paris")
+            ),
+            "2020-01-01 01:00:00" // Paris is UTC+1
         );
     }
 }

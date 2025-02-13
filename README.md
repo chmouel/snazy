@@ -148,6 +148,15 @@ are supported for now (ie: no rgb or fixed):
   [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
   strings.
 
+- You can specify a timezone with the `--timezone` flag (or the environment variable
+  `SNAZY_TIMEZONE`). By default, the timestamps are displayed in the server's timezone
+  (usually UTC). The timezone should be specified in the IANA timezone database format
+  (e.g., "America/New_York", "Europe/Paris", "Asia/Tokyo").
+
+  ```shell
+  kubectl logs deployment/controller | snazy --timezone America/New_York
+  ```
+
 - If you want to skip showing some lines you can specify the flag
   `-S/--skip-line-regexp`. When it matches the word or regexp in
   this value it will simply skipping printing the line. You can have multiple flags

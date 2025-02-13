@@ -45,6 +45,7 @@ pub struct Config {
     pub regexp_colours: HashMap<String, Style>,
     pub skip_line_regexp: Vec<String>,
     pub time_format: String,
+    pub timezone: Option<String>,
 }
 
 impl Default for Config {
@@ -54,6 +55,7 @@ impl Default for Config {
             kail_no_prefix: false,
             kail_prefix_format: String::from("{namespace}/{pod}[{container}]"),
             time_format: String::from("%H:%M:%S"),
+            timezone: None,
             filter_levels: <Vec<LogLevel>>::new(),
             regexp_colours: HashMap::new(),
             json_keys: HashMap::new(),
