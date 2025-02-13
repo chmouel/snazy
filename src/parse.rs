@@ -45,6 +45,7 @@ pub struct Info {
 
 pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     let time_format = config.time_format.as_str();
+    let timezone = config.timezone.as_deref();
     let mut msg = HashMap::new();
     let mut kail_msg_prefix = String::new();
     let mut line = rawline.to_string();
@@ -65,7 +66,11 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         // parse timestamp to a unix timestamp
         msg.insert(
             "ts".to_string(),
-            crate::utils::convert_str_to_ts(p.timestamp.as_str(), config.time_format.as_str()),
+            crate::utils::convert_str_to_ts(
+                p.timestamp.as_str(),
+                config.time_format.as_str(),
+                config.timezone.as_deref(),
+            ),
         );
         let mut others = String::new();
         if p.other.contains_key("provider") {
@@ -84,7 +89,7 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         if let Some(ts) = p.other.get("ts") {
             msg.insert(
                 String::from("ts"),
-                crate::utils::convert_ts_float_or_str(ts, time_format),
+                crate::utils::convert_ts_float_or_str(ts, time_format, timezone),
             );
         };
     }
@@ -123,18 +128,19 @@ fn custom_json_match(
     if let Ok(p) = serde_json::from_str::<Value>(line) {
         for (key, value) in &config.json_keys {
             if p.pointer(value).is_some() {
-                // if value  equal ts or timestamp or date then parse as timestamp
                 if key == "ts" || key == "timestamp" || key == "date" {
-                    // make a serde json Value
                     let v = p.pointer(value).unwrap();
-                    let ts = crate::utils::convert_ts_float_or_str(v, time_format);
+                    let ts = crate::utils::convert_ts_float_or_str(
+                        v,
+                        time_format,
+                        config.timezone.as_deref(),
+                    );
                     dico.insert(key.to_string(), ts);
                 } else {
                     let mut v = p.pointer(value).unwrap().to_string();
                     if v.contains('"') {
                         v = v.replace('"', "");
                     }
-
                     dico.insert(key.to_string(), v);
                 }
             }

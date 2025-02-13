@@ -185,6 +185,14 @@ snazytest!(
     false
 );
 
+snazytest!(
+    timezone_parsing,
+    ["--timezone", "America/New_York"],
+    r#"{"level":"info","ts":1739447782.2690723,"msg":"timezone test"}"#,
+    "INFO                06:56:22 timezone test\n",
+    false
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {

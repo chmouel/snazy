@@ -71,6 +71,10 @@ struct Args {
     /// A timeformat as documented by the strftime(3) manpage.
     pub time_format: String,
 
+    #[arg(long, env = "SNAZY_TIMEZONE")]
+    /// Convert timestamps to specified timezone (e.g. `Europe/Paris`, `America/New_York`)
+    pub timezone: Option<String>,
+
     #[arg(
         long,
         verbatim_doc_comment,
@@ -248,6 +252,7 @@ pub fn build_cli_config() -> Config {
         kail_prefix_format: args.kail_prefix_format,
         kail_no_prefix: args.kail_no_prefix,
         time_format: args.time_format,
+        timezone: args.timezone,
         skip_line_regexp: args.skip_line_regexp,
         filter_levels: args.filter_levels,
         action_command: args.action_command,
