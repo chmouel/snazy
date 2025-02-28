@@ -229,4 +229,8 @@ Shell completions are available for most shells using the command `--shell-compl
 
 ## Authors
 
-Chmouel Boudjnah <[@chmouel](https://twitter.com/chmouel)>
+### Chmouel Boudjnah
+
+- Fediverse - <[@chmouel@chmouel.com](https://fosstodon.org/@chmouel)>
+- Twitter - <[@chmouel](https://twitter.com/chmouel)>
+-
