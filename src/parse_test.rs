@@ -8,7 +8,7 @@ mod tests {
     use yansi::{Color, Paint, Style};
 
     use crate::config::Config;
-    use crate::parse::{action_on_regexp, do_line, extract_info};
+    use crate::parse::{do_line, extract_info};
 
     #[test]
     fn test_get_line() {
@@ -98,7 +98,7 @@ mod tests {
         let mut map = HashMap::new();
         map.insert(String::from("red"), Style::new().fg(Color::Red));
         map.insert(regexp.to_string(), Style::new().fg(Color::Blue));
-        let ret = crate::parse::apply_regexps(&map, line);
+        let ret = crate::utils::apply_regexps(&map, line);
         assert_eq!(
             ret,
             format!(
@@ -177,7 +177,7 @@ mod tests {
             ..Config::default()
         };
         let line = r"un HELLO MOTO nono el petiot roboto";
-        action_on_regexp(&config, line);
+        crate::parse::action_on_regexp(&config, line);
         // sleep for a bit to let the file be created
         thread::sleep(core::time::Duration::from_millis(50));
         let mut file = std::fs::File::open(file_path).unwrap();

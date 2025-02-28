@@ -1,7 +1,12 @@
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use chrono_tz::Tz;
+use regex::Regex;
 use serde_json::Value;
+use std::collections::HashMap;
 use yansi::Paint;
+use yansi::Style;
+
+use crate::config::Config;
 
 /// replace info level DEBUG, WARNING, ERROR, INFO, FATAL by pretty characters
 pub fn level_symbols(level: &str) -> String {
@@ -67,6 +72,47 @@ pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Optio
         Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format, timezone),
         _ => String::new(),
     }
+}
+
+pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
+    let mut ret = msg;
+    for (key, value) in regexps {
+        let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
+        if let Some(matched) = re.find(&ret) {
+            let replace = matched.as_str().paint(*value).to_string();
+            ret = re.replace_all(&ret, replace).to_string();
+        }
+    }
+    ret
+}
+
+pub fn custom_json_match(
+    config: &Config,
+    time_format: &str,
+    kail_msg_prefix: &str,
+    line: &str,
+) -> HashMap<String, String> {
+    let mut dico = HashMap::new();
+    if let Ok(p) = serde_json::from_str::<Value>(line) {
+        for (key, value) in &config.json_keys {
+            if let Some(v) = p.pointer(value) {
+                let value_str = if key == "ts" || key == "timestamp" || key == "date" {
+                    crate::utils::convert_ts_float_or_str(
+                        v,
+                        time_format,
+                        config.timezone.as_deref(),
+                    )
+                } else {
+                    v.to_string().replace('"', "")
+                };
+                dico.insert(key.to_string(), value_str);
+            }
+        }
+    }
+    if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && dico.contains_key("msg") {
+        *dico.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kail_msg_prefix), dico["msg"]);
+    }
+    dico
 }
 
 #[cfg(test)]

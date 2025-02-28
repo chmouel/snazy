@@ -10,10 +10,10 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use yansi::Paint;
-use yansi::Style;
 
 use crate::config;
 use crate::config::Config;
+use crate::utils::{apply_regexps, custom_json_match};
 
 const KAIL_RE: &str = r"^(?P<namespace>[^/]*)/(?P<pod>[^\[]*)\[(?P<container>[^]]*)]: (?P<line>.*)";
 
@@ -51,9 +51,10 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     let mut line = rawline.to_string();
 
     if let Some(prefix) = parse_kail_lines(config, rawline) {
-        let replacer = Regex::new(KAIL_RE).unwrap();
-        line = replacer.replace_all(rawline, "$line").to_string();
-        kail_msg_prefix = prefix;
+        if let Ok(replacer) = Regex::new(KAIL_RE) {
+            line = replacer.replace_all(rawline, "$line").to_string();
+            kail_msg_prefix = prefix;
+        }
     }
 
     if !config.json_keys.is_empty() {
@@ -74,12 +75,10 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         );
         let mut others = String::new();
         if p.other.contains_key("provider") {
-            // append provider icon to others
-            others.push_str(crate::utils::convert_pac_provider_to_fa_icon(
-                p.other["provider"].as_str().unwrap(),
-            ));
-
-            msg.insert("others".to_string(), format!("{others} "));
+            if let Some(provider) = p.other["provider"].as_str() {
+                others.push_str(crate::utils::convert_pac_provider_to_fa_icon(provider));
+                msg.insert("others".to_string(), format!("{others} "));
+            }
         }
     }
 
@@ -118,44 +117,11 @@ fn parse_kail_lines(config: &Config, rawline: &str) -> Option<String> {
     Some(kail_msg_prefix)
 }
 
-fn custom_json_match(
-    config: &Config,
-    time_format: &str,
-    kali_msg_prefix: &str,
-    line: &str,
-) -> HashMap<String, String> {
-    let mut dico = HashMap::new();
-    if let Ok(p) = serde_json::from_str::<Value>(line) {
-        for (key, value) in &config.json_keys {
-            if p.pointer(value).is_some() {
-                if key == "ts" || key == "timestamp" || key == "date" {
-                    let v = p.pointer(value).unwrap();
-                    let ts = crate::utils::convert_ts_float_or_str(
-                        v,
-                        time_format,
-                        config.timezone.as_deref(),
-                    );
-                    dico.insert(key.to_string(), ts);
-                } else {
-                    let mut v = p.pointer(value).unwrap().to_string();
-                    if v.contains('"') {
-                        v = v.replace('"', "");
-                    }
-                    dico.insert(key.to_string(), v);
-                }
-            }
-        }
-    }
-    if !config.kail_no_prefix && !kali_msg_prefix.is_empty() && dico.contains_key("msg") {
-        *dico.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kali_msg_prefix), dico["msg"]);
-    }
-    dico
-}
-
 pub fn action_on_regexp(config: &Config, line: &str) {
-    let reg = Regex::new(config.action_regexp.as_ref().unwrap()).unwrap();
-    if let Some(reg) = reg.captures(line) {
-        let regexpmatch = reg.get(0).unwrap().as_str();
+    let action_re =
+        Regex::new(config.action_regexp.as_ref().unwrap()).expect("Invalid action_regexp");
+    if let Some(captures) = action_re.captures(line) {
+        let regexpmatch = captures.get(0).unwrap().as_str();
         // replace {} by the actual match
         let action_command = config
             .action_command
@@ -184,9 +150,8 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     }
 
     let msg = extract_info(line, config);
-    let unwrapped = serde_json::to_string(&msg).unwrap();
-    //check if unwrapped is not an empty hashmap
-    if unwrapped == "{}" {
+    // use an empty map check instead of serializing to string
+    if msg.is_empty() {
         println!(
             "{}",
             apply_regexps(&config.regexp_colours, line.to_string())
@@ -197,10 +162,7 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     if config
         .skip_line_regexp
         .iter()
-        .map(|s| Regex::new(s).unwrap())
-        .filter(|r| r.is_match(msg["msg"].as_str()))
-        .count()
-        > 0
+        .any(|s| Regex::new(s).unwrap().is_match(&msg["msg"]))
     {
         return None;
     }
@@ -217,12 +179,13 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     if config.level_symbols {
         level = crate::utils::level_symbols(msg.get("level").unwrap());
     }
-    let mut ts = String::new();
-    if msg.contains_key("ts") {
-        ts = msg.get("ts").unwrap().fixed(13).to_string();
-    }
-    let other = if msg.contains_key("others") {
-        format!(" {}", Paint::cyan(msg.get("others").unwrap()).italic())
+    let ts = if let Some(ts) = msg.get("ts") {
+        ts.fixed(13).to_string()
+    } else {
+        String::new()
+    };
+    let other = if let Some(o) = msg.get("others") {
+        format!(" {}", Paint::cyan(o).italic())
     } else {
         String::new()
     };
@@ -237,20 +200,6 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         others: other,
         msg: themsg,
     })
-}
-
-pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
-    let mut ret = msg;
-    for (key, value) in regexps {
-        let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
-        let matched = re.find(&ret);
-        if matched.is_none() {
-            continue;
-        }
-        let replace = matched.unwrap().as_str().paint(*value).to_string();
-        ret = re.replace_all(&ret, replace).to_string();
-    }
-    ret
 }
 
 pub fn read_from_stdin(config: &Arc<Config>) {
