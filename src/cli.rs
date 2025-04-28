@@ -121,6 +121,10 @@ struct Args {
     ///  The command to run when a regexp match the --action-match
     pub action_command: Option<String>,
 
+    #[arg(long, action(clap::ArgAction::SetTrue), env = "SNAZY_HIDE_STACKTRACE")]
+    /// Hide stacktraces in the log output
+    pub hide_stacktrace: bool,
+
     #[arg(value_hint = ValueHint::FilePath)]
     files: Option<Vec<String>>,
 }
@@ -260,5 +264,6 @@ pub fn build_cli_config() -> Config {
         files: args.files,
         regexp_colours,
         json_keys,
+        hide_stacktrace: args.hide_stacktrace,
     }
 }
