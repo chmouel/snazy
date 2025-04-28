@@ -193,6 +193,22 @@ snazytest!(
     false
 );
 
+snazytest!(
+    stacktrace_default_display,
+    [""],
+    r#"{"level":"error","ts":"2022-04-25T14:20:32.505637358Z","msg":"Something went wrong","stacktrace":"github.com/example/app.Function\n\tat app.go:42\n\tat main.go:15"}"#,
+    "Stacktrace",
+    true
+);
+
+snazytest!(
+    stacktrace_hidden,
+    ["--hide-stacktrace"],
+    r#"{"level":"error","ts":"2022-04-25T14:20:32.505637358Z","msg":"Something went wrong","stacktrace":"github.com/example/app.Function\n\tat app.go:42\n\tat main.go:15"}"#,
+    "ERROR              14:20:32 Something went wrong\n",
+    false
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {

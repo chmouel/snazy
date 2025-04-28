@@ -99,14 +99,7 @@ mod tests {
         map.insert(String::from("red"), Style::new().fg(Color::Red));
         map.insert(regexp.to_string(), Style::new().fg(Color::Blue));
         let ret = crate::utils::apply_regexps(&map, line);
-        assert_eq!(
-            ret,
-            format!(
-                "{} {} normal",
-                "red".red().to_string(),
-                "blue".blue().to_string()
-            )
-        );
+        assert_eq!(ret, format!("{} {} normal", "red".red(), "blue".blue()));
     }
 
     #[test]
@@ -206,5 +199,75 @@ mod tests {
             "\u{1b}[32mINFO\u{1b}[0m       \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
             std::str::from_utf8(writeto).unwrap()
         );
+    }
+
+    #[test]
+    fn test_hide_stacktrace() {
+        // Create a temporary file for testing
+        let mut file: tempfile::NamedTempFile = tempfile::NamedTempFile::new().unwrap();
+        let file_path = file.path().to_path_buf();
+
+        // Create a log message with a stacktrace
+        // Using a format that exactly matches Golang stacktrace format
+        let stacktrace = r"goroutine 1 [running]:
+github.com/example/app.Function1(0x123456)
+        /home/user/app.go:42 +0x2a
+github.com/example/app.Function2(0x123456)
+        /home/user/main.go:15 +0x1b";
+
+        let line = format!(
+            r#"{{"level":"ERROR","ts":"2022-04-25T14:20:32.505637358Z", "msg":"Error occurred", "stacktrace":{stacktrace:?}}}"#
+        );
+
+        Write::write_all(&mut file, line.as_bytes()).unwrap();
+
+        // Test with hide_stacktrace = false (default)
+        let config = Config {
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            hide_stacktrace: false,
+            action_regexp: None,
+            action_command: None,
+            ..Config::default()
+        };
+        let writeto_visible = &mut Vec::new();
+        crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto_visible);
+
+        // Stacktrace should be visible
+        let output_with_stacktrace = std::str::from_utf8(writeto_visible).unwrap();
+
+        // Print the output for debugging
+        println!("Output with stacktrace enabled:\n{output_with_stacktrace}");
+
+        // Check for presence of stacktrace header
+        assert!(output_with_stacktrace.contains("Stacktrace"));
+
+        // Check for actual stacktrace content
+        // Look for "app.go" which should be present regardless of formatting
+        assert!(output_with_stacktrace.contains("app.go"));
+
+        // Test with hide_stacktrace = true
+        let config = Config {
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            hide_stacktrace: true,
+            action_regexp: None,
+            action_command: None,
+            ..Config::default()
+        };
+        let writeto_hidden = &mut Vec::new();
+        crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto_hidden);
+        file.close().unwrap();
+
+        // Stacktrace should not be visible
+        let output_without_stacktrace = std::str::from_utf8(writeto_hidden).unwrap();
+
+        // Print the output for debugging
+        println!("Output with stacktrace disabled:\n{output_without_stacktrace}");
+
+        // Check basic stacktrace content is not there
+        assert!(!output_without_stacktrace.contains("Stacktrace"));
+        assert!(!output_without_stacktrace.contains("app.go"));
+
+        // The error message should still be visible
+        assert!(output_without_stacktrace.contains("Error occurred"));
     }
 }

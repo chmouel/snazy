@@ -46,6 +46,7 @@ pub struct Config {
     pub skip_line_regexp: Vec<String>,
     pub time_format: String,
     pub timezone: Option<String>,
+    pub hide_stacktrace: bool,
 }
 
 impl Default for Config {
@@ -63,6 +64,7 @@ impl Default for Config {
             action_regexp: Some(String::new()),
             action_command: Some(String::new()),
             skip_line_regexp: Vec::new(),
+            hide_stacktrace: false,
         }
     }
 }
