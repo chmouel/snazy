@@ -157,18 +157,17 @@ are supported for now (ie: no rgb or fixed):
   kubectl logs deployment/controller | snazy --timezone America/New_York
   ```
 
-- You can disable the display of stacktraces in error logs using the
-`--hide-stacktrace` flag (or the environment variable `SNAZY_HIDE_STACKTRACE`).
-By default, when a stacktrace is found in the log entry, snazy will display it
-with syntax highlighting. This option allows you to keep your output more
-compact by hiding stacktraces.
+-  snazy looks for stack traces within the stacktrace field of JSON logs. When it finds a stack trace containing
+   both a filename and a line number, snazy highlights it with a unique color, as illustrated in the image.
+
+  ![image](https://github.com/user-attachments/assets/7d9f990a-88d4-4665-9ce2-d1e6a80be35e)
+
+  You can disable the display of stacktraces in error logs using the
+  `--hide-stacktrace` flag (or the environment variable `SNAZY_HIDE_STACKTRACE`).
 
   ```shell
   kubectl logs deployment/controller | snazy --hide-stacktrace
   ```
-
-  additionally if snazy detects a stacktrace with filename and line number it
-  will highlight it with a different color.
 
 - If you want to skip showing some lines you can specify the flag
   `-S/--skip-line-regexp`. When it matches the word or regexp in
