@@ -23,11 +23,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Check that the Cargo.yaml has been updated with tag
-        if: ${{ !inputs.debug_enabled }}
+      - name: Check that the Cargo.toml version matches tag
+        # Run on pushes and when debug is not enabled in manual runs
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.debug_enabled }}
         run: |
-          if ! grep -E "version[ ]*=[ ]*.${GITHUB_REF#refs/tags/}." Cargo.toml; then
-            echo "Cargo.toml version does not match tag, version in current Cargo.toml:"
+          TAG=${GITHUB_REF#refs/tags/}
+          if ! grep -E "^version *= *\"${TAG}\"$" Cargo.toml; then
+            echo "Cargo.toml version (${TAG}) does not match tag"
             exit 1
           fi
   crate_metadata:
@@ -64,9 +66,20 @@ jobs:
           - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu }
           - { os: windows-latest, target: x86_64-pc-windows-msvc }
           - { os: macos-latest, target: x86_64-apple-darwin }
+          - { os: macos-latest, target: aarch64-apple-darwin }
           - {
-              target: aarch64-unknown-linux-gnu,
               os: ubuntu-latest,
+              target: aarch64-unknown-linux-gnu,
+              use-cross: true,
+            }
+          - {
+              os: ubuntu-latest,
+              target: aarch64-unknown-linux-musl,
+              use-cross: true,
+            }
+          - {
+              os: ubuntu-latest,
+              target: arm-unknown-linux-gnueabihf,
               use-cross: true,
             }
     steps:
@@ -86,7 +99,7 @@ jobs:
       - name: Overwrite build command env variable
         if: matrix.job.use-cross
         shell: bash
-        run: echo "BUILD_CMD=cross" >> $GITHUB_ENV
+        run: echo "BUILD_CMD=cross" >> "$GITHUB_ENV"
       - name: Show version information (Rust, cargo, GCC)
         shell: bash
         run: |
@@ -97,9 +110,9 @@ jobs:
           cargo -V
           rustc -V
       - name: Add Extension variable on windows
-        if: matrix.job.os == 'windows-2019'
+        if: matrix.job.os == 'windows-latest'
         shell: bash
-        run: echo "EXTENSION=.exe" >> $GITHUB_ENV
+        run: echo "EXTENSION=.exe" >> "$GITHUB_ENV"
       - name: Build on ${{ matrix.job.target }}
         shell: bash
         run: $BUILD_CMD build --locked --release --target=${{ matrix.job.target }}
@@ -112,33 +125,31 @@ jobs:
         id: bin
         shell: bash
         run: |
-          # Figure out suffix of binary
           EXE_suffix=""
           case ${{ matrix.job.target }} in
             *-pc-windows-*) EXE_suffix=".exe" ;;
-          esac;
-
-          # Setup paths
+          esac
           BIN_NAME="${{ needs.crate_metadata.outputs.name }}${EXE_suffix}"
           BIN_PATH="target/${{ matrix.job.target }}/release/${BIN_NAME}"
-
-          # Let subsequent steps know where to find the binary
-          echo "BIN_PATH=${BIN_PATH}" >> $GITHUB_OUTPUT
-          echo "BIN_NAME=${BIN_NAME}" >> $GITHUB_OUTPUT
+          echo "BIN_PATH=${BIN_PATH}" >> "$GITHUB_OUTPUT"
+          echo "BIN_NAME=${BIN_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Create tarball
         id: package
         shell: bash
         run: |
           set -x
-          PKG_suffix=".tar.gz" ; 
+          PKG_suffix=".tar.gz"
           DIRNAME="${{ matrix.job.target }}"
           case ${DIRNAME} in
             *-pc-windows-*) PKG_suffix=".zip"; DIRNAME=${DIRNAME/x86_64-pc-windows-msvc/windows} ;;
             *aarch64-unknown-linux-gnu) DIRNAME=${DIRNAME/aarch64-unknown-linux-gnu/linux-arm64} ;;
+            *aarch64-unknown-linux-musl) DIRNAME=${DIRNAME/aarch64-unknown-linux-musl/linux-arm64-musl} ;;
+            *arm-unknown-linux-gnueabihf) DIRNAME=${DIRNAME/arm-unknown-linux-gnueabihf/linux-arm} ;;
             *x86_64-unknown-linux-gnu) DIRNAME=${DIRNAME/x86_64-unknown-linux-gnu/linux-amd64} ;;
             *x86_64-apple-darwin) DIRNAME=${DIRNAME/x86_64-apple-darwin/macos} ;;
-          esac;
+            *aarch64-apple-darwin) DIRNAME=${DIRNAME/aarch64-apple-darwin/macos-arm64} ;;
+          esac
           PKG_BASENAME=${{ needs.crate_metadata.outputs.name }}-v${{ needs.crate_metadata.outputs.version }}-${DIRNAME}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_OUTPUT
@@ -147,21 +158,16 @@ jobs:
           ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
           mkdir -p "${ARCHIVE_DIR}"
 
-          # Binary
-          cp "${{ steps.bin.outputs.BIN_PATH }}" "$ARCHIVE_DIR"
+          cp "${{ steps.bin.outputs.BIN_PATH }}" "${ARCHIVE_DIR}"
+          cp "README.md" "LICENSE" "${ARCHIVE_DIR}"
 
-          # README, LICENSE and CHANGELOG files
-          cp "README.md" "LICENSE" "$ARCHIVE_DIR"
-
-          # base compressed package
           pushd "${ARCHIVE_DIR}" >/dev/null
           case "${{ matrix.job.target }}" in
             *-pc-windows-*) 7z -y a "../${PKG_NAME}" * | tail -2 ;;
             *) tar czf "../${PKG_NAME}" * ;;
-          esac;
+          esac
           popd >/dev/null
 
-          # Let subsequent steps know where to find the compressed package
           echo "PKG_PATH=${PKG_STAGING}/${PKG_NAME}" >> $GITHUB_OUTPUT
           if [[ ${{ matrix.job.os }} == 'windows-latest' ]]; then
             certutil -hashfile "${PKG_STAGING}/${PKG_NAME}" sha256 | grep -E [A-Fa-f0-9]{64} > "${PKG_STAGING}/${PKG_NAME}.sha256"
@@ -170,13 +176,13 @@ jobs:
           fi
 
       - name: "Artifact upload: tarball"
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
 
       - name: "Artifact upload: tarball sha256"
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}.sha256
           path: ${{ steps.package.outputs.PKG_PATH }}.sha256
