@@ -157,7 +157,7 @@ are supported for now (ie: no rgb or fixed):
   kubectl logs deployment/controller | snazy --timezone America/New_York
   ```
 
--  snazy looks for stack traces within the stacktrace field of JSON logs. When it finds a stack trace containing
+- snazy looks for stack traces within the stacktrace field of JSON logs. When it finds a stack trace containing
    both a filename and a line number, snazy highlights it with a unique color, as illustrated in the image.
 
   ![image](https://github.com/user-attachments/assets/7d9f990a-88d4-4665-9ce2-d1e6a80be35e)
@@ -239,10 +239,14 @@ Shell completions are available for most shells using the command `--shell-compl
 
 [Apache-2.0](./LICENSE)
 
-## Authors
+## 📜 Copyright
+
+[Apache-2.0](./LICENSE)
+
+## 👥 Authors
 
 ### Chmouel Boudjnah
 
-- Fediverse - <[@chmouel@chmouel.com](https://fosstodon.org/@chmouel)>
-- Twitter - <[@chmouel](https://twitter.com/chmouel)>
--
+- 🐘 Fediverse - <[@chmouel@chmouel.com](https://fosstodon.org/@chmouel)>
+- 🐦 Twitter - <[@chmouel](https://twitter.com/chmouel)>
+- 📝 Blog  - <[https://blog.chmouel.com](https://blog.chmouel.com)>
