@@ -1,9 +1,8 @@
-use crate::config::{ColorWhen, Config, LogLevel};
+use crate::config::{Config, LogLevel};
 use clap::{Command, CommandFactory, Parser, ValueHint};
 use clap_complete::{generate, Generator, Shell};
-use is_terminal::IsTerminal;
 use std::collections::HashMap;
-use std::{env, io};
+use std::io;
 use yansi::{Color, Style};
 
 // `cstr!` converts tags to ANSI codes
@@ -53,7 +52,7 @@ struct Args {
         long,
         short = 'c',
         value_enum,
-        default_value_t = ColorWhen::Auto,
+        default_value_t = crate::config::Coloring::Auto,
         value_name = "when",
         hide_possible_values = true,
         verbatim_doc_comment
@@ -63,7 +62,7 @@ struct Args {
     /// 'auto':      show colors if the output goes to an interactive console (default)
     /// 'never':     do not use colorized output
     /// 'always':    always use colorized output
-    pub color: ColorWhen,
+    pub color: crate::config::Coloring,
 
     #[arg(long, default_value = "%H:%M:%S", env = "SNAZY_TIME_FORMAT")]
     /// Filter by log level
@@ -204,14 +203,6 @@ fn match_color(color: &str, default: Color) -> Color {
     }
 }
 
-fn colouring(color: ColorWhen) -> bool {
-    match color {
-        ColorWhen::Always => true,
-        ColorWhen::Never => false,
-        ColorWhen::Auto => env::var_os("NO_COLOR").is_none() && std::io::stdout().is_terminal(),
-    }
-}
-
 /// Return a `HashMap` of a vector of splited by = string
 fn make_json_keys(json_keys: &[String]) -> HashMap<String, String> {
     let ret: HashMap<String, String> = json_keys
@@ -245,16 +236,24 @@ pub fn build_cli_config() -> Config {
     }
 
     let regexp_colours = regexp_colorize(&args.regexp);
-    let colouring = colouring(args.color);
-    if !colouring {
+    let coloring = args.color;
+    if coloring == crate::config::Coloring::Never {
         yansi::disable();
     }
     let json_keys = make_json_keys(&args.json_keys);
 
     Config {
-        level_symbols: args.level_symbols,
+        level_symbols: if args.level_symbols {
+            crate::config::LevelSymbols::Emoji
+        } else {
+            crate::config::LevelSymbols::Text
+        },
         kail_prefix_format: args.kail_prefix_format,
-        kail_no_prefix: args.kail_no_prefix,
+        kail_prefix: if args.kail_no_prefix {
+            crate::config::KailPrefix::Hide
+        } else {
+            crate::config::KailPrefix::Show
+        },
         time_format: args.time_format,
         timezone: args.timezone,
         skip_line_regexp: args.skip_line_regexp,
@@ -265,6 +264,6 @@ pub fn build_cli_config() -> Config {
         regexp_colours,
         json_keys,
         hide_stacktrace: args.hide_stacktrace,
-        disable_coloring: !colouring,
+        coloring,
     }
 }

@@ -119,11 +119,16 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         }
     }
 
-    if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && msg.contains_key("msg") {
-        let prefix = if config.disable_coloring {
-            kail_msg_prefix.clone()
-        } else {
-            kail_msg_prefix.blue().to_string()
+    // Kail prefix logic
+    if config.kail_prefix == crate::config::KailPrefix::Hide
+        || kail_msg_prefix.is_empty()
+        || !msg.contains_key("msg")
+    {
+        // Do nothing, keep the message as is
+    } else {
+        let prefix = match config.coloring {
+            crate::config::Coloring::Never => kail_msg_prefix.clone(),
+            _ => kail_msg_prefix.blue().to_string(),
         };
         *msg.get_mut("msg").unwrap() = format!("{} {}", prefix, msg["msg"]);
     }
@@ -168,7 +173,7 @@ pub fn action_on_regexp(config: &Config, line: &str) {
         {
             println!("Spawned command: for action: {}", Paint::cyan(regexpmatch));
         } else {
-            eprintln!("Failed to spawn action command: {}", action_command_str);
+            eprintln!("Failed to spawn action command: {action_command_str}");
         }
     }
 }
@@ -194,9 +199,9 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     }
 
     if config.skip_line_regexp.iter().any(|s| match Regex::new(s) {
-        Ok(re) => msg.get("msg").map_or(false, |m| re.is_match(m)),
+        Ok(re) => msg.get("msg").is_some_and(|m| re.is_match(m)),
         Err(e) => {
-            eprintln!("Invalid skip_line_regexp pattern '{}': {}", s, e);
+            eprintln!("Invalid skip_line_regexp pattern '{s}': {e}");
             false
         }
     }) {
@@ -211,20 +216,25 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         return None;
     }
 
-    let mut level = crate::utils::color_by_level(msg.get("level").unwrap());
-    if config.level_symbols {
-        level = crate::utils::level_symbols(msg.get("level").unwrap());
-    }
+    // Level symbols logic
+    let level = match config.level_symbols {
+        crate::config::LevelSymbols::Emoji => {
+            crate::utils::level_symbols(msg.get("level").unwrap())
+        }
+        crate::config::LevelSymbols::Text => {
+            crate::utils::color_by_level(msg.get("level").unwrap())
+        }
+    };
     let ts = if let Some(ts) = msg.get("ts") {
         ts.fixed(13).to_string()
     } else {
         String::new()
     };
+    // Coloring logic for others
     let other = if let Some(o) = msg.get("others") {
-        if config.disable_coloring {
-            format!(" {}", o)
-        } else {
-            format!(" {}", Paint::cyan(o).italic())
+        match config.coloring {
+            crate::config::Coloring::Never => format!(" {o}"),
+            _ => format!(" {}", Paint::cyan(o).italic()),
         }
     } else {
         String::new()
@@ -268,7 +278,10 @@ pub fn read_from_stdin(config: &Arc<Config>) {
                     // Format each line of the stacktrace with color highlighting
                     for stack_line in stack.lines() {
                         // Format the line with colored components
-                        let formatted_line = format_stack_line(stack_line, config.disable_coloring);
+                        let formatted_line = format_stack_line(
+                            stack_line,
+                            config.coloring == crate::config::Coloring::Never,
+                        );
                         println!("   {formatted_line}");
                     }
 
@@ -310,7 +323,10 @@ pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write)
                     // Format each line of the stacktrace with color highlighting
                     for stack_line in stack.lines() {
                         // Format the line with colored components
-                        let formatted_line = format_stack_line(stack_line, config.disable_coloring);
+                        let formatted_line = format_stack_line(
+                            stack_line,
+                            config.coloring == crate::config::Coloring::Never,
+                        );
                         writeln!(writeto, "   {formatted_line}").unwrap();
                     }
 
@@ -450,9 +466,15 @@ mod tests {
         let line = "{\"severity\":\"INFO\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\",\"caller\":\"foo.rs:1\",\"message\":\"hello moto\"}";
         let config = Config::default();
         let info = extract_info(line, &config);
-        assert_eq!(info.get("msg").unwrap_or(&"".to_string()), "hello moto");
-        assert_eq!(info.get("level").unwrap_or(&"".to_string()), "INFO");
-        assert!(info.get("ts").map(|v| !v.is_empty()).unwrap_or(true));
+        assert_eq!(
+            info.get("msg").map_or(String::new(), |v| v.clone()),
+            "hello moto"
+        );
+        assert_eq!(
+            info.get("level").map_or(String::new(), |v| v.clone()),
+            "INFO"
+        );
+        assert!(info.get("ts").map_or(false, |v| !v.is_empty()));
     }
 
     #[test]
@@ -460,19 +482,27 @@ mod tests {
         let line = "{\"level\":\"DEBUG\",\"msg\":\"knative log\",\"ts\":1650602040.0}";
         let config = Config::default();
         let info = extract_info(line, &config);
-        assert_eq!(info.get("msg").unwrap_or(&"".to_string()), "knative log");
-        assert_eq!(info.get("level").unwrap_or(&"".to_string()), "DEBUG");
-        assert!(info.get("ts").map(|v| !v.is_empty()).unwrap_or(true));
+        assert_eq!(
+            info.get("msg").map_or(String::new(), |v| v.clone()),
+            "knative log"
+        );
+        assert_eq!(
+            info.get("level").map_or(String::new(), |v| v.clone()),
+            "DEBUG"
+        );
+        assert!(info.get("ts").map_or(false, |v| !v.is_empty()));
     }
 
     #[test]
     fn test_do_line_level_symbols() {
-        let mut config = Config::default();
-        config.level_symbols = true;
+        let config = Config {
+            level_symbols: crate::config::LevelSymbols::Emoji,
+            ..Config::default()
+        };
         let line = "{\"level\":\"INFO\",\"msg\":\"symbol test\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\"}";
         let result = do_line(&config, line);
         if result.is_none() {
-            println!("DEBUG: do_line returned None for input: {}", line);
+            println!("DEBUG: do_line returned None for input: {line}");
         }
         assert!(result.is_some());
         assert_eq!(result.unwrap().level, "💡");
@@ -498,20 +528,24 @@ mod tests {
 
     #[test]
     fn test_kail_prefix_coloring_toggle() {
-        let mut config = Config::default();
-        config.kail_prefix_format = "{namespace}/{pod}[{container}]".to_string();
+        let config = Config {
+            kail_prefix_format: "{namespace}/{pod}[{container}]".to_string(),
+            ..Config::default()
+        };
         // Use a valid Kail line with a proper JSON log message
         let line = "ns/pod[container]: {\"msg\":\"foo\",\"level\":\"INFO\"}";
         // With coloring
-        config.disable_coloring = false;
-        let info_colored = super::extract_info(line, &config);
+        let mut config_colored = config.clone();
+        config_colored.coloring = crate::config::Coloring::Always;
+        let info_colored = super::extract_info(line, &config_colored);
         assert!(
             info_colored.get("msg").unwrap().contains("\x1b["),
             "Expected ANSI color codes in prefix"
         );
         // Without coloring
-        config.disable_coloring = true;
-        let info_plain = super::extract_info(line, &config);
+        let mut config_plain = config.clone();
+        config_plain.coloring = crate::config::Coloring::Never;
+        let info_plain = super::extract_info(line, &config_plain);
         assert!(
             !info_plain.get("msg").unwrap().contains("\x1b["),
             "Expected no ANSI color codes in prefix"

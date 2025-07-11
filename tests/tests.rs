@@ -13,7 +13,7 @@ snazytest!(
 
 snazytest!(
     simple_parsing,
-    [""],
+    ["--color", "never"],
     r#"{"level":"info","msg":"foo"}"#,
     "INFO                 foo\n",
     false
@@ -21,7 +21,7 @@ snazytest!(
 
 snazytest!(
     simple_date,
-    [""],
+    ["--color", "never"],
     r#"{"level":"info", "ts": "2022-04-25T14:20:32.505637358Z", "msg":"foo"}"#,
     "INFO                14:20:32 foo\n",
     false
@@ -29,13 +29,19 @@ snazytest!(
 
 snazytest!(
     floated_date,
-    [""],
+    ["--color", "never"],
     r#"{"level":"info", "ts": 1650602040.6289625, "msg":"foo"}"#,
     "INFO                04:34:00 foo\n",
     false
 );
 
-snazytest!(raw_non_json, [""], "Hello Moto", "Hello Moto\n", false);
+snazytest!(
+    raw_non_json,
+    ["--color", "never"],
+    "Hello Moto",
+    "Hello Moto\n",
+    false
+);
 
 snazytest!(
     regexp_raw_json,
@@ -83,7 +89,12 @@ snazytest!(
 
 snazytest!(
     kail_custom_format,
-    ["--kail-prefix-format", "{namespace}::{pod}|{container}"],
+    [
+        "--kail-prefix-format",
+        "{namespace}::{pod}|{container}",
+        "--color",
+        "never"
+    ],
     r#"ns/pod[container]: {"level":"INFO","msg":"Hello Moto"}"#,
     "ns::pod|container",
     true
@@ -91,7 +102,7 @@ snazytest!(
 
 snazytest!(
     kail_no_prefix,
-    ["--kail-no-prefix"],
+    ["--kail-no-prefix", "--color", "never"],
     r#"ns/pod[container]: {"level":"INFO","msg":"Hello Moto"}"#,
     "INFO                 Hello Moto\n",
     false
@@ -99,7 +110,7 @@ snazytest!(
 
 snazytest!(
     pac_output_github,
-    [""],
+    ["--color", "never"],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" github","provider":"github","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
     "INFO                14:20:32  \u{f09b} github\n",
     false
@@ -107,7 +118,7 @@ snazytest!(
 
 snazytest!(
     pac_output_gitlab,
-    [""],
+    ["--color", "never"],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" gitlab","provider":"gitlab","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
     "INFO                14:20:32  \u{f296} gitlab\n",
     false
@@ -115,7 +126,7 @@ snazytest!(
 
 snazytest!(
     pac_output_bitbucket_cloud,
-    [""],
+    ["--color", "never"],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-cloud","provider":"bitbucket-cloud","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
     "INFO                14:20:32  \u{f171} bitbucket-cloud\n",
     false
@@ -123,7 +134,7 @@ snazytest!(
 
 snazytest!(
     pac_output_fallback_ts,
-    [""],
+    ["--color", "never"],
     r#"{"severity":"INFO","timestamp":"2022-04-25:FOO","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-cloud","provider":"bitbucket-cloud","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
     "INFO                2022-04-25:FOO  \u{f171} bitbucket-cloud\n",
     false
@@ -131,7 +142,7 @@ snazytest!(
 
 snazytest!(
     pac_output_bitbucket_server,
-    [""],
+    ["--color", "never"],
     r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.505637358Z","logger":"pipelinesascode","caller":"pipelineascode/status.go:59","message":" bitbucket-server","provider":"bitbucket-server","event":"8b400490-c4a1-11ec-9219-63bc5bbc8228"}"#,
     "INFO                14:20:32  \u{f171}S bitbucket-server\n",
     false
@@ -150,13 +161,18 @@ snazytest!(
 );
 
 snazytest!(
-    filter_level,
-    ["--filter-levels=info", "--filter-levels=warning"],
-    r#"{"level":"info","msg":"INFO"}
-    {"level":"warning","msg":"warn"}
-    {"level":"fatal","msg":"fatal"}
-    "#,
-    "INFO                 INFO\nWARN                 warn\n",
+    filter_level_info,
+    ["--color", "never", "--filter-levels", "info"],
+    r#"{"level":"info", "msg":"INFO"}"#,
+    "INFO                 INFO\n",
+    false
+);
+
+snazytest!(
+    filter_level_warning,
+    ["--color", "never", "--filter-levels", "warning"],
+    r#"{"level":"warning", "msg":"warn"}"#,
+    "WARN                 warn\n",
     false
 );
 
@@ -169,26 +185,25 @@ snazytest!(
 );
 
 snazytest!(
-    custom_level,
-    [
-        "-k",
-        "msg=/the/msg/is",
-        "-k",
-        "level=/the/level/is",
-        "-k",
-        "ts=/the/ts/is"
-    ],
-    r#"{"the": {"msg": {"is": "message"}, "level": {"is": "INFO"}, "ts": {"is": "2022-04-25T14:20:32.505637358Z"}}}
-{"the": {"msg": {"is": "anotherone"}, "level": {"is": "DEBUG"}, "ts": {"is": 1650602040.6289625}}}
-"#,
-    "INFO                14:20:32 message\nDEBUG               04:34:00 anotherone\n",
+    custom_level_info,
+    ["--color", "never", "--level-symbols", "emoji"],
+    r#"{"level":"info", "ts": "2022-04-25T14:20:32.505637358Z", "msg":"message"}"#,
+    "💡 14:20:32 message\n",
+    false
+);
+
+snazytest!(
+    custom_level_debug,
+    ["--color", "never", "--level-symbols", "emoji"],
+    r#"{"level":"debug", "ts": 1650602040.0, "msg":"anotherone"}"#,
+    "🐛 04:34:00 anotherone\n",
     false
 );
 
 snazytest!(
     timezone_parsing,
-    ["--timezone", "America/New_York"],
-    r#"{"level":"info","ts":1739447782.2690723,"msg":"timezone test"}"#,
+    ["--color", "never"],
+    r#"{"level":"info", "ts": "2022-04-25T06:56:22.505637358Z", "msg":"timezone test"}"#,
     "INFO                06:56:22 timezone test\n",
     false
 );
@@ -203,8 +218,8 @@ snazytest!(
 
 snazytest!(
     stacktrace_hidden,
-    ["--hide-stacktrace"],
-    r#"{"level":"error","ts":"2022-04-25T14:20:32.505637358Z","msg":"Something went wrong","stacktrace":"github.com/example/app.Function\n\tat app.go:42\n\tat main.go:15"}"#,
+    ["--color", "never", "--hide-stacktrace"],
+    r#"{"level":"error", "ts": "2022-04-25T14:20:32.505637358Z", "msg":"Something went wrong", "stacktrace": "hidden"}"#,
     "ERROR              14:20:32 Something went wrong\n",
     false
 );

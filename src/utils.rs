@@ -91,9 +91,8 @@ pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Optio
 pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
     let mut ret = msg;
     for (key, value) in regexps {
-        let re = match Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()) {
-            Ok(r) => r,
-            Err(_) => continue, // Skip invalid regex
+        let Ok(re) = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()) else {
+            continue;
         };
         if let Some(matched) = re.find(&ret) {
             let replace = matched.as_str().paint(*value).to_string();
@@ -103,7 +102,7 @@ pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
     ret
 }
 
-/// Extracts and remaps JSON keys from a log line using config.json_keys.
+/// Extracts and remaps JSON keys from a log line using `config.json_keys`.
 /// Handles timestamp formatting and Kail prefix.
 pub fn custom_json_match(
     config: &Config,
@@ -128,7 +127,10 @@ pub fn custom_json_match(
             }
         }
     }
-    if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && dico.contains_key("msg") {
+    if config.kail_prefix == crate::config::KailPrefix::Show
+        && !kail_msg_prefix.is_empty()
+        && dico.contains_key("msg")
+    {
         *dico.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kail_msg_prefix), dico["msg"]);
     }
     dico
@@ -197,7 +199,7 @@ mod tests {
         );
         assert_eq!(
             convert_ts_float_or_str(
-                &serde_json::json!(9223372036854775807u64),
+                &serde_json::json!(9_223_372_036_854_775_807_u64),
                 "%Y-%m-%d %H:%M:%S",
                 None
             ),
