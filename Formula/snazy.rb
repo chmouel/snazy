@@ -5,11 +5,11 @@
 class Snazy < Formula
   desc "snazy - a snazzy json log viewer"
   homepage "https://github.com/chmouel/snazy"
-  version "0.56.0"
+  version "0.57.1"
 
   on_macos do
-    url "https://github.com/chmouel/snazy/releases/download/0.56.0/snazy-v0.56.0-macos.tar.gz"
-    sha256 "397610743fe921f62e7c0890a3a8a1a3d55c12e68b5237c8564ae2ba503aaed1"
+    url "https://github.com/chmouel/snazy/releases/download/0.57.1/snazy-v0.57.1-macos.tar.gz"
+    sha256 "d47f7c249156953d53bed1492c4980655d11a93f43aeeaebf95e7ffd1e5b44b9"
 
     def install
       bin.install "snazy" => "snazy"
@@ -28,8 +28,8 @@ class Snazy < Formula
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/chmouel/snazy/releases/download/0.56.0/snazy-v0.56.0-linux-amd64.tar.gz"
-      sha256 "77e7b90ffb97f7b9bac63984e48df5e22d55096522de05d3c401d62fbc34b8e5"
+      url "https://github.com/chmouel/snazy/releases/download/0.57.1/snazy-v0.57.1-linux-amd64.tar.gz"
+      sha256 "f15571361ca4cfbb52dc7b170c0be6f3f762a039bb39e52f7c4e7f15fde347d0"
 
       def install
         bin.install "snazy" => "snazy"
@@ -46,8 +46,8 @@ class Snazy < Formula
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/chmouel/snazy/releases/download/0.56.0/snazy-v0.56.0-linux-arm64.tar.gz"
-      sha256 "18ece8de042f933ffe70ecea85907dd8e8caa578bb2782da1ad585175f1a1e2b"
+      url "https://github.com/chmouel/snazy/releases/download/0.57.1/snazy-v0.57.1-linux-arm64.tar.gz"
+      sha256 "c44b1c3fabc298bc0da8f2a7aec136efe862ebba190392a67d4b95b5c6077b13"
 
       def install
         bin.install "snazy" => "snazy"
