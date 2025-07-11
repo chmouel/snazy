@@ -32,7 +32,7 @@ mod tests {
                 ..Config::default()
             },
         );
-        let m = msg.get("msg").map_or(String::new(), |v| v.clone());
+        let m = msg.get("msg").cloned().unwrap_or_default();
         // Kail prefix may be colorized, so check for both plain and colorized
         assert!(
             m.contains("ns/pod[container]") || m.contains("\x1b["),
@@ -52,7 +52,7 @@ mod tests {
                 ..Config::default()
             },
         );
-        let m = msg.get("msg").map_or(String::new(), |v| v.clone());
+        let m = msg.get("msg").cloned().unwrap_or_default();
         // Kail prefix with newline may be colorized
         assert!(
             m.contains("container\n") || m.contains("\x1b["),
@@ -62,13 +62,15 @@ mod tests {
 
     #[test]
     fn test_skip_lines() {
-        let line = r#"{"level":"INFO","msg":"yolo"}"#;
+        let line = r#"{\"level\":\"INFO\",\"msg\":\"yolo\"}"#;
+        let mut state = crate::parse::ParseState::default();
         let msg = do_line(
             &Config {
                 skip_line_regexp: vec![String::from("yolo")],
                 ..Config::default()
             },
             line,
+            &mut state,
         );
         assert!(msg.is_none());
     }
@@ -83,7 +85,7 @@ mod tests {
                 ..Config::default()
             },
         );
-        let m = msg.get("msg").map_or(String::new(), |v| v.clone());
+        let m = msg.get("msg").cloned().unwrap_or_default();
         // Kail no prefix: should not contain prefix, but message should be present
         assert!(m.contains("updated"));
     }
@@ -98,7 +100,7 @@ mod tests {
                 ..Config::default()
             },
         );
-        let others = msg.get("others").map_or(String::new(), |v| v.clone());
+        let others = msg.get("others").cloned().unwrap_or_default();
         // Provider icon may be colorized, so check for icon or color code
         assert!(
             others.contains(" ") || others.contains("\x1b["),
@@ -121,8 +123,8 @@ mod tests {
     #[test]
     fn test_config_json_keys() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("msg"), String::from("/foo"));
-        keys.insert(String::from("level"), String::from("/bar"));
+        keys.insert(String::from("msg"), String::from("foo"));
+        keys.insert(String::from("level"), String::from("bar"));
 
         let config = Config {
             json_keys: keys,
@@ -130,14 +132,14 @@ mod tests {
         };
         let line = r#"{"foo": "Bar", "bar": "info"}"#;
         let info = extract_info(line, &config);
-        assert_eq!(info.get("msg").unwrap(), "Bar");
-        assert_eq!(info.get("level").unwrap(), "info");
+        assert_eq!(info.get("msg").cloned().unwrap_or_default(), "Bar");
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "info");
     }
 
     #[test]
     fn test_config_json_timestamp_float() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("ts"), String::from("/bar"));
+        keys.insert(String::from("ts"), String::from("bar"));
 
         let config = Config {
             json_keys: keys,
@@ -145,15 +147,15 @@ mod tests {
         };
         let line = r#"{"bar": 1650602040.6289625}"#;
         let info = extract_info(line, &config);
-        assert_eq!(info.get("ts").unwrap(), "04:34:00");
+        assert_eq!(info.get("ts").cloned().unwrap_or_default(), "04:34:00");
     }
 
     #[test]
     fn test_custom_json_match() {
         let mut keys = HashMap::new();
-        keys.insert(String::from("ts"), String::from("/bar"));
-        keys.insert(String::from("msg"), String::from("/foo"));
-        keys.insert(String::from("level"), String::from("/level"));
+        keys.insert(String::from("ts"), String::from("bar"));
+        keys.insert(String::from("msg"), String::from("foo"));
+        keys.insert(String::from("level"), String::from("level"));
 
         let config = Config {
             json_keys: keys,
@@ -162,13 +164,13 @@ mod tests {
         let line =
             r#"{"bar": "2022-04-22T04:34:00.628550164Z", "foo": "hello", "level": "lelevel"}"#;
         let info = extract_info(line, &config);
-        assert_eq!(info.get("ts").unwrap(), "04:34:00");
-        assert_eq!(info.get("msg").unwrap(), "hello");
-        assert_eq!(info.get("level").unwrap(), "lelevel");
+        assert_eq!(info.get("ts").cloned().unwrap_or_default(), "04:34:00");
+        assert_eq!(info.get("msg").cloned().unwrap_or_default(), "hello");
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "lelevel");
 
         let line = r#"{"bar": 1650992726.6289625, "foo": "hello", "level": "lelevel"}"#;
         let info = extract_info(line, &config);
-        assert_eq!(info.get("ts").unwrap(), "17:05:26");
+        assert_eq!(info.get("ts").cloned().unwrap_or_default(), "17:05:26");
     }
 
     #[test]

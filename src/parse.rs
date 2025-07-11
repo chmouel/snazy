@@ -61,65 +61,74 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         }
     }
 
+    // Try custom JSON key extraction first
     if !config.json_keys.is_empty() {
         msg = custom_json_match(config, time_format, &kail_msg_prefix, line.as_str());
-    }
-
-    // Try to parse as a generic JSON to extract stacktrace field
-    // regardless of the specific log format
-    if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&line) {
-        if let Some(stacktrace) = json_value.get("stacktrace").and_then(|s| s.as_str()) {
-            msg.insert("stacktrace".to_string(), stacktrace.to_string());
-        }
-    }
-
-    if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
-        msg.insert("msg".to_string(), p.message.trim().to_string());
-        msg.insert("level".to_string(), p.severity.to_uppercase());
-        // parse timestamp to a unix timestamp
-        msg.insert(
-            "ts".to_string(),
-            crate::utils::convert_str_to_ts(
-                p.timestamp.as_str(),
-                config.time_format.as_str(),
-                config.timezone.as_deref(),
-            ),
+        eprintln!(
+            "extract_info: after custom_json_match, keys: {:?}",
+            msg.keys().collect::<Vec<_>>()
         );
-        let mut others = String::new();
-        if p.other.contains_key("provider") {
-            if let Some(provider) = p.other["provider"].as_str() {
-                others.push_str(crate::utils::convert_pac_provider_to_fa_icon(provider));
-                msg.insert("others".to_string(), format!("{others} "));
-            }
-        }
+    }
 
-        // Extract stacktrace from Pac struct if available
-        if p.other.contains_key("stacktrace") {
-            if let Some(stacktrace) = p.other["stacktrace"].as_str() {
+    // Fallback to Pac/Knative parsing if custom extraction failed
+    if msg.is_empty() {
+        // Try to parse as a generic JSON to extract stacktrace field
+        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&line) {
+            if let Some(stacktrace) = json_value.get("stacktrace").and_then(|s| s.as_str()) {
                 msg.insert("stacktrace".to_string(), stacktrace.to_string());
             }
         }
-    }
 
-    if let Ok(p) = serde_json::from_str::<Knative>(line.as_str()) {
-        msg.insert("msg".to_string(), p.msg.trim().to_string());
-        msg.insert("level".to_string(), p.level.to_uppercase());
-        if let Some(ts) = p.other.get("ts") {
+        if let Ok(p) = serde_json::from_str::<Pac>(line.as_str()) {
+            msg.insert("msg".to_string(), p.message.trim().to_string());
+            msg.insert("level".to_string(), p.severity.to_uppercase());
+            // parse timestamp to a unix timestamp
             msg.insert(
-                String::from("ts"),
-                crate::utils::convert_ts_float_or_str(ts, time_format, timezone),
+                "ts".to_string(),
+                crate::utils::convert_str_to_ts(
+                    p.timestamp.as_str(),
+                    config.time_format.as_str(),
+                    config.timezone.as_deref(),
+                ),
             );
-        }
-
-        // Extract stacktrace from Knative struct if available
-        if p.other.contains_key("stacktrace") {
-            if let Some(stacktrace) = p.other["stacktrace"].as_str() {
-                msg.insert("stacktrace".to_string(), stacktrace.to_string());
+            let mut others = String::new();
+            if p.other.contains_key("provider") {
+                if let Some(provider) = p.other["provider"].as_str() {
+                    others.push_str(crate::utils::convert_pac_provider_to_fa_icon(provider));
+                    msg.insert("others".to_string(), format!("{others} "));
+                }
+            }
+            // Extract stacktrace from Pac struct if available
+            if p.other.contains_key("stacktrace") {
+                if let Some(stacktrace) = p.other["stacktrace"].as_str() {
+                    msg.insert("stacktrace".to_string(), stacktrace.to_string());
+                }
             }
         }
+
+        if let Ok(p) = serde_json::from_str::<Knative>(line.as_str()) {
+            msg.insert("msg".to_string(), p.msg.trim().to_string());
+            msg.insert("level".to_string(), p.level.to_uppercase());
+            if let Some(ts) = p.other.get("ts") {
+                msg.insert(
+                    String::from("ts"),
+                    crate::utils::convert_ts_float_or_str(ts, time_format, timezone),
+                );
+            }
+            // Extract stacktrace from Knative struct if available
+            if p.other.contains_key("stacktrace") {
+                if let Some(stacktrace) = p.other["stacktrace"].as_str() {
+                    msg.insert("stacktrace".to_string(), stacktrace.to_string());
+                }
+            }
+        }
+        eprintln!(
+            "extract_info: after fallback, keys: {:?}",
+            msg.keys().collect::<Vec<_>>()
+        );
     }
 
-    // Kail prefix logic
+    // Kail prefix logic (apply for both custom and fallback)
     if config.kail_prefix == crate::config::KailPrefix::Hide
         || kail_msg_prefix.is_empty()
         || !msg.contains_key("msg")
@@ -132,6 +141,10 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         };
         *msg.get_mut("msg").unwrap() = format!("{} {}", prefix, msg["msg"]);
     }
+    eprintln!(
+        "extract_info: final keys: {:?}",
+        msg.keys().collect::<Vec<_>>()
+    );
     msg
 }
 
@@ -178,10 +191,130 @@ pub fn action_on_regexp(config: &Config, line: &str) {
     }
 }
 
-pub fn do_line(config: &Config, line: &str) -> Option<Info> {
+// Struct to track kubectl events parsing mode and column positions
+#[derive(Default)]
+pub struct ParseState {
+    pub kubectl_events_mode: bool,
+    pub kubectl_events_cols: Option<(usize, usize, usize, usize, usize)>,
+}
+
+// Helper to detect kubectl events header and record column positions in state
+fn is_kubectl_events_header(line: &str, state: &mut ParseState) -> bool {
+    let header = line.trim_start();
+    if header.starts_with("LAST SEEN") && header.contains("TYPE") && header.contains("REASON") {
+        // Find column start indices
+        let last_seen_idx = header.find("LAST SEEN").unwrap_or(0);
+        let type_idx = header.find("TYPE").unwrap_or(0);
+        let reason_idx = header.find("REASON").unwrap_or(0);
+        let object_idx = header.find("OBJECT").unwrap_or(0);
+        let message_idx = header.find("MESSAGE").unwrap_or(0);
+        state.kubectl_events_cols =
+            Some((last_seen_idx, type_idx, reason_idx, object_idx, message_idx));
+        return true;
+    }
+    false
+}
+
+// Helper to parse kubectl events line using header-based column positions from state
+fn parse_kubectl_event_line(
+    line: &str,
+    state: &ParseState,
+) -> Option<(String, String, String, String, String)> {
+    if let Some((last_seen_idx, type_idx, reason_idx, object_idx, message_idx)) =
+        state.kubectl_events_cols
+    {
+        let last_seen = line.get(last_seen_idx..type_idx)?.trim().to_string();
+        let type_ = line.get(type_idx..reason_idx)?.trim().to_string();
+        let reason = line.get(reason_idx..object_idx)?.trim().to_string();
+        let object = line.get(object_idx..message_idx)?.trim().to_string();
+        let message = line.get(message_idx..)?.trim().to_string();
+        return Some((last_seen, type_, reason, object, message));
+    }
+    None
+}
+
+// Helper to colorize object type prefix
+fn colorize_object_type(object: &str) -> String {
+    use yansi::Color;
+    let (prefix, rest) = if let Some(idx) = object.find('/') {
+        (&object[..idx], &object[idx..])
+    } else {
+        (object, "")
+    };
+    let colored_prefix = match prefix {
+        "pod" => Paint::magenta(prefix).bold(),
+        "replicaset" => Paint::blue(prefix).bold(),
+        "deployment" => Paint::green(prefix).bold(),
+        "service" => Paint::yellow(prefix).bold(),
+        "job" => Paint::cyan(prefix).bold(),
+        "daemonset" => Paint::red(prefix).bold(),
+        "statefulset" => Paint::new(prefix).fg(Color::Fixed(93)).bold(), // purple
+        "configmap" => Paint::new(prefix).fg(Color::Fixed(208)).bold(),  // orange
+        "secret" => Paint::new(prefix).fg(Color::Fixed(244)).bold(),     // gray
+        _ => Paint::white(prefix).bold(),
+    };
+    format!("{colored_prefix}{rest}")
+}
+
+// Update do_line to use new header/line parsing
+pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<Info> {
     // exclude lines with only space or empty
     if line.trim().is_empty() {
         return None;
+    }
+
+    // Kubectl events mode detection
+    if is_kubectl_events_header(line, state) {
+        state.kubectl_events_mode = true;
+        // Print header with color
+        println!(
+            "{} {} {} {} {}",
+            "LAST SEEN".bold(),
+            "TYPE".bold(),
+            "REASON".bold(),
+            "OBJECT".bold(),
+            "MESSAGE".bold()
+        );
+        return None;
+    }
+    if state.kubectl_events_mode {
+        if let Some((last_seen, type_, reason, object, message)) =
+            parse_kubectl_event_line(line, state)
+        {
+            // Define fixed widths for each column
+            const LAST_SEEN_WIDTH: usize = 8;
+            const TYPE_WIDTH: usize = 8;
+            const REASON_WIDTH: usize = 18;
+            const OBJECT_WIDTH: usize = 52;
+
+            // Pad each column to its width
+            let last_seen_padded = format!("{last_seen:LAST_SEEN_WIDTH$}");
+            let type_padded = format!("{type_:TYPE_WIDTH$}");
+            let reason_padded = format!("{reason:REASON_WIDTH$}");
+            let object_padded = format!("{object:OBJECT_WIDTH$}");
+
+            // Colorize after padding (convert to &str)
+            let type_colored = match type_.as_str() {
+                "Warning" => Paint::red(&type_padded).bold(),
+                "Normal" => Paint::green(&type_padded).bold(),
+                _ => Paint::new(&type_padded).bold(),
+            };
+            let reason_colored = Paint::yellow(&reason_padded).bold();
+            let object_colored = colorize_object_type(&object_padded);
+            let last_seen_colored = Paint::new(&last_seen_padded).bold();
+            // Colorize MESSAGE (allow regex coloring)
+            let msg_colored = if config.regexp_colours.is_empty() {
+                message.clone()
+            } else {
+                apply_regexps(&config.regexp_colours, message.clone())
+            };
+            // Use a literal format string for Clippy compliance
+            println!(
+                concat!("{} {} {} {} {}"),
+                last_seen_colored, type_colored, reason_colored, object_colored, msg_colored
+            );
+            return None;
+        }
     }
 
     if config.action_regexp.is_some() {
@@ -239,14 +372,14 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
     } else {
         String::new()
     };
-    let mut themsg = msg.get("msg").unwrap().to_string();
+    let mut themsg = msg.get("msg").cloned().unwrap_or_default();
 
     if !config.regexp_colours.is_empty() {
         themsg = apply_regexps(&config.regexp_colours, themsg);
     }
 
     // Get stacktrace if available
-    let stacktrace = msg.get("stacktrace").map(std::string::ToString::to_string);
+    let stacktrace = msg.get("stacktrace").cloned();
 
     Some(Info {
         level,
@@ -259,10 +392,11 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
 
 pub fn read_from_stdin(config: &Arc<Config>) {
     let stdin = io::stdin();
+    let mut state = ParseState::default();
     for line in stdin.lock().lines() {
         let parseline = &line.unwrap();
 
-        if let Some(info) = do_line(config, parseline) {
+        if let Some(info) = do_line(config, parseline, &mut state) {
             println!(
                 "{} {} {}{}",
                 info.level, info.timestamp, info.others, info.msg
@@ -302,10 +436,11 @@ pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write)
         }
     };
     let buf_reader = BufReader::new(file);
+    let mut state = ParseState::default();
     for line in buf_reader.lines() {
         let parseline = &line.unwrap();
 
-        if let Some(info) = do_line(config, parseline) {
+        if let Some(info) = do_line(config, parseline, &mut state) {
             writeln!(
                 writeto,
                 "{} {} {}{}",
@@ -466,15 +601,9 @@ mod tests {
         let line = "{\"severity\":\"INFO\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\",\"caller\":\"foo.rs:1\",\"message\":\"hello moto\"}";
         let config = Config::default();
         let info = extract_info(line, &config);
-        assert_eq!(
-            info.get("msg").map_or(String::new(), |v| v.clone()),
-            "hello moto"
-        );
-        assert_eq!(
-            info.get("level").map_or(String::new(), |v| v.clone()),
-            "INFO"
-        );
-        assert!(info.get("ts").map_or(false, |v| !v.is_empty()));
+        assert_eq!(info.get("msg").cloned().unwrap_or_default(), "hello moto");
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "INFO");
+        assert!(info.get("ts").is_some_and(|v| !v.is_empty()));
     }
 
     #[test]
@@ -482,15 +611,9 @@ mod tests {
         let line = "{\"level\":\"DEBUG\",\"msg\":\"knative log\",\"ts\":1650602040.0}";
         let config = Config::default();
         let info = extract_info(line, &config);
-        assert_eq!(
-            info.get("msg").map_or(String::new(), |v| v.clone()),
-            "knative log"
-        );
-        assert_eq!(
-            info.get("level").map_or(String::new(), |v| v.clone()),
-            "DEBUG"
-        );
-        assert!(info.get("ts").map_or(false, |v| !v.is_empty()));
+        assert_eq!(info.get("msg").cloned().unwrap_or_default(), "knative log");
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "DEBUG");
+        assert!(info.get("ts").is_some_and(|v| !v.is_empty()));
     }
 
     #[test]
@@ -500,7 +623,8 @@ mod tests {
             ..Config::default()
         };
         let line = "{\"level\":\"INFO\",\"msg\":\"symbol test\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\"}";
-        let result = do_line(&config, line);
+        let mut state = ParseState::default();
+        let result = do_line(&config, line, &mut state);
         if result.is_none() {
             println!("DEBUG: do_line returned None for input: {line}");
         }
@@ -554,5 +678,77 @@ mod tests {
             .get("msg")
             .unwrap()
             .contains("ns/pod[container] foo"));
+    }
+
+    #[test]
+    fn test_kubectl_events_parsing_and_formatting() {
+        let header = "LAST SEEN   TYPE      REASON              OBJECT                                               MESSAGE";
+        let event_line = "119m        Warning   Unhealthy           pod/pipelines-as-code-controller-76d86f74bb-vxjtd    Readiness probe failed: Get \"http://10.128.0.97:8082/live\": dial tcp 10.128.0.97:8082: connect: connection refused";
+        let mut state = ParseState::default();
+        // Simulate header detection
+        assert!(crate::parse::is_kubectl_events_header(header, &mut state));
+        // Parse event line
+        let parsed = crate::parse::parse_kubectl_event_line(event_line, &state);
+        assert!(parsed.is_some());
+        let (last_seen, type_, reason, object, message) = parsed.unwrap();
+        assert_eq!(last_seen, "119m");
+        assert_eq!(type_, "Warning");
+        assert_eq!(reason, "Unhealthy");
+        assert_eq!(object, "pod/pipelines-as-code-controller-76d86f74bb-vxjtd");
+        assert!(message.contains("Readiness probe failed:"));
+    }
+
+    #[test]
+    fn test_kubectl_events_object_type_coloring() {
+        use yansi::Paint;
+        // Each type should have a distinct color
+        let pod = "pod/foo";
+        let replicaset = "replicaset/bar";
+        let deployment = "deployment/baz";
+        let service = "service/qux";
+        let job = "job/quux";
+        let daemonset = "daemonset/quuz";
+        let statefulset = "statefulset/corge";
+        let configmap = "configmap/grault";
+        let secret = "secret/garply";
+        let unknown = "foobar/xyz";
+
+        let pod_colored = colorize_object_type(pod);
+        let replicaset_colored = colorize_object_type(replicaset);
+        let deployment_colored = colorize_object_type(deployment);
+        let service_colored = colorize_object_type(service);
+        let job_colored = colorize_object_type(job);
+        let daemonset_colored = colorize_object_type(daemonset);
+        let statefulset_colored = colorize_object_type(statefulset);
+        let configmap_colored = colorize_object_type(configmap);
+        let secret_colored = colorize_object_type(secret);
+        let unknown_colored = colorize_object_type(unknown);
+
+        // All should contain ANSI color codes
+        for colored in [
+            &pod_colored,
+            &replicaset_colored,
+            &deployment_colored,
+            &service_colored,
+            &job_colored,
+            &daemonset_colored,
+            &statefulset_colored,
+            &configmap_colored,
+            &secret_colored,
+            &unknown_colored,
+        ] {
+            assert!(
+                colored.contains("\x1b["),
+                "Expected ANSI color codes in object type coloring: {colored}"
+            );
+        }
+        // Pod and replicaset should have different colors
+        assert_ne!(pod_colored, replicaset_colored);
+        // Pod and pod again should have the same color prefix
+        let pod2_colored = colorize_object_type("pod/bar");
+        assert_eq!(
+            pod_colored.split('/').next().unwrap(),
+            pod2_colored.split('/').next().unwrap()
+        );
     }
 }

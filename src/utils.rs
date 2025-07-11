@@ -113,7 +113,13 @@ pub fn custom_json_match(
     let mut dico = HashMap::new();
     if let Ok(p) = serde_json::from_str::<Value>(line) {
         for (key, value) in &config.json_keys {
-            if let Some(v) = p.pointer(value) {
+            // Accept both pointer ("/foo") and direct key ("foo")
+            let extracted = if value.starts_with('/') {
+                p.pointer(value)
+            } else {
+                p.get(value)
+            };
+            if let Some(v) = extracted {
                 let value_str = if key == "ts" || key == "timestamp" || key == "date" {
                     crate::utils::convert_ts_float_or_str(
                         v,

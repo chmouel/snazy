@@ -226,6 +226,25 @@ Here is a video showing the feature <https://streamable.com/7sf1hq>
 
 Shell completions are available for most shells using the command `--shell-completion` for example `--shell-completion=zsh`. Many different shell are supported. I let the reader figure out how to use them with their respective shells. Brew and RPM packages should have them auto configured for bash/fish/zsh.
 
+## Kubernetes Events Colorization
+
+Snazy can parse and colorize the output of `kubectl get events`, making it much easier to visually distinguish different Kubernetes object types (such as pods, deployments, replica sets, etc.). Each object type in the `OBJECT` column is assigned a distinct color, and all objects of the same type share the same color for consistency.
+
+Example usage:
+
+```shell
+kubectl get events -n <namespace> | snazy
+```
+
+- The `OBJECT` column will show each type (e.g., `pod/`, `replicaset/`, `deployment/`) in a unique color.
+- The rest of the columns (`LAST SEEN`, `TYPE`, `REASON`, `MESSAGE`) are also colorized for clarity.
+
+**Screenshot:**
+
+![kubectl events colorization screenshot](./.github/screenshot-kubectl-events.png)
+
+*Add your screenshot here to showcase the feature!*
+
 ## FAQ
 
 - I have seen a tool like that before with another stupid name? I used to have a python script that does the same and more called
