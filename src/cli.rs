@@ -265,5 +265,6 @@ pub fn build_cli_config() -> Config {
         regexp_colours,
         json_keys,
         hide_stacktrace: args.hide_stacktrace,
+        disable_coloring: !colouring,
     }
 }

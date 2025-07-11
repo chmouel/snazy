@@ -44,6 +44,9 @@ pub struct Info {
     stacktrace: Option<String>,
 }
 
+// Add to Config struct (in config.rs):
+// pub disable_coloring: bool,
+
 pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     let time_format = config.time_format.as_str();
     let timezone = config.timezone.as_deref();
@@ -117,7 +120,12 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     }
 
     if !config.kail_no_prefix && !kail_msg_prefix.is_empty() && msg.contains_key("msg") {
-        *msg.get_mut("msg").unwrap() = format!("{} {}", kail_msg_prefix.blue(), msg["msg"]);
+        let prefix = if config.disable_coloring {
+            kail_msg_prefix.clone()
+        } else {
+            kail_msg_prefix.blue().to_string()
+        };
+        *msg.get_mut("msg").unwrap() = format!("{} {}", prefix, msg["msg"]);
     }
     msg
 }
@@ -151,6 +159,7 @@ pub fn action_on_regexp(config: &Config, line: &str) {
             .as_ref()
             .unwrap()
             .replace("{}", regexpmatch);
+        let action_command_str = action_command.clone();
         if Command::new("sh")
             .arg("-c")
             .arg(action_command)
@@ -158,6 +167,8 @@ pub fn action_on_regexp(config: &Config, line: &str) {
             .is_ok()
         {
             println!("Spawned command: for action: {}", Paint::cyan(regexpmatch));
+        } else {
+            eprintln!("Failed to spawn action command: {}", action_command_str);
         }
     }
 }
@@ -182,11 +193,13 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         return None;
     }
 
-    if config
-        .skip_line_regexp
-        .iter()
-        .any(|s| Regex::new(s).unwrap().is_match(&msg["msg"]))
-    {
+    if config.skip_line_regexp.iter().any(|s| match Regex::new(s) {
+        Ok(re) => msg.get("msg").map_or(false, |m| re.is_match(m)),
+        Err(e) => {
+            eprintln!("Invalid skip_line_regexp pattern '{}': {}", s, e);
+            false
+        }
+    }) {
         return None;
     }
 
@@ -208,7 +221,11 @@ pub fn do_line(config: &Config, line: &str) -> Option<Info> {
         String::new()
     };
     let other = if let Some(o) = msg.get("others") {
-        format!(" {}", Paint::cyan(o).italic())
+        if config.disable_coloring {
+            format!(" {}", o)
+        } else {
+            format!(" {}", Paint::cyan(o).italic())
+        }
     } else {
         String::new()
     };
@@ -251,7 +268,7 @@ pub fn read_from_stdin(config: &Arc<Config>) {
                     // Format each line of the stacktrace with color highlighting
                     for stack_line in stack.lines() {
                         // Format the line with colored components
-                        let formatted_line = format_stack_line(stack_line);
+                        let formatted_line = format_stack_line(stack_line, config.disable_coloring);
                         println!("   {formatted_line}");
                     }
 
@@ -293,7 +310,7 @@ pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write)
                     // Format each line of the stacktrace with color highlighting
                     for stack_line in stack.lines() {
                         // Format the line with colored components
-                        let formatted_line = format_stack_line(stack_line);
+                        let formatted_line = format_stack_line(stack_line, config.disable_coloring);
                         writeln!(writeto, "   {formatted_line}").unwrap();
                     }
 
@@ -316,12 +333,15 @@ pub fn read_from_files(config: &Arc<Config>) {
 }
 
 // Format a line of stacktrace with colored components
-fn format_stack_line(line: &str) -> String {
+fn format_stack_line(line: &str, disable_coloring: bool) -> String {
     // Check if this is a file path line with line numbers (contains a colon with numbers after it)
     if line.contains(".go:")
         || line.contains(".rs:")
         || line.contains(".js:")
         || line.contains(".py:")
+        || line.contains(".cpp:")
+        || line.contains(".ts:")
+        || line.contains(".rb:")
     {
         // Format lines with file paths and line numbers
         if let Some(last_slash_pos) = line.rfind('/') {
@@ -337,14 +357,38 @@ fn format_stack_line(line: &str) -> String {
                 // Return colored parts
                 return format!(
                     "{}{}{}",
-                    path.fixed(15),                 // Path in dim gray
-                    filename.yellow().bold(),       // Filename in bright yellow
-                    format!(":{line_num}").green()  // Line number in green
+                    if disable_coloring {
+                        path.to_string()
+                    } else {
+                        path.fixed(15).to_string()
+                    },
+                    if disable_coloring {
+                        filename.to_string()
+                    } else {
+                        filename.yellow().bold().to_string()
+                    },
+                    if disable_coloring {
+                        format!(":{line_num}")
+                    } else {
+                        format!(":{line_num}").green().to_string()
+                    }
                 );
             }
 
             // If no colon found, just color the filename
-            return format!("{}{}", path.fixed(15), rest.yellow().bold());
+            return format!(
+                "{}{}",
+                if disable_coloring {
+                    path.to_string()
+                } else {
+                    path.fixed(15).to_string()
+                },
+                if disable_coloring {
+                    rest.to_string()
+                } else {
+                    rest.yellow().bold().to_string()
+                }
+            );
         }
 
         // If no slash found, check for a colon to split filename and line number
@@ -354,8 +398,16 @@ fn format_stack_line(line: &str) -> String {
 
             return format!(
                 "{}{}",
-                filename.yellow().bold(),
-                format!(":{line_num}").green()
+                if disable_coloring {
+                    filename.to_string()
+                } else {
+                    filename.yellow().bold().to_string()
+                },
+                if disable_coloring {
+                    format!(":{line_num}")
+                } else {
+                    format!(":{line_num}").green().to_string()
+                }
             );
         }
     }
@@ -367,13 +419,25 @@ fn format_stack_line(line: &str) -> String {
 
         return format!(
             "{}{}",
-            package_path.fixed(15),  // Package path in dim gray
-            func_name.cyan().bold()  // Function name in cyan
+            if disable_coloring {
+                package_path.to_string()
+            } else {
+                package_path.fixed(15).to_string()
+            },
+            if disable_coloring {
+                func_name.to_string()
+            } else {
+                func_name.cyan().bold().to_string()
+            }
         );
     }
 
     // Default formatting if no patterns matched
-    line.fixed(15).to_string()
+    if disable_coloring {
+        line.to_string()
+    } else {
+        line.fixed(15).to_string()
+    }
 }
 
 #[cfg(test)]
@@ -412,5 +476,34 @@ mod tests {
         }
         assert!(result.is_some());
         assert_eq!(result.unwrap().level, "💡");
+    }
+
+    #[test]
+    fn test_format_stack_line_coloring_toggle() {
+        let line = "/foo/bar.rs:42";
+        // With coloring
+        let colored = super::format_stack_line(line, false);
+        assert!(colored.contains("\x1b["), "Expected ANSI color codes in output");
+        // Without coloring
+        let plain = super::format_stack_line(line, true);
+        assert!(!plain.contains("\x1b["), "Expected no ANSI color codes in output");
+        assert!(plain.contains("/foo/bar.rs:42"));
+    }
+
+    #[test]
+    fn test_kail_prefix_coloring_toggle() {
+        let mut config = Config::default();
+        config.kail_prefix_format = "{namespace}/{pod}[{container}]".to_string();
+        // Use a valid Kail line with a proper JSON log message
+        let line = "ns/pod[container]: {\"msg\":\"foo\",\"level\":\"INFO\"}";
+        // With coloring
+        config.disable_coloring = false;
+        let info_colored = super::extract_info(line, &config);
+        assert!(info_colored.get("msg").unwrap().contains("\x1b["), "Expected ANSI color codes in prefix");
+        // Without coloring
+        config.disable_coloring = true;
+        let info_plain = super::extract_info(line, &config);
+        assert!(!info_plain.get("msg").unwrap().contains("\x1b["), "Expected no ANSI color codes in prefix");
+        assert!(info_plain.get("msg").unwrap().contains("ns/pod[container] foo"));
     }
 }

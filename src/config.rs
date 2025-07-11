@@ -47,6 +47,7 @@ pub struct Config {
     pub time_format: String,
     pub timezone: Option<String>,
     pub hide_stacktrace: bool,
+    pub disable_coloring: bool, // NEW FIELD
 }
 
 impl Default for Config {
@@ -65,6 +66,7 @@ impl Default for Config {
             action_command: Some(String::new()),
             skip_line_regexp: Vec::new(),
             hide_stacktrace: false,
+            disable_coloring: false, // NEW FIELD
         }
     }
 }
