@@ -241,7 +241,7 @@ kubectl get events -n <namespace> | snazy
 
 **Screenshot:**
 
-![kubectl events colorization screenshot](./.github/screenshot-kubectl-events.png)
+<img width="3840" height="1511" alt="image" src="https://github.com/user-attachments/assets/c857277f-c8ad-4495-a529-51a2f0376326" />
 
 *Add your screenshot here to showcase the feature!*
 
