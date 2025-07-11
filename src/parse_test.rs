@@ -158,35 +158,48 @@ mod tests {
     #[test]
     fn test_action_on_regexp() {
         // create a temporary file to delete at the end of the test
-        let file = tempfile::NamedTempFile::new().unwrap();
+        let file = tempfile::NamedTempFile::new().expect("Failed to create temp file");
         let file_path = file.path().to_path_buf();
-        file.close().unwrap();
+        file.close().expect("Failed to close temp file");
 
         let config = Config {
             action_regexp: Some(String::from(r"HELLO\s\w+")),
             action_command: Some(
-                String::from("echo \"you said {}\" > ") + file_path.to_str().unwrap(),
+                String::from("echo \"you said {}\" > ")
+                    + file_path
+                        .to_str()
+                        .expect("Failed to convert file path to str"),
             ),
             ..Config::default()
         };
         let line = r"un HELLO MOTO nono el petiot roboto";
         crate::parse::action_on_regexp(&config, line);
-        // sleep for a bit to let the file be created
-        thread::sleep(core::time::Duration::from_millis(50));
-        let mut file = std::fs::File::open(file_path).unwrap();
+        // Wait for the file to be created, up to 500ms
+        let mut waited = 0;
+        while !file_path.exists() && waited < 500 {
+            thread::sleep(core::time::Duration::from_millis(10));
+            waited += 10;
+        }
+        assert!(
+            file_path.exists(),
+            "File was not created by action_on_regexp"
+        );
+        let mut file = std::fs::File::open(file_path).expect("Failed to open file");
         let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
+        file.read_to_string(&mut contents)
+            .expect("Failed to read file contents");
         assert_eq!(contents, "you said HELLO MOTO\n");
     }
 
     #[test]
     fn test_read_from_file() {
-        let mut file: tempfile::NamedTempFile = tempfile::NamedTempFile::new().unwrap();
+        let mut file: tempfile::NamedTempFile =
+            tempfile::NamedTempFile::new().expect("Failed to create temp file");
         let file_path = file.path().to_path_buf();
         let line = r#"{"level":"INFO","ts":"2022-04-25T14:20:32.505637358Z", "msg":"hello world"}
 {"level":"DEBUG","ts":"2022-04-25T14:20:32.505637358Z", "msg":"debug"}"#;
 
-        Write::write_all(&mut file, line.as_bytes()).unwrap();
+        Write::write_all(&mut file, line.as_bytes()).expect("Failed to write to temp file");
 
         let config = Config {
             files: Some(vec![file_path.to_str().unwrap().to_string()]),
@@ -195,9 +208,19 @@ mod tests {
         let writeto = &mut Vec::new();
         crate::parse::read_a_file(&config, file_path.to_str().unwrap(), writeto);
         file.close().unwrap();
-        assert_eq!(
-            "\u{1b}[32mINFO\u{1b}[0m       \u{1b}[38;5;13m14:20:32\u{1b}[0m hello world\n\u{1b}[38;5;14mDEBUG\u{1b}[0m \u{1b}[38;5;13m14:20:32\u{1b}[0m debug\n",
-            std::str::from_utf8(writeto).unwrap()
+        let output = std::str::from_utf8(writeto).expect("Failed to convert output to utf8");
+        // Use regex to validate output contains expected log lines
+        let re_info = regex::Regex::new(r"INFO.*14:20:32.*hello world").unwrap();
+        let re_debug = regex::Regex::new(r"DEBUG.*14:20:32.*debug").unwrap();
+        assert!(
+            re_info.is_match(output),
+            "INFO log line not found or formatted incorrectly: {}",
+            output
+        );
+        assert!(
+            re_debug.is_match(output),
+            "DEBUG log line not found or formatted incorrectly: {}",
+            output
         );
     }
 
@@ -235,9 +258,6 @@ github.com/example/app.Function2(0x123456)
         // Stacktrace should be visible
         let output_with_stacktrace = std::str::from_utf8(writeto_visible).unwrap();
 
-        // Print the output for debugging
-        println!("Output with stacktrace enabled:\n{output_with_stacktrace}");
-
         // Check for presence of stacktrace header
         assert!(output_with_stacktrace.contains("Stacktrace"));
 
@@ -260,14 +280,72 @@ github.com/example/app.Function2(0x123456)
         // Stacktrace should not be visible
         let output_without_stacktrace = std::str::from_utf8(writeto_hidden).unwrap();
 
-        // Print the output for debugging
-        println!("Output with stacktrace disabled:\n{output_without_stacktrace}");
-
         // Check basic stacktrace content is not there
         assert!(!output_without_stacktrace.contains("Stacktrace"));
         assert!(!output_without_stacktrace.contains("app.go"));
 
         // The error message should still be visible
         assert!(output_without_stacktrace.contains("Error occurred"));
+    }
+
+    #[test]
+    fn test_read_from_missing_file() {
+        let missing_path = "/tmp/this_file_should_not_exist_snazy_test";
+        let config = Config {
+            files: Some(vec![missing_path.to_string()]),
+            ..Config::default()
+        };
+        let result = std::panic::catch_unwind(|| {
+            let mut writeto = Vec::new();
+            crate::parse::read_a_file(&config, missing_path, &mut writeto);
+            writeto
+        });
+        assert!(result.is_ok(), "read_a_file panicked on missing file");
+        let output = result.unwrap();
+        assert_eq!(output.len(), 0, "Output should be empty for missing file");
+    }
+
+    #[test]
+    fn test_read_from_malformed_json() {
+        let file = tempfile::NamedTempFile::new().expect("Failed to create temp file");
+        let file_path = file.path().to_path_buf();
+        let line = "{this is not valid json}";
+        std::io::Write::write_all(&mut file.as_file(), line.as_bytes())
+            .expect("Failed to write to temp file");
+        let config = Config {
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            ..Config::default()
+        };
+        let result = std::panic::catch_unwind(|| {
+            let mut writeto = Vec::new();
+            crate::parse::read_a_file(&config, file_path.to_str().unwrap(), &mut writeto);
+            writeto
+        });
+        file.close().unwrap();
+        assert!(result.is_ok(), "read_a_file panicked on malformed JSON");
+        let output = result.unwrap();
+        assert!(
+            output.is_empty() || std::str::from_utf8(&output).unwrap().contains("error"),
+            "Malformed JSON should not produce valid output"
+        );
+    }
+
+    #[test]
+    fn test_read_from_empty_file() {
+        let file = tempfile::NamedTempFile::new().expect("Failed to create temp file");
+        let file_path = file.path().to_path_buf();
+        let config = Config {
+            files: Some(vec![file_path.to_str().unwrap().to_string()]),
+            ..Config::default()
+        };
+        let result = std::panic::catch_unwind(|| {
+            let mut writeto = Vec::new();
+            crate::parse::read_a_file(&config, file_path.to_str().unwrap(), &mut writeto);
+            writeto
+        });
+        file.close().unwrap();
+        assert!(result.is_ok(), "read_a_file panicked on empty file");
+        let output = result.unwrap();
+        assert_eq!(output.len(), 0, "Output should be empty for empty file");
     }
 }

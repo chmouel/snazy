@@ -264,11 +264,14 @@ pub fn read_from_stdin(config: &Arc<Config>) {
 
 // read from file and output to the writer. This makes it easy to unittest
 pub fn read_a_file(config: &Config, filename: &str, writeto: &mut dyn io::Write) {
-    let file = File::open(filename).map_err(|e| {
-        eprintln!("file {filename}, {e}");
-        std::process::exit(1);
-    });
-    let buf_reader = BufReader::new(file.unwrap());
+    let file = match File::open(filename) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("file {filename}, {e}");
+            return; // Gracefully return instead of exiting the process
+        }
+    };
+    let buf_reader = BufReader::new(file);
     for line in buf_reader.lines() {
         let parseline = &line.unwrap();
 
