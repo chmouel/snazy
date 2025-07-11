@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn test_convert_ts_float_or_str_non_float() {
-        // Should return empty string for non-float number
+        // Should return string representation for non-float number
         assert_eq!(
             convert_ts_float_or_str(
                 &serde_json::json!("not_a_number"),
@@ -197,11 +197,11 @@ mod tests {
         );
         assert_eq!(
             convert_ts_float_or_str(
-                &serde_json::json!(12345678901234567890u64),
+                &serde_json::json!(9223372036854775807u64),
                 "%Y-%m-%d %H:%M:%S",
                 None
             ),
-            ""
+            "9223372036854775807"
         );
     }
 

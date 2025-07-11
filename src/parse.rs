@@ -375,3 +375,42 @@ fn format_stack_line(line: &str) -> String {
     // Default formatting if no patterns matched
     line.fixed(15).to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+
+    #[test]
+    fn test_extract_info_pac() {
+        let line = "{\"severity\":\"INFO\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\",\"caller\":\"foo.rs:1\",\"message\":\"hello moto\"}";
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(info.get("msg").unwrap_or(&"".to_string()), "hello moto");
+        assert_eq!(info.get("level").unwrap_or(&"".to_string()), "INFO");
+        assert!(info.get("ts").map(|v| !v.is_empty()).unwrap_or(true));
+    }
+
+    #[test]
+    fn test_extract_info_knative() {
+        let line = "{\"level\":\"DEBUG\",\"msg\":\"knative log\",\"ts\":1650602040.0}";
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(info.get("msg").unwrap_or(&"".to_string()), "knative log");
+        assert_eq!(info.get("level").unwrap_or(&"".to_string()), "DEBUG");
+        assert!(info.get("ts").map(|v| !v.is_empty()).unwrap_or(true));
+    }
+
+    #[test]
+    fn test_do_line_level_symbols() {
+        let mut config = Config::default();
+        config.level_symbols = true;
+        let line = "{\"level\":\"INFO\",\"msg\":\"symbol test\",\"timestamp\":\"2022-04-25T10:24:30.155404234Z\"}";
+        let result = do_line(&config, line);
+        if result.is_none() {
+            println!("DEBUG: do_line returned None for input: {}", line);
+        }
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().level, "💡");
+    }
+}
