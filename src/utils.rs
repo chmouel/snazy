@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use chrono_tz::Tz;
 use regex::Regex;
 use serde_json::Value;
@@ -59,7 +59,7 @@ pub fn convert_str_to_ts(s: &str, time_format: &str, timezone: Option<&str>) -> 
 /// Converts a Unix timestamp (i64) to formatted string, optionally applying a timezone.
 /// Returns the original value as string if conversion fails.
 fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> String {
-    if let Some(ts) = DateTime::from_timestamp(value, 0) {
+    if let Some(ts) = Utc.timestamp_opt(value, 0).single() {
         if let Some(tz) = timezone {
             if let Ok(tz) = tz.parse::<Tz>() {
                 return ts.with_timezone(&tz).format(time_format).to_string();
@@ -81,7 +81,7 @@ pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Optio
             } else {
                 String::new() // Gracefully handle non-float numbers
             }
-        },
+        }
         _ => String::new(),
     }
 }
@@ -187,8 +187,22 @@ mod tests {
     #[test]
     fn test_convert_ts_float_or_str_non_float() {
         // Should return empty string for non-float number
-        assert_eq!(convert_ts_float_or_str(&serde_json::json!("not_a_number"), "%Y-%m-%d %H:%M:%S", None), "not_a_number");
-        assert_eq!(convert_ts_float_or_str(&serde_json::json!(12345678901234567890u64), "%Y-%m-%d %H:%M:%S", None), "");
+        assert_eq!(
+            convert_ts_float_or_str(
+                &serde_json::json!("not_a_number"),
+                "%Y-%m-%d %H:%M:%S",
+                None
+            ),
+            "not_a_number"
+        );
+        assert_eq!(
+            convert_ts_float_or_str(
+                &serde_json::json!(12345678901234567890u64),
+                "%Y-%m-%d %H:%M:%S",
+                None
+            ),
+            ""
+        );
     }
 
     #[test]
