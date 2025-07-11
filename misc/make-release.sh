@@ -5,39 +5,39 @@ CARGO_VERSION=$(grep '^version = "' Cargo.toml | grep -Eo '[0-9]+\.[0-9]+\.[0-9]
 PKGNAME=$(grep '^name = "' Cargo.toml | sed -E 's/.*"(\w+)"/\1/')
 
 bumpversion() {
-	current=$(git describe --tags $(git rev-list --tags --max-count=1))
-	echo "Current tag version is ${current}"
+  current=$(git describe --tags $(git rev-list --tags --max-count=1))
+  echo "Current tag version is ${current}"
 
-	major=$(python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_major()))" ${current})
-	minor=$(python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_minor()))" ${current})
-	patch=$(python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_patch()))" ${current})
+  major=$(uv run --with semver python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_major()))" ${current})
+  minor=$(uv run --with semver python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_minor()))" ${current})
+  patch=$(uv run --with semver python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_patch()))" ${current})
 
-	echo "If we bump we get, Major: ${major} Minor: ${minor} Patch: ${patch}"
-	read -p "To which version you would like to bump [M]ajor, Mi[n]or, [P]atch or Manua[l]: " ANSWER
-	if [[ ${ANSWER,,} == "m" ]]; then
-		mode="major"
-	elif [[ ${ANSWER,,} == "n" ]]; then
-		mode="minor"
-	elif [[ ${ANSWER,,} == "p" ]]; then
-		mode="patch"
-	elif [[ ${ANSWER,,} == "l" ]]; then
-		read -p "Enter version: " -e VERSION
-		return
-	else
-		echo "no or bad reply??"
-		exit
-	fi
-	VERSION=$(python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_${mode}()))" ${current})
-	[[ -z ${VERSION} ]] && {
-		echo "could not bump version automatically"
-		exit
-	}
-	echo "[release] Releasing ${VERSION}"
+  echo "If we bump we get, Major: ${major} Minor: ${minor} Patch: ${patch}"
+  read -p "To which version you would like to bump [M]ajor, Mi[n]or, [P]atch or Manua[l]: " ANSWER
+  if [[ ${ANSWER,,} == "m" ]]; then
+    mode="major"
+  elif [[ ${ANSWER,,} == "n" ]]; then
+    mode="minor"
+  elif [[ ${ANSWER,,} == "p" ]]; then
+    mode="patch"
+  elif [[ ${ANSWER,,} == "l" ]]; then
+    read -p "Enter version: " -e VERSION
+    return
+  else
+    echo "no or bad reply??"
+    exit
+  fi
+  VERSION=$(uv run --with semver python3 -c "import semver,sys;print(str(semver.VersionInfo.parse(sys.argv[1]).bump_${mode}()))" ${current})
+  [[ -z ${VERSION} ]] && {
+    echo "could not bump version automatically"
+    exit
+  }
+  echo "[release] Releasing ${VERSION}"
 }
 
 [[ $(git rev-parse --abbrev-ref HEAD) != main ]] && {
-	echo "you need to be on the main branch"
-	exit 1
+  echo "you need to be on the main branch"
+  exit 1
 }
 [[ -z ${VERSION} ]] && bumpversion
 
