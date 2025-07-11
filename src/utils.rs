@@ -41,6 +41,8 @@ pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
     }
 }
 
+/// Converts a string timestamp to formatted string, optionally applying a timezone.
+/// Returns the original string if parsing fails.
 pub fn convert_str_to_ts(s: &str, time_format: &str, timezone: Option<&str>) -> String {
     if let Ok(ts) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ") {
         let utc_dt = Utc.from_utc_datetime(&ts);
@@ -54,6 +56,8 @@ pub fn convert_str_to_ts(s: &str, time_format: &str, timezone: Option<&str>) -> 
     s.to_string()
 }
 
+/// Converts a Unix timestamp (i64) to formatted string, optionally applying a timezone.
+/// Returns the original value as string if conversion fails.
 fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> String {
     if let Some(ts) = DateTime::from_timestamp(value, 0) {
         if let Some(tz) = timezone {
@@ -66,18 +70,31 @@ fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> Str
     value.to_string()
 }
 
+/// Converts a JSON value (string or number) to a formatted timestamp string.
+/// Returns empty string for unsupported types or conversion errors.
 pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Option<&str>) -> String {
     match value {
         Value::String(s) => convert_str_to_ts(s.as_str(), time_format, timezone),
-        Value::Number(n) => convert_unix_ts(n.as_f64().unwrap() as i64, time_format, timezone),
+        Value::Number(n) => {
+            if let Some(f) = n.as_f64() {
+                convert_unix_ts(f as i64, time_format, timezone)
+            } else {
+                String::new() // Gracefully handle non-float numbers
+            }
+        },
         _ => String::new(),
     }
 }
 
+/// Applies regex-based styles to a message string using the provided map.
+/// Skips invalid regexes and returns the original string if no match.
 pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
     let mut ret = msg;
     for (key, value) in regexps {
-        let re = Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()).unwrap();
+        let re = match Regex::new(format!(r"(?P<r>{})", key.as_str()).as_str()) {
+            Ok(r) => r,
+            Err(_) => continue, // Skip invalid regex
+        };
         if let Some(matched) = re.find(&ret) {
             let replace = matched.as_str().paint(*value).to_string();
             ret = re.replace_all(&ret, replace).to_string();
@@ -86,6 +103,8 @@ pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
     ret
 }
 
+/// Extracts and remaps JSON keys from a log line using config.json_keys.
+/// Handles timestamp formatting and Kail prefix.
 pub fn custom_json_match(
     config: &Config,
     time_format: &str,
@@ -163,5 +182,21 @@ mod tests {
             ),
             "2020-01-01 01:00:00" // Paris is UTC+1
         );
+    }
+
+    #[test]
+    fn test_convert_ts_float_or_str_non_float() {
+        // Should return empty string for non-float number
+        assert_eq!(convert_ts_float_or_str(&serde_json::json!("not_a_number"), "%Y-%m-%d %H:%M:%S", None), "not_a_number");
+        assert_eq!(convert_ts_float_or_str(&serde_json::json!(12345678901234567890u64), "%Y-%m-%d %H:%M:%S", None), "");
+    }
+
+    #[test]
+    fn test_apply_regexps_invalid_regex() {
+        let mut regexps = HashMap::new();
+        regexps.insert(String::from("[invalid"), Style::new().fg(yansi::Color::Red));
+        let msg = String::from("test [invalid regex");
+        // Should not panic, should return original string
+        assert_eq!(apply_regexps(&regexps, msg.clone()), msg);
     }
 }
