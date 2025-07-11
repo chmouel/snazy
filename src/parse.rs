@@ -483,10 +483,16 @@ mod tests {
         let line = "/foo/bar.rs:42";
         // With coloring
         let colored = super::format_stack_line(line, false);
-        assert!(colored.contains("\x1b["), "Expected ANSI color codes in output");
+        assert!(
+            colored.contains("\x1b["),
+            "Expected ANSI color codes in output"
+        );
         // Without coloring
         let plain = super::format_stack_line(line, true);
-        assert!(!plain.contains("\x1b["), "Expected no ANSI color codes in output");
+        assert!(
+            !plain.contains("\x1b["),
+            "Expected no ANSI color codes in output"
+        );
         assert!(plain.contains("/foo/bar.rs:42"));
     }
 
@@ -499,11 +505,20 @@ mod tests {
         // With coloring
         config.disable_coloring = false;
         let info_colored = super::extract_info(line, &config);
-        assert!(info_colored.get("msg").unwrap().contains("\x1b["), "Expected ANSI color codes in prefix");
+        assert!(
+            info_colored.get("msg").unwrap().contains("\x1b["),
+            "Expected ANSI color codes in prefix"
+        );
         // Without coloring
         config.disable_coloring = true;
         let info_plain = super::extract_info(line, &config);
-        assert!(!info_plain.get("msg").unwrap().contains("\x1b["), "Expected no ANSI color codes in prefix");
-        assert!(info_plain.get("msg").unwrap().contains("ns/pod[container] foo"));
+        assert!(
+            !info_plain.get("msg").unwrap().contains("\x1b["),
+            "Expected no ANSI color codes in prefix"
+        );
+        assert!(info_plain
+            .get("msg")
+            .unwrap()
+            .contains("ns/pod[container] foo"));
     }
 }
