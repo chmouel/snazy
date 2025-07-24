@@ -64,10 +64,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     // Try custom JSON key extraction first
     if !config.json_keys.is_empty() {
         msg = custom_json_match(config, time_format, &kail_msg_prefix, line.as_str());
-        eprintln!(
-            "extract_info: after custom_json_match, keys: {:?}",
-            msg.keys().collect::<Vec<_>>()
-        );
     }
 
     // Fallback to Pac/Knative parsing if custom extraction failed
@@ -122,10 +118,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
                 }
             }
         }
-        eprintln!(
-            "extract_info: after fallback, keys: {:?}",
-            msg.keys().collect::<Vec<_>>()
-        );
     }
 
     // Kail prefix logic (apply for both custom and fallback)
@@ -141,10 +133,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         };
         *msg.get_mut("msg").unwrap() = format!("{} {}", prefix, msg["msg"]);
     }
-    eprintln!(
-        "extract_info: final keys: {:?}",
-        msg.keys().collect::<Vec<_>>()
-    );
     msg
 }
 
