@@ -700,7 +700,6 @@ mod tests {
 
     #[test]
     fn test_kubectl_events_object_type_coloring() {
-        use yansi::Paint;
         // Each type should have a distinct color
         let pod = "pod/foo";
         let replicaset = "replicaset/bar";
@@ -745,10 +744,10 @@ mod tests {
         // Pod and replicaset should have different colors
         assert_ne!(pod_colored, replicaset_colored);
         // Pod and pod again should have the same color prefix
-        let pod2_colored = colorize_object_type("pod/bar");
+        let is_pod_bar_colored = colorize_object_type("pod/bar");
         assert_eq!(
             pod_colored.split('/').next().unwrap(),
-            pod2_colored.split('/').next().unwrap()
+            is_pod_bar_colored.split('/').next().unwrap()
         );
     }
 }
