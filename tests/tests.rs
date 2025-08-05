@@ -224,6 +224,27 @@ snazytest!(
     false
 );
 
+snazytest!(
+    extra_fields_all,
+    ["--color", "never", "--extra-fields"],
+    r#"{"level":"info","msg":"foo","duration_ms":123,"status_code":200,"url_path":"/api/test"}"#,
+    "INFO                 foo duration_ms=123 status_code=200 url_path=/api/test\n",
+    false
+);
+
+snazytest!(
+    include_fields_subset,
+    [
+        "--color",
+        "never",
+        "--include-fields",
+        "duration_ms,status_code"
+    ],
+    r#"{"level":"info","msg":"foo","duration_ms":123,"status_code":200,"url_path":"/api/test"}"#,
+    "INFO                 foo duration_ms=123 status_code=200\n",
+    false
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {

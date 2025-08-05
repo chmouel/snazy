@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::fmt::Write as FmtWrite;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{self, BufRead};
@@ -64,10 +65,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
     // Try custom JSON key extraction first
     if !config.json_keys.is_empty() {
         msg = custom_json_match(config, time_format, &kail_msg_prefix, line.as_str());
-        eprintln!(
-            "extract_info: after custom_json_match, keys: {:?}",
-            msg.keys().collect::<Vec<_>>()
-        );
     }
 
     // Fallback to Pac/Knative parsing if custom extraction failed
@@ -122,10 +119,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
                 }
             }
         }
-        eprintln!(
-            "extract_info: after fallback, keys: {:?}",
-            msg.keys().collect::<Vec<_>>()
-        );
     }
 
     // Kail prefix logic (apply for both custom and fallback)
@@ -141,10 +134,6 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
         };
         *msg.get_mut("msg").unwrap() = format!("{} {}", prefix, msg["msg"]);
     }
-    eprintln!(
-        "extract_info: final keys: {:?}",
-        msg.keys().collect::<Vec<_>>()
-    );
     msg
 }
 
@@ -378,6 +367,50 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
         themsg = apply_regexps(&config.regexp_colours, themsg);
     }
 
+    // Add extra fields if requested
+    let mut extra_fields_str = String::new();
+    if config.extra_fields || !config.include_fields.is_empty() {
+        // Try to parse the line as JSON
+        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(line) {
+            let obj = json_value.as_object();
+            if let Some(map) = obj {
+                let mut fields: Vec<_> = map.iter().collect();
+                // Remove main fields
+                let main_fields = [
+                    "msg",
+                    "message",
+                    "level",
+                    "severity",
+                    "ts",
+                    "timestamp",
+                    "stacktrace",
+                ];
+                fields.retain(|(k, _)| !main_fields.contains(&k.as_str()));
+                // If include_fields is set, filter to only those
+                if !config.include_fields.is_empty() {
+                    fields.retain(|(k, _)| {
+                        config
+                            .include_fields
+                            .iter()
+                            .any(|f| f.as_str() == k.as_str())
+                    });
+                }
+                for (k, v) in fields {
+                    let key_colored = match config.coloring {
+                        crate::config::Coloring::Never => k.to_string(),
+                        _ => yansi::Paint::magenta(k).bold().to_string(),
+                    };
+                    let value_str = if v.is_string() {
+                        v.as_str().unwrap().to_string()
+                    } else {
+                        v.to_string()
+                    };
+                    write!(extra_fields_str, " {key_colored}={value_str}").unwrap();
+                }
+            }
+        }
+    }
+
     // Get stacktrace if available
     let stacktrace = msg.get("stacktrace").cloned();
 
@@ -385,7 +418,7 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
         level,
         timestamp: ts,
         others: other,
-        msg: themsg,
+        msg: format!("{themsg}{extra_fields_str}"),
         stacktrace,
     })
 }

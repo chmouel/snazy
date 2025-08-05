@@ -20,6 +20,7 @@ Try to stream some logs or specify a log file and let snazy, <red>snazzy them</r
 
 /// Snazzy is a snazy log viewer
 #[derive(Parser, Debug)]
+#[allow(clippy::struct_excessive_bools)]
 #[command(
     author,
     version,
@@ -123,6 +124,14 @@ struct Args {
     #[arg(long, action(clap::ArgAction::SetTrue), env = "SNAZY_HIDE_STACKTRACE")]
     /// Hide stacktraces in the log output
     pub hide_stacktrace: bool,
+
+    #[arg(long, action(clap::ArgAction::SetTrue), env = "SNAZY_EXTRA_FIELDS")]
+    /// Include all available fields from JSON logs
+    pub extra_fields: bool,
+
+    #[arg(long, value_delimiter = ',', env = "SNAZY_INCLUDE_FIELDS")]
+    /// Include specific fields from JSON logs (comma-separated)
+    pub include_fields: Vec<String>,
 
     #[arg(value_hint = ValueHint::FilePath)]
     files: Option<Vec<String>>,
@@ -265,5 +274,7 @@ pub fn build_cli_config() -> Config {
         json_keys,
         hide_stacktrace: args.hide_stacktrace,
         coloring,
+        extra_fields: args.extra_fields,
+        include_fields: args.include_fields,
     }
 }

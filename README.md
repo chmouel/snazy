@@ -201,6 +201,30 @@ are supported for now (ie: no rgb or fixed):
   snazy --action-regexp "pipelinerun(s)?\s*.*has success" --action-command "osascript -e 'display notification \"{}\"'"
   ```
 
+- By default snazy will show only some fields as autodetected from your log. You can display all extra fields from your JSON logs using the `--extra-fields` flag (or the environment variable `SNAZY_EXTRA_FIELDS`):
+
+```shell
+cat log.json | snazy --extra-fields
+# or
+SNAZY_EXTRA_FIELDS=1 cat log.json | snazy
+```
+
+Or only specific fields using `--include-fields` (comma-separated, or the environment variable `SNAZY_INCLUDE_FIELDS`):
+
+```shell
+cat log.json | snazy --include-fields duration_ms,status_code,url_path
+# or
+SNAZY_INCLUDE_FIELDS=duration_ms,status_code,url_path cat log.json | snazy
+```
+
+This will append the specified fields to the output, with the field names colorized for clarity.
+
+Example output:
+
+```console
+🐛 07:55:22 GitHub API call completed duration_ms=348 status_code=200 url_path=/api/v3/repos/chmouel/e2e-gapps/issues/comments/46969
+```
+
 ## Interactive filtering with fzf
 
 You can go even further with UNIX shell pipelines, and feed snazy to fzf for interactive filtering of the stream. for example to stream everything on a kubernetes cluster with kail, transforming the logs via snazy and finally using fzf to interactively select the patter to match:

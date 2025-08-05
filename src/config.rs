@@ -58,6 +58,8 @@ pub struct Config {
     pub timezone: Option<String>,
     pub hide_stacktrace: bool,
     pub coloring: Coloring,
+    pub extra_fields: bool,
+    pub include_fields: Vec<String>,
 }
 
 impl Default for Config {
@@ -77,6 +79,8 @@ impl Default for Config {
             skip_line_regexp: Vec::new(),
             hide_stacktrace: false,
             coloring: Coloring::Auto,
+            extra_fields: false,
+            include_fields: Vec::new(),
         }
     }
 }
