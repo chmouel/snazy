@@ -206,7 +206,8 @@ are supported for now (ie: no rgb or fixed):
 ```shell
 cat log.json | snazy --extra-fields
 # or
-SNAZY_EXTRA_FIELDS=1 cat log.json | snazy
+export SNAZY_EXTRA_FIELDS=true
+cat log.json | snazy
 ```
 
 Or only specific fields using `--include-fields` (comma-separated, or the environment variable `SNAZY_INCLUDE_FIELDS`):
@@ -214,7 +215,8 @@ Or only specific fields using `--include-fields` (comma-separated, or the enviro
 ```shell
 cat log.json | snazy --include-fields duration_ms,status_code,url_path
 # or
-SNAZY_INCLUDE_FIELDS=duration_ms,status_code,url_path cat log.json | snazy
+export SNAZY_INCLUDE_FIELDS=duration_ms,status_code,url_path
+cat log.json | snazy
 ```
 
 This will append the specified fields to the output, with the field names colorized for clarity.
