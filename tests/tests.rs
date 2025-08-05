@@ -245,6 +245,80 @@ snazytest!(
     false
 );
 
+snazytest!(
+    include_fields_kail_basic,
+    [
+        "--color",
+        "never",
+        "--include-fields",
+        "commit,provider,operation"
+    ],
+    r#"pipelines-as-code/controller-pod[container]: {"level":"info","msg":"GitHub API call completed","commit":"c42eedb","provider":"github","operation":"list_comments","url_path":"/api/v3/repos/user/repo/issues/494/comments"}"#,
+    "INFO                 pipelines-as-code/controller-pod[container] GitHub API call completed commit=c42eedb provider=github operation=list_comments\n",
+    false
+);
+
+snazytest!(
+    include_fields_kail_all_fields,
+    [
+        "--color",
+        "never",
+        "--include-fields",
+        "commit,provider,operation,url_path"
+    ],
+    r#"ns/pod[container]: {"level":"info","msg":"API call","commit":"c42eedb-dirty","provider":"github","operation":"list_comments","url_path":"/api/v3/repos/chmouel/e2e-gapps/issues/494/comments"}"#,
+    "INFO                 ns/pod[container] API call commit=c42eedb-dirty provider=github operation=list_comments url_path=/api/v3/repos/chmouel/e2e-gapps/issues/494/comments\n",
+    false
+);
+
+snazytest!(
+    include_fields_kail_missing_fields,
+    [
+        "--color",
+        "never",
+        "--include-fields",
+        "commit,missing_field,provider"
+    ],
+    r#"test-ns/test-pod[test-container]: {"level":"debug","msg":"test message","commit":"abc123","provider":"gitlab"}"#,
+    "DEBUG                test-ns/test-pod[test-container] test message commit=abc123 provider=gitlab\n",
+    false
+);
+
+snazytest!(
+    include_fields_kail_nested_fields,
+    [
+        "--color",
+        "never",
+        "--include-fields",
+        "request.method,response.status,metadata.user_id"
+    ],
+    r#"app/service[worker]: {"level":"info","msg":"Request processed","request":{"method":"POST","path":"/api/users"},"response":{"status":201,"body":"created"},"metadata":{"user_id":"user123","session_id":"sess456"}}"#,
+    "INFO                 app/service[worker] Request processed request.method=POST response.status=201 metadata.user_id=user123\n",
+    false
+);
+
+snazytest!(
+    include_fields_kail_no_prefix,
+    [
+        "--color",
+        "never",
+        "--kail-no-prefix",
+        "--include-fields",
+        "commit,provider"
+    ],
+    r#"ns/pod[container]: {"level":"warn","msg":"Warning message","commit":"def456","provider":"bitbucket-cloud","extra":"ignored"}"#,
+    "WARN                 Warning message commit=def456 provider=bitbucket-cloud\n",
+    false
+);
+
+snazytest!(
+    include_fields_kail_with_colors,
+    ["--color", "always", "--include-fields", "status,endpoint"],
+    r#"web/frontend[app]: {"level":"info","msg":"HTTP request","status":"200","endpoint":"/health","timestamp":"2023-01-01T12:00:00Z"}"#,
+    "HTTP request",
+    true
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {

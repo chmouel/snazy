@@ -274,13 +274,12 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
             const LAST_SEEN_WIDTH: usize = 8;
             const TYPE_WIDTH: usize = 8;
             const REASON_WIDTH: usize = 18;
-            const OBJECT_WIDTH: usize = 52;
 
             // Pad each column to its width
             let last_seen_padded = format!("{last_seen:LAST_SEEN_WIDTH$}");
             let type_padded = format!("{type_:TYPE_WIDTH$}");
             let reason_padded = format!("{reason:REASON_WIDTH$}");
-            let object_padded = format!("{object:OBJECT_WIDTH$}");
+            let object_padded = format!("{object:52}");
 
             // Colorize after padding (convert to &str)
             let type_colored = match type_.as_str() {
@@ -370,8 +369,19 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
     // Add extra fields if requested
     let mut extra_fields_str = String::new();
     if config.extra_fields || !config.include_fields.is_empty() {
-        // Try to parse the line as JSON
-        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(line) {
+        // Extract the JSON part from kail line if needed
+        let json_line = if parse_kail_lines(config, line).is_some() {
+            if let Ok(replacer) = Regex::new(KAIL_RE) {
+                replacer.replace_all(line, "$line").to_string()
+            } else {
+                line.to_string()
+            }
+        } else {
+            line.to_string()
+        };
+
+        // Try to parse the JSON line
+        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&json_line) {
             let obj = json_value.as_object();
             if let Some(map) = obj {
                 let mut fields: Vec<_> = map.iter().collect();
@@ -386,26 +396,36 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
                     "stacktrace",
                 ];
                 fields.retain(|(k, _)| !main_fields.contains(&k.as_str()));
-                // If include_fields is set, filter to only those
-                if !config.include_fields.is_empty() {
-                    fields.retain(|(k, _)| {
-                        config
-                            .include_fields
-                            .iter()
-                            .any(|f| f.as_str() == k.as_str())
-                    });
-                }
-                for (k, v) in fields {
-                    let key_colored = match config.coloring {
-                        crate::config::Coloring::Never => k.to_string(),
-                        _ => yansi::Paint::magenta(k).bold().to_string(),
-                    };
-                    let value_str = if v.is_string() {
-                        v.as_str().unwrap().to_string()
-                    } else {
-                        v.to_string()
-                    };
-                    write!(extra_fields_str, " {key_colored}={value_str}").unwrap();
+                if config.include_fields.is_empty() {
+                    for (k, v) in fields {
+                        let key_bold = match config.coloring {
+                            crate::config::Coloring::Never => k.to_string(),
+                            _ => yansi::Paint::new(k).bold().to_string(),
+                        };
+                        let value_str = if v.is_string() {
+                            v.as_str().unwrap().to_string()
+                        } else {
+                            v.to_string()
+                        };
+                        write!(extra_fields_str, " {key_bold}={value_str}").unwrap();
+                    }
+                } else {
+                    for field in &config.include_fields {
+                        if let Some(val) = get_nested_value(&json_value, field) {
+                            let key_bold = match config.coloring {
+                                crate::config::Coloring::Never => field.to_string(),
+                                _ => yansi::Paint::new(field).bold().to_string(),
+                            };
+                            let value_str = if val.is_string() {
+                                val.as_str().unwrap().to_string()
+                            } else {
+                                val.to_string()
+                            };
+                            write!(extra_fields_str, " {key_bold}={value_str}").unwrap();
+                        } else {
+                            // Field not found, skip silently
+                        }
+                    }
                 }
             }
         }
@@ -414,13 +434,34 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
     // Get stacktrace if available
     let stacktrace = msg.get("stacktrace").cloned();
 
+    // Compose the final message with a clear separator for extra fields
+    let final_msg = if extra_fields_str.is_empty() {
+        themsg.to_string()
+    } else {
+        format!("{themsg}{extra_fields_str}")
+    };
+
     Some(Info {
         level,
         timestamp: ts,
         others: other,
-        msg: format!("{themsg}{extra_fields_str}"),
+        msg: final_msg,
         stacktrace,
     })
+}
+
+// Helper to get nested value by dot notation
+fn get_nested_value<'a>(v: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
+    let mut current = v;
+    for part in path.split('.') {
+        match current {
+            serde_json::Value::Object(map) => {
+                current = map.get(part)?;
+            }
+            _ => return None,
+        }
+    }
+    Some(current)
 }
 
 pub fn read_from_stdin(config: &Arc<Config>) {
