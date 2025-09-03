@@ -298,8 +298,7 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
             };
             // Use a literal format string for Clippy compliance
             println!(
-                concat!("{} {} {} {} {}"),
-                last_seen_colored, type_colored, reason_colored, object_colored, msg_colored
+                "{last_seen_colored} {type_colored} {reason_colored} {object_colored} {msg_colored}"
             );
             return None;
         }
