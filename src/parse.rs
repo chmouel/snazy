@@ -398,7 +398,7 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
                 if config.include_fields.is_empty() {
                     for (k, v) in fields {
                         let key_bold = match config.coloring {
-                            crate::config::Coloring::Never => k.to_string(),
+                            crate::config::Coloring::Never => k.clone(),
                             _ => yansi::Paint::new(k).bold().to_string(),
                         };
                         let value_str = if v.is_string() {
@@ -412,7 +412,7 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
                     for field in &config.include_fields {
                         if let Some(val) = get_nested_value(&json_value, field) {
                             let key_bold = match config.coloring {
-                                crate::config::Coloring::Never => field.to_string(),
+                                crate::config::Coloring::Never => field.clone(),
                                 _ => yansi::Paint::new(field).bold().to_string(),
                             };
                             let value_str = if val.is_string() {
@@ -435,7 +435,7 @@ pub fn do_line(config: &Config, line: &str, state: &mut ParseState) -> Option<In
 
     // Compose the final message with a clear separator for extra fields
     let final_msg = if extra_fields_str.is_empty() {
-        themsg.to_string()
+        themsg.clone()
     } else {
         format!("{themsg}{extra_fields_str}")
     };

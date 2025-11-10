@@ -129,7 +129,7 @@ pub fn custom_json_match(
                 } else {
                     v.to_string().replace('"', "")
                 };
-                dico.insert(key.to_string(), value_str);
+                dico.insert(key.clone(), value_str);
             }
         }
     }

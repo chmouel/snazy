@@ -150,7 +150,7 @@ fn regexp_colorize(regexps: &[String]) -> HashMap<String, Style> {
         let defchosen = colours[i % colours.len()];
         let mut foreground = defchosen;
         let mut background = None;
-        let mut reg = regexp.to_string();
+        let mut reg = regexp.clone();
         if let Some(colour) = regexp.split(':').next() {
             if colour.contains("bg=") && colour.contains("fg=") && colour.split(',').count() == 2 {
                 let parts: Vec<&str> = colour.split(',').collect();
