@@ -116,7 +116,7 @@ jobs:
       - name: Build on ${{ matrix.job.target }}
         shell: bash
         run: $BUILD_CMD build --locked --release --target=${{ matrix.job.target }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: snazy-${{ matrix.job.target }}
           path: target/${{ matrix.job.target }}/release/snazy${{ env.EXTENSION }}
@@ -176,13 +176,13 @@ jobs:
           fi
 
       - name: "Artifact upload: tarball"
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
 
       - name: "Artifact upload: tarball sha256"
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}.sha256
           path: ${{ steps.package.outputs.PKG_PATH }}.sha256
