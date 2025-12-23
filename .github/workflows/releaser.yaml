@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Check that the Cargo.toml version matches tag
         # Run on pushes and when debug is not enabled in manual runs
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.debug_enabled }}
@@ -36,7 +36,7 @@ jobs:
     name: Extract crate metadata
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Extract crate information
         id: crate_metadata
         run: |
@@ -84,7 +84,7 @@ jobs:
             }
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Fetch all tags
         run: git fetch --force --tags
       - uses: dtolnay/rust-toolchain@stable
@@ -204,7 +204,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - name: Run update-formula.sh
