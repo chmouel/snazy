@@ -14,6 +14,8 @@ lint: clippy
 lint-fix:
 	@$(CARGO) clippy -q --color=always --fix
 
+sanity: lint test
+
 coverage:
 	@$(CARGO) tarpaulin --out=Html --output-dir /tmp/cov-output && \
 		type -p open && cmd=open || type -p xdg-open && cmd=xdg-open; \
