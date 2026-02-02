@@ -17,7 +17,7 @@ repository = "chmouel/snazy"
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
+chrono = { version = "0.4.43", default-features = false, features = ["clock"] }
 yansi = "1.0.1"
 clap = { version = "4", features = ["suggestions", "derive", "env"] }
 regex = "1.11.3"
