@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, process};
+use std::{path::PathBuf, process};
 
 // create macro that tests arguments and output
 #[macro_export]
@@ -34,14 +34,7 @@ macro_rules! snazytest {
 
 /// Find the *snazy* executable
 pub fn find_snazy() -> PathBuf {
-    let root = env::current_exe()
-        .expect("tests executable")
-        .parent()
-        .expect("tests executable directory")
-        .parent()
-        .expect("snazy executable directory")
-        .to_path_buf();
-    root.join("snazy")
+    PathBuf::from(env!("CARGO_BIN_EXE_snazy"))
 }
 
 /// Format an error message for when *snazy* did not exit successfully.
