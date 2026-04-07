@@ -364,4 +364,52 @@ github.com/example/app.Function2(0x123456)
         let output = result.unwrap();
         assert_eq!(output.len(), 0, "Output should be empty for empty file");
     }
+
+    #[test]
+    fn test_extract_info_caddy_access_log() {
+        let line = r#"{"level":"info","ts":1588610091.0,"logger":"http.log.access","msg":"handled request","request":{"method":"GET","uri":"/api/users"},"status":200,"duration":0.001234}"#;
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(
+            info.get("msg").cloned().unwrap_or_default(),
+            "GET /api/users -> 200 (1ms)"
+        );
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "INFO");
+        assert!(info.get("ts").is_some_and(|v| !v.is_empty()));
+    }
+
+    #[test]
+    fn test_extract_info_caddy_general_log() {
+        let line =
+            r#"{"level":"info","ts":1588610091.0,"logger":"tls","msg":"cleaning storage unit"}"#;
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(
+            info.get("msg").cloned().unwrap_or_default(),
+            "cleaning storage unit"
+        );
+        assert_eq!(info.get("level").cloned().unwrap_or_default(), "INFO");
+    }
+
+    #[test]
+    fn test_extract_info_caddy_duration_formatting() {
+        let line = r#"{"level":"info","ts":1588610091.0,"msg":"handled request","request":{"method":"POST","uri":"/api/login"},"status":201,"duration":1.234567}"#;
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(
+            info.get("msg").cloned().unwrap_or_default(),
+            "POST /api/login -> 201 (1235ms)"
+        );
+    }
+
+    #[test]
+    fn test_extract_info_caddy_zero_duration() {
+        let line = r#"{"level":"info","ts":1588610091.0,"msg":"handled request","request":{"method":"GET","uri":"/health"},"status":200,"duration":0.0}"#;
+        let config = Config::default();
+        let info = extract_info(line, &config);
+        assert_eq!(
+            info.get("msg").cloned().unwrap_or_default(),
+            "GET /health -> 200 (0ms)"
+        );
+    }
 }

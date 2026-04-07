@@ -319,6 +319,30 @@ snazytest!(
     true
 );
 
+snazytest!(
+    caddy_access_log_basic,
+    ["--color", "never"],
+    r#"{"level":"info","ts":1588610091.0,"logger":"http.log.access","msg":"handled request","request":{"method":"GET","uri":"/path"},"status":200,"duration":0.001234}"#,
+    "INFO                16:34:51 GET /path -> 200 (1ms)\n",
+    false
+);
+
+snazytest!(
+    caddy_access_log_post,
+    ["--color", "never"],
+    r#"{"level":"info","ts":1588610091.0,"msg":"handled request","request":{"method":"POST","uri":"/api/users"},"status":201,"duration":0.045678}"#,
+    "INFO                16:34:51 POST /api/users -> 201 (46ms)\n",
+    false
+);
+
+snazytest!(
+    caddy_general_log,
+    ["--color", "never"],
+    r#"{"level":"info","ts":1588610091.0,"logger":"tls","msg":"cleaning storage unit"}"#,
+    "INFO                16:34:51 cleaning storage unit\n",
+    false
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {
