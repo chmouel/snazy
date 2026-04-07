@@ -36,6 +36,28 @@ struct Knative {
     other: BTreeMap<String, Value>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct CaddyAccess {
+    level: String,
+    #[serde(default)]
+    msg: String,
+    request: CaddyRequest,
+    #[serde(default)]
+    status: u16,
+    #[serde(default)]
+    duration: f64,
+    #[serde(flatten)]
+    other: BTreeMap<String, Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct CaddyRequest {
+    method: String,
+    uri: String,
+    #[serde(flatten)]
+    _other: BTreeMap<String, Value>,
+}
+
 #[derive(Debug)]
 pub struct Info {
     level: String,
@@ -117,6 +139,26 @@ pub fn extract_info(rawline: &str, config: &Config) -> HashMap<String, String> {
                 if let Some(stacktrace) = p.other["stacktrace"].as_str() {
                     msg.insert("stacktrace".to_string(), stacktrace.to_string());
                 }
+            }
+        }
+
+        // Try Caddy access log format (must be after Knative to overwrite generic msg)
+        if let Ok(p) = serde_json::from_str::<CaddyAccess>(line.as_str()) {
+            let duration_ms = ((p.duration * 1000.0).round() as i64).cast_unsigned();
+            let formatted = format!(
+                "{} {} -> {} ({}ms)",
+                p.request.method, p.request.uri, p.status, duration_ms
+            );
+            msg.insert("msg".to_string(), formatted);
+            msg.insert("level".to_string(), p.level.to_uppercase());
+            if let Some(ts) = p.other.get("ts") {
+                msg.insert(
+                    String::from("ts"),
+                    crate::utils::convert_ts_float_or_str(ts, time_format, timezone),
+                );
+            }
+            if let Some(stacktrace) = p.other.get("stacktrace").and_then(|s| s.as_str()) {
+                msg.insert("stacktrace".to_string(), stacktrace.to_string());
             }
         }
     }
