@@ -239,7 +239,7 @@ This will give you a prompt with [`fzf`](https://github.com/junegunn/fzf) where 
 
 ## Show GitHub Action Runs logs with snazy
 
-An handy script located [here](./misc/gh-run-logview-snazy) let you show the log
+A handy script [gh-run-logview-snazy](./misc/gh-run-logview-snazy) lets you show the log
 of a GitHub action runs through snazy and the
 [`bat`](https://github.com/sharkdp/bat) pager.
 
@@ -254,7 +254,11 @@ Shell completions are available for most shells using the command `--shell-compl
 
 ## Kubernetes Events Colorization
 
-Snazy can parse and colorize the output of `kubectl get events`, making it much easier to visually distinguish different Kubernetes object types (such as pods, deployments, replica sets, etc.). Each object type in the `OBJECT` column is assigned a distinct color, and all objects of the same type share the same color for consistency.
+Snazy can parse and colorize the output of `kubectl get events`, making it much
+easier to visually distinguish different Kubernetes object types (such as pods,
+deployments, replica sets and so on.). Each object type in the `OBJECT` column is
+assigned a distinct color, and all objects of the same type share the same
+color for consistency.
 
 Example usage:
 

@@ -6,8 +6,6 @@ use std::collections::HashMap;
 use yansi::Paint;
 use yansi::Style;
 
-use crate::config::Config;
-
 /// replace info level DEBUG, WARNING, ERROR, INFO, FATAL by pretty characters
 pub fn level_symbols(level: &str) -> String {
     match level {
@@ -102,46 +100,6 @@ pub fn apply_regexps(regexps: &HashMap<String, Style>, msg: String) -> String {
     ret
 }
 
-/// Extracts and remaps JSON keys from a log line using `config.json_keys`.
-/// Handles timestamp formatting and Kail prefix.
-pub fn custom_json_match(
-    config: &Config,
-    time_format: &str,
-    kail_msg_prefix: &str,
-    line: &str,
-) -> HashMap<String, String> {
-    let mut dico = HashMap::new();
-    if let Ok(p) = serde_json::from_str::<Value>(line) {
-        for (key, value) in &config.json_keys {
-            // Accept both pointer ("/foo") and direct key ("foo")
-            let extracted = if value.starts_with('/') {
-                p.pointer(value)
-            } else {
-                p.get(value)
-            };
-            if let Some(v) = extracted {
-                let value_str = if key == "ts" || key == "timestamp" || key == "date" {
-                    crate::utils::convert_ts_float_or_str(
-                        v,
-                        time_format,
-                        config.timezone.as_deref(),
-                    )
-                } else {
-                    v.to_string().replace('"', "")
-                };
-                dico.insert(key.clone(), value_str);
-            }
-        }
-    }
-    if config.kail_prefix == crate::config::KailPrefix::Show
-        && !kail_msg_prefix.is_empty()
-        && dico.contains_key("msg")
-    {
-        *dico.get_mut("msg").unwrap() = format!("{} {}", Paint::blue(kail_msg_prefix), dico["msg"]);
-    }
-    dico
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -211,6 +169,19 @@ mod tests {
             ),
             "9223372036854775807"
         );
+    }
+
+    #[test]
+    fn test_apply_regexps() {
+        let line = String::from("red blue normal");
+        let mut regexps = HashMap::new();
+        regexps.insert(String::from("red"), Style::new().fg(yansi::Color::Red));
+        regexps.insert(
+            String::from(r"\b(b.ue)\b"),
+            Style::new().fg(yansi::Color::Blue),
+        );
+        let ret = apply_regexps(&regexps, line);
+        assert_eq!(ret, format!("{} {} normal", "red".red(), "blue".blue()));
     }
 
     #[test]

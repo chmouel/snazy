@@ -6,19 +6,21 @@
 
 use std::sync::Arc;
 
+mod app;
 mod cli;
 mod config;
-mod parse;
+mod input;
+mod model;
+mod parser;
+mod pipeline;
+mod render;
 mod utils;
-
-#[cfg(test)]
-mod parse_test;
 
 fn main() {
     let config = cli::build_cli_config();
     if config.files.is_some() {
-        parse::read_from_files(&Arc::new(config));
+        input::read_from_files(&Arc::new(config));
     } else {
-        parse::read_from_stdin(&Arc::new(config));
+        input::read_from_stdin(&Arc::new(config));
     }
 }
