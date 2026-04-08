@@ -1,7 +1,7 @@
-use chrono::{NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, LocalResult, TimeDelta, TimeZone, Utc};
 use chrono_tz::Tz;
 use regex::Regex;
-use serde_json::Value;
+use serde_json::{Number, Value};
 use std::collections::HashMap;
 use yansi::Paint;
 use yansi::Style;
@@ -42,30 +42,112 @@ pub fn convert_pac_provider_to_fa_icon(provider: &str) -> &str {
 /// Converts a string timestamp to formatted string, optionally applying a timezone.
 /// Returns the original string if parsing fails.
 pub fn convert_str_to_ts(s: &str, time_format: &str, timezone: Option<&str>) -> String {
-    if let Ok(ts) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S.%fZ") {
-        let utc_dt = Utc.from_utc_datetime(&ts);
-        if let Some(tz) = timezone {
-            if let Ok(tz) = tz.parse::<Tz>() {
-                return utc_dt.with_timezone(&tz).format(time_format).to_string();
-            }
-        }
-        return utc_dt.format(time_format).to_string();
+    if let Some(timestamp) = parse_timestamp_str(s) {
+        return format_timestamp(&timestamp, time_format, timezone);
     }
     s.to_string()
 }
 
-/// Converts a Unix timestamp (i64) to formatted string, optionally applying a timezone.
-/// Returns the original value as string if conversion fails.
-fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> String {
-    if let Some(ts) = Utc.timestamp_opt(value, 0).single() {
-        if let Some(tz) = timezone {
-            if let Ok(tz) = tz.parse::<Tz>() {
-                return ts.with_timezone(&tz).format(time_format).to_string();
-            }
+pub fn format_timestamp(
+    timestamp: &DateTime<Utc>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> String {
+    if let Some(tz) = timezone {
+        if let Ok(tz) = tz.parse::<Tz>() {
+            return timestamp.with_timezone(&tz).format(time_format).to_string();
         }
-        return ts.format(time_format).to_string();
     }
-    value.to_string()
+    timestamp.format(time_format).to_string()
+}
+
+pub fn parse_timestamp_str(value: &str) -> Option<DateTime<Utc>> {
+    DateTime::parse_from_rfc3339(value)
+        .ok()
+        .map(|timestamp| timestamp.with_timezone(&Utc))
+}
+
+fn parse_unix_ts(value: &Number) -> Option<DateTime<Utc>> {
+    let raw = value.to_string();
+    if raw.contains(['e', 'E']) {
+        return None;
+    }
+
+    let (negative, unsigned) = raw
+        .strip_prefix('-')
+        .map_or((false, raw.as_str()), |rest| (true, rest));
+    let (whole, fractional) = unsigned
+        .split_once('.')
+        .map_or((unsigned, ""), |parts| parts);
+    let whole_seconds: i64 = whole.parse().ok()?;
+    let (nanos, carry_second) = parse_fractional_nanos(fractional)?;
+
+    let (seconds, nanos) = if negative {
+        if nanos == 0 {
+            (-whole_seconds, 0)
+        } else {
+            let whole_with_carry = whole_seconds.checked_add(i64::from(carry_second))?;
+            let next_second = whole_with_carry.checked_add(1)?;
+            (-next_second, 1_000_000_000_u32.saturating_sub(nanos))
+        }
+    } else {
+        (whole_seconds.checked_add(i64::from(carry_second))?, nanos)
+    };
+
+    match Utc.timestamp_opt(seconds, nanos) {
+        LocalResult::Single(timestamp) => Some(timestamp),
+        _ => None,
+    }
+}
+
+fn parse_fractional_nanos(fractional: &str) -> Option<(u32, bool)> {
+    if fractional.is_empty() {
+        return Some((0, false));
+    }
+    if !fractional.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+
+    let mut digits = fractional.chars();
+    let nanos_digits: String = digits.by_ref().take(9).collect();
+    let round_up = digits.next().is_some_and(|digit| digit >= '5');
+    let nanos = format!("{nanos_digits:0<9}").parse::<u32>().ok()?;
+
+    if round_up {
+        if nanos == 999_999_999 {
+            return Some((0, true));
+        }
+        return Some((nanos + 1, false));
+    }
+
+    Some((nanos, false))
+}
+
+pub fn parse_timestamp_value(value: &Value) -> Option<DateTime<Utc>> {
+    match value {
+        Value::String(s) => parse_timestamp_str(s),
+        Value::Number(n) => {
+            if let Some(value) = n.as_i64() {
+                return match Utc.timestamp_opt(value, 0) {
+                    LocalResult::Single(timestamp) => Some(timestamp),
+                    _ => None,
+                };
+            }
+
+            if let Some(value) = n.as_u64() {
+                if let Ok(value) = i64::try_from(value) {
+                    return match Utc.timestamp_opt(value, 0) {
+                        LocalResult::Single(timestamp) => Some(timestamp),
+                        _ => None,
+                    };
+                }
+                return None;
+            }
+
+            parse_unix_ts(n)
+        }
+        _ => None,
+    }
 }
 
 /// Converts a JSON value (string or number) to a formatted timestamp string.
@@ -73,15 +155,42 @@ fn convert_unix_ts(value: i64, time_format: &str, timezone: Option<&str>) -> Str
 pub fn convert_ts_float_or_str(value: &Value, time_format: &str, timezone: Option<&str>) -> String {
     match value {
         Value::String(s) => convert_str_to_ts(s.as_str(), time_format, timezone),
-        Value::Number(n) => {
-            if let Some(f) = n.as_f64() {
-                convert_unix_ts(f as i64, time_format, timezone)
-            } else {
-                String::new() // Gracefully handle non-float numbers
-            }
-        }
+        Value::Number(n) => parse_timestamp_value(value).map_or_else(
+            || n.to_string(),
+            |timestamp| format_timestamp(&timestamp, time_format, timezone),
+        ),
         _ => String::new(),
     }
+}
+
+pub fn format_time_delta(delta: TimeDelta) -> String {
+    let negative = delta < TimeDelta::zero();
+    let prefix = if negative { "-" } else { "+" };
+    let abs_delta = if negative { -delta } else { delta };
+    let total_milliseconds = abs_delta.num_milliseconds();
+
+    if total_milliseconds < 1_000 {
+        return format!("{prefix}{total_milliseconds}ms");
+    }
+
+    let total_seconds = abs_delta.num_seconds();
+    if total_seconds < 60 {
+        let tenths = ((total_milliseconds + 50) / 100).min(599);
+        if tenths % 10 == 0 {
+            return format!("{prefix}{}s", tenths / 10);
+        }
+        return format!("{prefix}{}.{:01}s", tenths / 10, tenths % 10);
+    }
+
+    if total_seconds < 3_600 {
+        let minutes = total_seconds / 60;
+        let seconds = total_seconds % 60;
+        return format!("{prefix}{minutes}m{seconds:02}s");
+    }
+
+    let hours = total_seconds / 3_600;
+    let minutes = (total_seconds % 3_600) / 60;
+    format!("{prefix}{hours}h{minutes:02}m")
 }
 
 /// Applies regex-based styles to a message string using the provided map.
@@ -172,6 +281,18 @@ mod tests {
     }
 
     #[test]
+    fn test_convert_ts_float_or_str_keeps_subseconds() {
+        assert_eq!(
+            convert_ts_float_or_str(
+                &serde_json::json!(1_650_602_040.628_962_5),
+                "%H:%M:%S%.3f",
+                None
+            ),
+            "04:34:00.628"
+        );
+    }
+
+    #[test]
     fn test_apply_regexps() {
         let line = String::from("red blue normal");
         let mut regexps = HashMap::new();
@@ -191,5 +312,20 @@ mod tests {
         let msg = String::from("test [invalid regex");
         // Should not panic, should return original string
         assert_eq!(apply_regexps(&regexps, msg.clone()), msg);
+    }
+
+    #[test]
+    fn test_format_time_delta_compact_units() {
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(12)), "+12ms");
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(999)), "+999ms");
+        assert_eq!(format_time_delta(TimeDelta::seconds(1)), "+1s");
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(1_400)), "+1.4s");
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(59_900)), "+59.9s");
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(59_950)), "+59.9s");
+        assert_eq!(format_time_delta(TimeDelta::seconds(60)), "+1m00s");
+        assert_eq!(format_time_delta(TimeDelta::seconds(2)), "+2s");
+        assert_eq!(format_time_delta(TimeDelta::seconds(123)), "+2m03s");
+        assert_eq!(format_time_delta(TimeDelta::seconds(3_720)), "+1h02m");
+        assert_eq!(format_time_delta(TimeDelta::milliseconds(-250)), "-250ms");
     }
 }

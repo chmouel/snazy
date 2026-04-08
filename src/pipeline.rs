@@ -183,6 +183,7 @@ mod tests {
             level: "INFO".to_string(),
             message: "hello".to_string(),
             timestamp: None,
+            parsed_timestamp: None,
             others: None,
             consumed_fields: Vec::new(),
             extra_fields: Vec::new(),
@@ -220,6 +221,7 @@ mod tests {
             level: "WARNING".to_string(),
             message: "hello".to_string(),
             timestamp: Some("10:00:00".to_string()),
+            parsed_timestamp: None,
             others: None,
             consumed_fields: vec![
                 "/level".to_string(),
@@ -262,6 +264,7 @@ mod tests {
             level: "INFO".to_string(),
             message: "ecs".to_string(),
             timestamp: Some("10:00:00".to_string()),
+            parsed_timestamp: None,
             others: None,
             consumed_fields: vec![
                 "/@timestamp".to_string(),

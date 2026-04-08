@@ -151,6 +151,16 @@ are supported for now (ie: no rgb or fixed):
   [`strftime`](https://man7.org/linux/man-pages/man3/strftime.3.html) format
   strings.
 
+- If you want to spot stalls and bursts between timestamped structured logs, use
+  `--time-delta` (or `SNAZY_TIME_DELTA=true`) to show the elapsed time since the
+  previous timestamped structured log line in addition to the absolute timestamp:
+
+  ```shell
+  kubectl logs deployment/controller | snazy --time-delta
+  # => INFO  14:20:32          started reconcile
+  # => INFO  14:20:33 +1.4s    finished reconcile
+  ```
+
 - You can specify a timezone with the `--timezone` flag (or the environment variable
   `SNAZY_TIMEZONE`). By default, the timestamps are displayed in the server's timezone
   (usually UTC). The timezone should be specified in the [IANA timezone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) format

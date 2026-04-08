@@ -71,6 +71,10 @@ struct Args {
     /// A timeformat as documented by the strftime(3) manpage.
     pub time_format: String,
 
+    #[arg(long, action(clap::ArgAction::SetTrue), env = "SNAZY_TIME_DELTA")]
+    /// Show elapsed time between timestamped structured log lines
+    pub time_delta: bool,
+
     #[arg(long, env = "SNAZY_TIMEZONE")]
     /// Convert timestamps to specified timezone (e.g. `Europe/Paris`, `America/New_York`)
     pub timezone: Option<String>,
@@ -264,6 +268,7 @@ pub fn build_cli_config() -> Config {
             crate::config::KailPrefix::Show
         },
         time_format: args.time_format,
+        time_delta: args.time_delta,
         timezone: args.timezone,
         skip_line_regexp: args.skip_line_regexp,
         filter_levels: args.filter_levels,

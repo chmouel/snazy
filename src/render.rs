@@ -2,12 +2,38 @@ use std::fmt::Write as _;
 
 use crate::config::Config;
 use crate::model::{KubectlEvent, ParsedLine, RenderedLog, StructuredLog};
-use crate::utils::apply_regexps;
+use crate::parser::ParseState;
+use crate::utils::{apply_regexps, format_time_delta};
 use yansi::Paint;
 
-pub fn render_parsed_line(config: &Config, parsed: &ParsedLine) -> Vec<String> {
+const DELTA_WIDTH: usize = 8;
+
+pub fn render_parsed_line(
+    config: &Config,
+    parsed: &ParsedLine,
+    state: &mut ParseState,
+) -> Vec<String> {
     match parsed {
-        ParsedLine::Structured(log) => render_structured_lines(config, log),
+        ParsedLine::Structured(log) => {
+            let delta = if config.time_delta {
+                match (
+                    state.previous_structured_timestamp.as_ref(),
+                    log.parsed_timestamp.as_ref(),
+                ) {
+                    (Some(previous), Some(current)) => {
+                        Some(format_time_delta(current.signed_duration_since(*previous)))
+                    }
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            let lines = render_structured_lines(config, log, delta.as_deref());
+            if log.timestamp.is_some() {
+                state.previous_structured_timestamp = log.parsed_timestamp;
+            }
+            lines
+        }
         ParsedLine::Raw(line) => vec![apply_regexps(&config.regexp_colours, line.clone())],
         ParsedLine::KubectlHeader => vec![format!(
             "{} {} {} {} {}",
@@ -21,7 +47,11 @@ pub fn render_parsed_line(config: &Config, parsed: &ParsedLine) -> Vec<String> {
     }
 }
 
-pub fn render_structured_log(config: &Config, log: &StructuredLog) -> RenderedLog {
+pub fn render_structured_log(
+    config: &Config,
+    log: &StructuredLog,
+    delta: Option<&str>,
+) -> RenderedLog {
     let level = match config.level_symbols {
         crate::config::LevelSymbols::Emoji => crate::utils::level_symbols(&log.level),
         crate::config::LevelSymbols::Text => crate::utils::color_by_level(&log.level),
@@ -30,6 +60,7 @@ pub fn render_structured_log(config: &Config, log: &StructuredLog) -> RenderedLo
         .timestamp
         .as_ref()
         .map_or_else(String::new, |ts| ts.fixed(13).to_string());
+    let delta = render_delta_slot(config, log.timestamp.is_some(), delta);
     let others = log
         .others
         .as_ref()
@@ -51,17 +82,22 @@ pub fn render_structured_log(config: &Config, log: &StructuredLog) -> RenderedLo
     RenderedLog {
         level,
         timestamp,
+        delta,
         others,
         message,
         stacktrace: log.stacktrace.clone(),
     }
 }
 
-pub fn render_structured_lines(config: &Config, log: &StructuredLog) -> Vec<String> {
-    let rendered = render_structured_log(config, log);
+pub fn render_structured_lines(
+    config: &Config,
+    log: &StructuredLog,
+    delta: Option<&str>,
+) -> Vec<String> {
+    let rendered = render_structured_log(config, log, delta);
     let mut lines = vec![format!(
-        "{} {} {}{}",
-        rendered.level, rendered.timestamp, rendered.others, rendered.message
+        "{} {}{} {}{}",
+        rendered.level, rendered.timestamp, rendered.delta, rendered.others, rendered.message
     )];
 
     if !config.hide_stacktrace {
@@ -74,6 +110,19 @@ pub fn render_structured_lines(config: &Config, log: &StructuredLog) -> Vec<Stri
     }
 
     lines
+}
+
+fn render_delta_slot(config: &Config, has_timestamp: bool, delta: Option<&str>) -> String {
+    if !config.time_delta || !has_timestamp {
+        return String::new();
+    }
+
+    let padded = format!(" {:<DELTA_WIDTH$}", delta.unwrap_or(""));
+    match config.coloring {
+        crate::config::Coloring::Never => padded,
+        _ if delta.is_some() => Paint::new(padded).fixed(8).to_string(),
+        _ => padded,
+    }
 }
 
 pub fn render_stacktrace_block(stacktrace: &str, disable_coloring: bool) -> Vec<String> {
@@ -268,8 +317,11 @@ fn render_extra_fields(config: &Config, extra_fields: &[(String, String)]) -> St
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, Utc};
+
     use crate::config::Config;
-    use crate::model::StructuredLog;
+    use crate::model::{ParsedLine, StructuredLog};
+    use crate::parser::ParseState;
 
     #[test]
     fn render_structured_log_appends_extra_fields() {
@@ -282,6 +334,7 @@ mod tests {
                 level: "INFO".to_string(),
                 message: "hello".to_string(),
                 timestamp: Some("10:00:00".to_string()),
+                parsed_timestamp: None,
                 others: None,
                 consumed_fields: Vec::new(),
                 extra_fields: vec![("status".to_string(), "200".to_string())],
@@ -289,9 +342,36 @@ mod tests {
                 raw_json: None,
                 kail_prefix: None,
             },
+            None,
         );
 
         assert_eq!(rendered.message, "hello status=200");
+    }
+
+    #[test]
+    fn render_structured_log_renders_delta_slot() {
+        let rendered = super::render_structured_log(
+            &Config {
+                coloring: crate::config::Coloring::Never,
+                time_delta: true,
+                ..Config::default()
+            },
+            &StructuredLog {
+                level: "INFO".to_string(),
+                message: "hello".to_string(),
+                timestamp: Some("10:00:00".to_string()),
+                parsed_timestamp: None,
+                others: None,
+                consumed_fields: Vec::new(),
+                extra_fields: Vec::new(),
+                stacktrace: None,
+                raw_json: None,
+                kail_prefix: None,
+            },
+            Some("+12ms"),
+        );
+
+        assert_eq!(rendered.delta, " +12ms   ");
     }
 
     #[test]
@@ -308,5 +388,61 @@ mod tests {
         assert!(pod.contains("\x1b["));
         assert!(deployment.contains("\x1b["));
         assert_ne!(pod, deployment);
+    }
+
+    #[test]
+    fn render_parsed_line_resets_time_delta_after_unparsable_timestamp() {
+        let config = Config {
+            coloring: crate::config::Coloring::Never,
+            time_delta: true,
+            ..Config::default()
+        };
+        let mut state = ParseState::default();
+
+        let first = ParsedLine::Structured(structured_log(
+            "one",
+            Some("14:20:32"),
+            Some(parse_timestamp("2022-04-25T14:20:32Z")),
+        ));
+        let second = ParsedLine::Structured(structured_log("two", Some("2022-04-25:FOO"), None));
+        let third = ParsedLine::Structured(structured_log(
+            "three",
+            Some("14:20:34"),
+            Some(parse_timestamp("2022-04-25T14:20:34Z")),
+        ));
+
+        super::render_parsed_line(&config, &first, &mut state);
+        assert!(state.previous_structured_timestamp.is_some());
+
+        super::render_parsed_line(&config, &second, &mut state);
+        assert_eq!(state.previous_structured_timestamp, None);
+
+        let rendered = super::render_parsed_line(&config, &third, &mut state);
+        assert!(!rendered[0].contains("+2s"));
+    }
+
+    fn structured_log(
+        message: &str,
+        timestamp: Option<&str>,
+        parsed_timestamp: Option<DateTime<Utc>>,
+    ) -> StructuredLog {
+        StructuredLog {
+            level: "INFO".to_string(),
+            message: message.to_string(),
+            timestamp: timestamp.map(ToOwned::to_owned),
+            parsed_timestamp,
+            others: None,
+            consumed_fields: Vec::new(),
+            extra_fields: Vec::new(),
+            stacktrace: None,
+            raw_json: None,
+            kail_prefix: None,
+        }
+    }
+
+    fn parse_timestamp(timestamp: &str) -> DateTime<Utc> {
+        DateTime::parse_from_rfc3339(timestamp)
+            .unwrap()
+            .with_timezone(&Utc)
     }
 }

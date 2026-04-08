@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -5,6 +6,7 @@ pub struct StructuredLog {
     pub level: String,
     pub message: String,
     pub timestamp: Option<String>,
+    pub parsed_timestamp: Option<DateTime<Utc>>,
     pub others: Option<String>,
     pub consumed_fields: Vec<String>,
     pub extra_fields: Vec<(String, String)>,
@@ -34,6 +36,7 @@ pub enum ParsedLine {
 pub struct RenderedLog {
     pub level: String,
     pub timestamp: String,
+    pub delta: String,
     pub others: String,
     pub message: String,
     pub stacktrace: Option<String>,

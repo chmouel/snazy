@@ -17,5 +17,5 @@ pub fn process_raw_line(config: &Config, line: &str, state: &mut ParseState) -> 
         return Vec::new();
     };
 
-    crate::render::render_parsed_line(config, &processed)
+    crate::render::render_parsed_line(config, &processed, state)
 }

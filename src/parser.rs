@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use chrono::{DateTime, Utc};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -55,12 +56,14 @@ struct CaddyRequest {
 pub struct ParseState {
     pub kubectl_events_mode: bool,
     pub kubectl_events_cols: Option<(usize, usize, usize, usize, usize)>,
+    pub previous_structured_timestamp: Option<DateTime<Utc>>,
 }
 
 struct StructuredFields<'a> {
     level: &'a str,
     message: &'a str,
     timestamp: Option<String>,
+    parsed_timestamp: Option<DateTime<Utc>>,
     others: Option<String>,
     stacktrace: Option<String>,
     consumed_fields: Vec<String>,
@@ -140,6 +143,7 @@ fn parse_custom_json(
     let mut message = None;
     let mut level = None;
     let mut timestamp = None;
+    let mut parsed_timestamp = None;
 
     for (key, path) in &config.json_keys {
         let extracted = if path.starts_with('/') {
@@ -161,6 +165,10 @@ fn parse_custom_json(
             extracted.to_string().replace('"', "")
         };
 
+        if key == "ts" || key == "timestamp" || key == "date" {
+            parsed_timestamp = crate::utils::parse_timestamp_value(extracted);
+        }
+
         match key.as_str() {
             "msg" => message = Some(normalized),
             "level" => level = Some(normalized),
@@ -173,6 +181,7 @@ fn parse_custom_json(
         level: level?,
         message: message?,
         timestamp,
+        parsed_timestamp,
         others: None,
         consumed_fields: Vec::new(),
         extra_fields: Vec::new(),
@@ -193,6 +202,7 @@ fn parse_pac(
 ) -> Option<StructuredLog> {
     let pac = serde_json::from_str::<Pac>(&prepared.line).ok()?;
     let mut others = String::new();
+    let parsed_timestamp = crate::utils::parse_timestamp_str(pac.timestamp.as_str());
 
     if let Some(provider) = pac.other.get("provider").and_then(|value| value.as_str()) {
         others.push_str(crate::utils::convert_pac_provider_to_fa_icon(provider));
@@ -207,6 +217,7 @@ fn parse_pac(
             time_format,
             timezone,
         )),
+        parsed_timestamp,
         others: (!others.is_empty()).then_some(others),
         consumed_fields: Vec::new(),
         extra_fields: Vec::new(),
@@ -230,6 +241,10 @@ fn parse_caddy(
     if caddy.logger.as_deref() != Some("http.log.access") && caddy.msg.trim() != "handled request" {
         return None;
     }
+    let (timestamp, parsed_timestamp) = caddy.other.get("ts").map_or((None, None), |value| {
+        let (display, parsed) = timestamp_details(value, time_format, timezone);
+        (Some(display), parsed)
+    });
 
     Some(StructuredLog {
         level: caddy.level.to_uppercase(),
@@ -240,10 +255,8 @@ fn parse_caddy(
             caddy.status,
             (caddy.duration * 1000.0).round() as i64
         ),
-        timestamp: caddy
-            .other
-            .get("ts")
-            .map(|value| crate::utils::convert_ts_float_or_str(value, time_format, timezone)),
+        timestamp,
+        parsed_timestamp,
         others: None,
         consumed_fields: vec![
             "/level".to_string(),
@@ -272,13 +285,16 @@ fn parse_knative(
     timezone: Option<&str>,
 ) -> Option<StructuredLog> {
     let knative = serde_json::from_str::<Knative>(&prepared.line).ok()?;
+    let (timestamp, parsed_timestamp) = knative.other.get("ts").map_or((None, None), |value| {
+        let (display, parsed) = timestamp_details(value, time_format, timezone);
+        (Some(display), parsed)
+    });
+
     Some(StructuredLog {
         level: knative.level.to_uppercase(),
         message: knative.msg.trim().to_string(),
-        timestamp: knative
-            .other
-            .get("ts")
-            .map(|value| crate::utils::convert_ts_float_or_str(value, time_format, timezone)),
+        timestamp,
+        parsed_timestamp,
         others: None,
         consumed_fields: vec![
             "/level".to_string(),
@@ -306,7 +322,8 @@ fn parse_logrus(
     let raw_json = raw_json?;
     let message = json_string(raw_json, &["/msg"])?;
     let level = json_string(raw_json, &["/level"])?;
-    let timestamp = json_timestamp(raw_json, &["/time"], time_format, timezone)?;
+    let (timestamp, parsed_timestamp) =
+        json_timestamp(raw_json, &["/time"], time_format, timezone)?;
     let stacktrace = json_string(raw_json, &["/stack", "/stacktrace"]).map(ToOwned::to_owned);
 
     Some(build_structured_log(
@@ -316,6 +333,7 @@ fn parse_logrus(
             level,
             message,
             timestamp: Some(timestamp),
+            parsed_timestamp,
             others: None,
             stacktrace,
             consumed_fields: vec![
@@ -338,7 +356,8 @@ fn parse_zerolog(
     let raw_json = raw_json?;
     let message = json_string(raw_json, &["/message"])?;
     let level = json_string(raw_json, &["/level"])?;
-    let timestamp = json_timestamp(raw_json, &["/time"], time_format, timezone)?;
+    let (timestamp, parsed_timestamp) =
+        json_timestamp(raw_json, &["/time"], time_format, timezone)?;
     let stacktrace = json_string(raw_json, &["/stack"]).map(ToOwned::to_owned);
 
     Some(build_structured_log(
@@ -348,6 +367,7 @@ fn parse_zerolog(
             level,
             message,
             timestamp: Some(timestamp),
+            parsed_timestamp,
             others: None,
             stacktrace,
             consumed_fields: vec![
@@ -369,7 +389,8 @@ fn parse_ecs(
     let raw_json = raw_json?;
     let message = json_string(raw_json, &["/message"])?;
     let level = json_string(raw_json, &["/log/level"])?;
-    let timestamp = json_timestamp(raw_json, &["/@timestamp"], time_format, timezone)?;
+    let (timestamp, parsed_timestamp) =
+        json_timestamp(raw_json, &["/@timestamp"], time_format, timezone)?;
     let stacktrace = json_string(raw_json, &["/error/stack_trace"]).map(ToOwned::to_owned);
 
     Some(build_structured_log(
@@ -379,6 +400,7 @@ fn parse_ecs(
             level,
             message,
             timestamp: Some(timestamp),
+            parsed_timestamp,
             others: None,
             stacktrace,
             consumed_fields: vec![
@@ -425,7 +447,8 @@ fn parse_cloud_logging(
         StructuredFields {
             level,
             message,
-            timestamp,
+            timestamp: timestamp.as_ref().map(|(display, _)| display.clone()),
+            parsed_timestamp: timestamp.and_then(|(_, parsed)| parsed),
             others: None,
             stacktrace,
             consumed_fields: vec![
@@ -453,6 +476,7 @@ fn build_structured_log(
         level: fields.level.to_uppercase(),
         message: fields.message.trim().to_string(),
         timestamp: fields.timestamp,
+        parsed_timestamp: fields.parsed_timestamp,
         others: fields.others,
         consumed_fields: fields.consumed_fields,
         extra_fields: Vec::new(),
@@ -478,12 +502,23 @@ fn json_timestamp(
     pointers: &[&str],
     time_format: &str,
     timezone: Option<&str>,
-) -> Option<String> {
+) -> Option<(String, Option<DateTime<Utc>>)> {
     pointers.iter().find_map(|pointer| {
-        value.pointer(pointer).map(|candidate| {
-            crate::utils::convert_ts_float_or_str(candidate, time_format, timezone)
-        })
+        value
+            .pointer(pointer)
+            .map(|candidate| timestamp_details(candidate, time_format, timezone))
     })
+}
+
+fn timestamp_details(
+    value: &Value,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> (String, Option<DateTime<Utc>>) {
+    (
+        crate::utils::convert_ts_float_or_str(value, time_format, timezone),
+        crate::utils::parse_timestamp_value(value),
+    )
 }
 
 fn normalize_cloud_logging_level(level: &str) -> &str {

@@ -28,6 +28,45 @@ snazytest!(
 );
 
 snazytest!(
+    time_delta_between_timestamped_logs,
+    ["--color", "never", "--time-delta"],
+    r#"{"level":"info","ts":"2022-04-25T14:20:32.000Z","msg":"one"}
+{"level":"info","ts":"2022-04-25T14:20:33.400Z","msg":"two"}"#,
+    "INFO                14:20:32          one\nINFO                14:20:33 +1.4s    two\n",
+    false
+);
+
+snazytest!(
+    time_delta_ignores_raw_and_missing_timestamps,
+    ["--color", "never", "--time-delta"],
+    r#"{"level":"info","ts":"2022-04-25T14:20:32.000Z","msg":"one"}
+raw line
+{"level":"info","msg":"mid"}
+{"level":"info","ts":"2022-04-25T14:20:33.400Z","msg":"two"}"#,
+    "INFO                14:20:32          one\nraw line\nINFO                 mid\nINFO                14:20:33 +1.4s    two\n",
+    false
+);
+
+snazytest!(
+    time_delta_resets_after_unparsable_timestamp,
+    ["--color", "never", "--time-delta"],
+    r#"{"severity":"INFO","timestamp":"2022-04-25T14:20:32.000Z","caller":"foo.rs:1","message":"one"}
+{"severity":"INFO","timestamp":"2022-04-25:FOO","caller":"foo.rs:1","message":"two"}
+{"severity":"INFO","timestamp":"2022-04-25T14:20:34.000Z","caller":"foo.rs:1","message":"three"}"#,
+    "INFO                14:20:32          one\nINFO                2022-04-25:FOO          two\nINFO                14:20:34          three\n",
+    false
+);
+
+snazytest!(
+    time_delta_disabled_keeps_existing_output,
+    ["--color", "never"],
+    r#"{"level":"info","ts":"2022-04-25T14:20:32.000Z","msg":"one"}
+{"level":"info","ts":"2022-04-25T14:20:33.400Z","msg":"two"}"#,
+    "INFO                14:20:32 one\nINFO                14:20:33 two\n",
+    false
+);
+
+snazytest!(
     floated_date,
     ["--color", "never"],
     r#"{"level":"info", "ts": 1650602040.6289625, "msg":"foo"}"#,
