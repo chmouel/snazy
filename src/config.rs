@@ -42,10 +42,12 @@ pub enum Coloring {
 }
 
 #[derive(Debug, Clone)]
-/// NOTE: Clippy warns about excessive bools in this struct. Refactored to enums for clarity.
+#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     pub action_command: Option<String>,
     pub action_regexp: Option<String>,
+    pub collapse_duplicates: bool,
+    pub collapse_window_seconds: u64,
     pub files: Option<Vec<String>>,
     pub filter_levels: Vec<LogLevel>,
     pub json_keys: HashMap<String, String>,
@@ -67,6 +69,8 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             files: Some(vec![]),
+            collapse_duplicates: false,
+            collapse_window_seconds: 30,
             kail_prefix_format: String::from("{namespace}/{pod}[{container}]"),
             kail_prefix: KailPrefix::Show,
             time_format: String::from("%H:%M:%S"),

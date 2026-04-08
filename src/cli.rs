@@ -75,6 +75,23 @@ struct Args {
     /// Show elapsed time between timestamped structured log lines
     pub time_delta: bool,
 
+    #[arg(
+        long,
+        action(clap::ArgAction::SetTrue),
+        env = "SNAZY_COLLAPSE_DUPLICATES"
+    )]
+    /// Collapse repeated identical messages into a burst summary
+    pub collapse_duplicates: bool,
+
+    #[arg(
+        long,
+        default_value_t = 30,
+        env = "SNAZY_COLLAPSE_WINDOW",
+        value_name = "seconds"
+    )]
+    /// Window in seconds used to detect duplicate message bursts
+    pub collapse_window: u64,
+
     #[arg(long, env = "SNAZY_TIMEZONE")]
     /// Convert timestamps to specified timezone (e.g. `Europe/Paris`, `America/New_York`)
     pub timezone: Option<String>,
@@ -267,6 +284,8 @@ pub fn build_cli_config() -> Config {
         } else {
             crate::config::KailPrefix::Show
         },
+        collapse_duplicates: args.collapse_duplicates,
+        collapse_window_seconds: args.collapse_window,
         time_format: args.time_format,
         time_delta: args.time_delta,
         timezone: args.timezone,

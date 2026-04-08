@@ -1,9 +1,10 @@
 use std::fmt::Write as _;
+use std::time::Duration;
 
 use crate::config::Config;
 use crate::model::{KubectlEvent, ParsedLine, RenderedLog, StructuredLog};
 use crate::parser::ParseState;
-use crate::utils::{apply_regexps, format_time_delta};
+use crate::utils::{apply_regexps, format_duration_compact, format_time_delta};
 use yansi::Paint;
 
 const DELTA_WIDTH: usize = 8;
@@ -167,6 +168,16 @@ pub fn render_kubectl_event(config: &Config, event: &KubectlEvent) -> String {
     };
 
     format!("{last_seen_colored} {type_colored} {reason_colored} {object_colored} {message}")
+}
+
+pub fn render_duplicate_summary(config: &Config, count: usize, window: Duration) -> String {
+    let summary = format!("x{count} in {}", format_duration_compact(window));
+    let padded = format!("{summary:>24}");
+
+    match config.coloring {
+        crate::config::Coloring::Never => padded,
+        _ => Paint::new(padded).fixed(8).italic().to_string(),
+    }
 }
 
 pub fn colorize_object_type(object: &str) -> String {

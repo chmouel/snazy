@@ -67,6 +67,34 @@ snazytest!(
 );
 
 snazytest!(
+    duplicate_structured_logs_collapse_into_summary,
+    ["--color", "never", "--collapse-duplicates"],
+    r#"{"level":"info","ts":"2022-04-25T14:20:32.000Z","msg":"reconcile start"}
+{"level":"info","ts":"2022-04-25T14:20:33.000Z","msg":"reconcile start"}"#,
+    "INFO                14:20:32 reconcile start\n               x2 in 30s\n",
+    false
+);
+
+snazytest!(
+    duplicate_raw_logs_collapse_into_summary,
+    ["--color", "never", "--collapse-duplicates"],
+    r#"controller busy
+controller busy"#,
+    "controller busy\n               x2 in 30s\n",
+    false
+);
+
+snazytest!(
+    duplicate_collapse_keeps_time_delta_based_on_hidden_duplicates,
+    ["--color", "never", "--collapse-duplicates", "--time-delta"],
+    r#"{"level":"info","ts":"2022-04-25T14:20:32.000Z","msg":"same"}
+{"level":"info","ts":"2022-04-25T14:20:33.000Z","msg":"same"}
+{"level":"info","ts":"2022-04-25T14:20:34.000Z","msg":"next"}"#,
+    "INFO                14:20:32          same\n               x2 in 30s\nINFO                14:20:34 +1s      next\n",
+    false
+);
+
+snazytest!(
     floated_date,
     ["--color", "never"],
     r#"{"level":"info", "ts": 1650602040.6289625, "msg":"foo"}"#,

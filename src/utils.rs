@@ -3,6 +3,7 @@ use chrono_tz::Tz;
 use regex::Regex;
 use serde_json::{Number, Value};
 use std::collections::HashMap;
+use std::time::Duration;
 use yansi::Paint;
 use yansi::Style;
 
@@ -191,6 +192,28 @@ pub fn format_time_delta(delta: TimeDelta) -> String {
     let hours = total_seconds / 3_600;
     let minutes = (total_seconds % 3_600) / 60;
     format!("{prefix}{hours}h{minutes:02}m")
+}
+
+pub fn format_duration_compact(duration: Duration) -> String {
+    let total_milliseconds = duration.as_millis();
+    if total_milliseconds < 1_000 {
+        return format!("{total_milliseconds}ms");
+    }
+
+    let total_seconds = duration.as_secs();
+    if total_seconds < 60 {
+        return format!("{total_seconds}s");
+    }
+
+    if total_seconds < 3_600 {
+        let minutes = total_seconds / 60;
+        let seconds = total_seconds % 60;
+        return format!("{minutes}m{seconds:02}s");
+    }
+
+    let hours = total_seconds / 3_600;
+    let minutes = (total_seconds % 3_600) / 60;
+    format!("{hours}h{minutes:02}m")
 }
 
 /// Applies regex-based styles to a message string using the provided map.

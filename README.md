@@ -161,6 +161,18 @@ are supported for now (ie: no rgb or fixed):
   # => INFO  14:20:33 +1.4s    finished reconcile
   ```
 
+- If your controllers or reconcilers emit the same line over and over, use
+  `--collapse-duplicates` (or `SNAZY_COLLAPSE_DUPLICATES=true`) to collapse
+  identical bursts into a compact summary. The burst window defaults to 30
+  seconds and can be changed with `--collapse-window` (or
+  `SNAZY_COLLAPSE_WINDOW`):
+
+  ```shell
+  kubectl logs deployment/controller -f | snazy --collapse-duplicates
+  # => INFO  14:20:32 reconcile loop still waiting
+  # =>                x42 in 30s
+  ```
+
 - You can specify a timezone with the `--timezone` flag (or the environment variable
   `SNAZY_TIMEZONE`). By default, the timestamps are displayed in the server's timezone
   (usually UTC). The timezone should be specified in the [IANA timezone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) format
