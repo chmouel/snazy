@@ -112,7 +112,12 @@ pub fn parse_structured_log(config: &Config, prepared: &PreparedLine) -> Option<
     }
 
     parse_pac(prepared, raw_json.clone(), time_format, timezone)
-        .or_else(|| parse_knative_or_caddy(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_caddy(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_logrus(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_zerolog(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_knative(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_ecs(prepared, raw_json.as_ref(), time_format, timezone))
+        .or_else(|| parse_cloud_logging(prepared, raw_json.as_ref(), time_format, timezone))
 }
 
 fn parse_custom_json(
@@ -203,14 +208,46 @@ fn parse_pac(
     })
 }
 
-fn parse_knative_or_caddy(
+fn parse_caddy(
+    prepared: &PreparedLine,
+    raw_json: Option<&Value>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<StructuredLog> {
+    let caddy = serde_json::from_str::<CaddyAccess>(&prepared.line).ok()?;
+    Some(StructuredLog {
+        level: caddy.level.to_uppercase(),
+        message: format!(
+            "{} {} -> {} ({}ms)",
+            caddy.request.method,
+            caddy.request.uri,
+            caddy.status,
+            (caddy.duration * 1000.0).round() as i64
+        ),
+        timestamp: caddy
+            .other
+            .get("ts")
+            .map(|value| crate::utils::convert_ts_float_or_str(value, time_format, timezone)),
+        others: None,
+        extra_fields: Vec::new(),
+        stacktrace: caddy
+            .other
+            .get("stacktrace")
+            .and_then(|value| value.as_str())
+            .map(ToOwned::to_owned),
+        raw_json: raw_json.cloned(),
+        kail_prefix: prepared.kail_prefix.clone(),
+    })
+}
+
+fn parse_knative(
     prepared: &PreparedLine,
     raw_json: Option<&Value>,
     time_format: &str,
     timezone: Option<&str>,
 ) -> Option<StructuredLog> {
     let knative = serde_json::from_str::<Knative>(&prepared.line).ok()?;
-    let mut log = StructuredLog {
+    Some(StructuredLog {
         level: knative.level.to_uppercase(),
         message: knative.msg.trim().to_string(),
         timestamp: knative
@@ -226,32 +263,160 @@ fn parse_knative_or_caddy(
             .map(ToOwned::to_owned),
         raw_json: raw_json.cloned(),
         kail_prefix: prepared.kail_prefix.clone(),
-    };
+    })
+}
 
-    if let Ok(caddy) = serde_json::from_str::<CaddyAccess>(&prepared.line) {
-        let duration_ms = (caddy.duration * 1000.0).round() as i64;
-        log.message = format!(
-            "{} {} -> {} ({}ms)",
-            caddy.request.method, caddy.request.uri, caddy.status, duration_ms
-        );
-        log.level = caddy.level.to_uppercase();
-        if let Some(ts) = caddy.other.get("ts") {
-            log.timestamp = Some(crate::utils::convert_ts_float_or_str(
-                ts,
-                time_format,
-                timezone,
-            ));
-        }
-        if let Some(stacktrace) = caddy
-            .other
-            .get("stacktrace")
-            .and_then(|value| value.as_str())
-        {
-            log.stacktrace = Some(stacktrace.to_string());
-        }
+fn parse_logrus(
+    prepared: &PreparedLine,
+    raw_json: Option<&Value>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<StructuredLog> {
+    let raw_json = raw_json?;
+    let message = json_string(raw_json, &["/msg"])?;
+    let level = json_string(raw_json, &["/level"])?;
+    let timestamp = json_timestamp(raw_json, &["/time"], time_format, timezone)?;
+    let stacktrace = json_string(raw_json, &["/stack", "/stacktrace"]).map(ToOwned::to_owned);
+
+    Some(build_structured_log(
+        prepared,
+        raw_json.clone(),
+        level,
+        message,
+        Some(timestamp),
+        None,
+        stacktrace,
+    ))
+}
+
+fn parse_zerolog(
+    prepared: &PreparedLine,
+    raw_json: Option<&Value>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<StructuredLog> {
+    let raw_json = raw_json?;
+    let message = json_string(raw_json, &["/message"])?;
+    let level = json_string(raw_json, &["/level"])?;
+    let timestamp = json_timestamp(raw_json, &["/time"], time_format, timezone)?;
+    let stacktrace = json_string(raw_json, &["/stack"]).map(ToOwned::to_owned);
+
+    Some(build_structured_log(
+        prepared,
+        raw_json.clone(),
+        level,
+        message,
+        Some(timestamp),
+        None,
+        stacktrace,
+    ))
+}
+
+fn parse_ecs(
+    prepared: &PreparedLine,
+    raw_json: Option<&Value>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<StructuredLog> {
+    let raw_json = raw_json?;
+    let message = json_string(raw_json, &["/message"])?;
+    let level = json_string(raw_json, &["/log/level"])?;
+    let timestamp = json_timestamp(raw_json, &["/@timestamp"], time_format, timezone)?;
+    let stacktrace = json_string(raw_json, &["/error/stack_trace"]).map(ToOwned::to_owned);
+
+    Some(build_structured_log(
+        prepared,
+        raw_json.clone(),
+        level,
+        message,
+        Some(timestamp),
+        None,
+        stacktrace,
+    ))
+}
+
+fn parse_cloud_logging(
+    prepared: &PreparedLine,
+    raw_json: Option<&Value>,
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<StructuredLog> {
+    let raw_json = raw_json?;
+    let level = json_string(raw_json, &["/severity"])?;
+    let message = json_string(
+        raw_json,
+        &["/message", "/jsonPayload/message", "/textPayload"],
+    )?;
+    let timestamp = json_timestamp(
+        raw_json,
+        &["/timestamp", "/time", "/receiveTimestamp"],
+        time_format,
+        timezone,
+    );
+    let stacktrace = json_string(
+        raw_json,
+        &[
+            "/jsonPayload/stacktrace",
+            "/jsonPayload/stack_trace",
+            "/stacktrace",
+        ],
+    )
+    .map(ToOwned::to_owned);
+
+    Some(build_structured_log(
+        prepared,
+        raw_json.clone(),
+        level,
+        message,
+        timestamp,
+        None,
+        stacktrace,
+    ))
+}
+
+fn build_structured_log(
+    prepared: &PreparedLine,
+    raw_json: Value,
+    level: &str,
+    message: &str,
+    timestamp: Option<String>,
+    others: Option<String>,
+    stacktrace: Option<String>,
+) -> StructuredLog {
+    StructuredLog {
+        level: level.to_uppercase(),
+        message: message.trim().to_string(),
+        timestamp,
+        others,
+        extra_fields: Vec::new(),
+        stacktrace,
+        raw_json: Some(raw_json),
+        kail_prefix: prepared.kail_prefix.clone(),
     }
+}
 
-    Some(log)
+fn json_string<'a>(value: &'a Value, pointers: &[&str]) -> Option<&'a str> {
+    pointers.iter().find_map(|pointer| {
+        value
+            .pointer(pointer)
+            .and_then(|candidate| match candidate {
+                Value::String(inner) if !inner.is_empty() => Some(inner.as_str()),
+                _ => None,
+            })
+    })
+}
+
+fn json_timestamp(
+    value: &Value,
+    pointers: &[&str],
+    time_format: &str,
+    timezone: Option<&str>,
+) -> Option<String> {
+    pointers.iter().find_map(|pointer| {
+        value.pointer(pointer).map(|candidate| {
+            crate::utils::convert_ts_float_or_str(candidate, time_format, timezone)
+        })
+    })
 }
 
 pub fn parse_kail_lines(config: &Config, rawline: &str) -> Option<String> {
@@ -337,6 +502,50 @@ mod tests {
         assert_eq!(log.message, "GET /api/users -> 200 (1ms)");
         assert_eq!(log.level, "INFO");
         assert!(log.timestamp.is_some());
+    }
+
+    #[test]
+    fn parses_logrus_logs() {
+        let line =
+            r#"{"level":"warning","msg":"logrus log","time":"2022-04-25T14:20:32.505637358Z"}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.message, "logrus log");
+        assert_eq!(log.level, "WARNING");
+        assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
+    }
+
+    #[test]
+    fn parses_zerolog_logs() {
+        let line = r#"{"level":"error","message":"zerolog log","time":"2022-04-25T14:20:32.505637358Z","stack":"trace"}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.message, "zerolog log");
+        assert_eq!(log.level, "ERROR");
+        assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
+        assert_eq!(log.stacktrace.as_deref(), Some("trace"));
+    }
+
+    #[test]
+    fn parses_ecs_logs() {
+        let line = r#"{"@timestamp":"2022-04-25T14:20:32.505637358Z","message":"ecs log","log":{"level":"info"},"error":{"stack_trace":"trace"}}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.message, "ecs log");
+        assert_eq!(log.level, "INFO");
+        assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
+        assert_eq!(log.stacktrace.as_deref(), Some("trace"));
+    }
+
+    #[test]
+    fn parses_cloud_logging_logs() {
+        let line = r#"{"severity":"ERROR","textPayload":"cloud log","timestamp":"2022-04-25T14:20:32.505637358Z","jsonPayload":{"stacktrace":"trace"}}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.message, "cloud log");
+        assert_eq!(log.level, "ERROR");
+        assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
+        assert_eq!(log.stacktrace.as_deref(), Some("trace"));
     }
 
     #[test]

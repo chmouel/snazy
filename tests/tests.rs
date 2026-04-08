@@ -343,6 +343,38 @@ snazytest!(
     false
 );
 
+snazytest!(
+    logrus_autodetect,
+    ["--color", "never"],
+    r#"{"level":"warning","msg":"logrus log","time":"2022-04-25T14:20:32.505637358Z"}"#,
+    "WARN                14:20:32 logrus log\n",
+    false
+);
+
+snazytest!(
+    zerolog_autodetect,
+    ["--color", "never"],
+    r#"{"level":"error","message":"zerolog log","time":"2022-04-25T14:20:32.505637358Z"}"#,
+    "ERROR              14:20:32 zerolog log\n",
+    false
+);
+
+snazytest!(
+    ecs_autodetect,
+    ["--color", "never"],
+    r#"{"@timestamp":"2022-04-25T14:20:32.505637358Z","message":"ecs log","log":{"level":"info"}}"#,
+    "INFO                14:20:32 ecs log\n",
+    false
+);
+
+snazytest!(
+    cloud_logging_autodetect,
+    ["--color", "never"],
+    r#"{"severity":"ERROR","textPayload":"cloud log","timestamp":"2022-04-25T14:20:32.505637358Z"}"#,
+    "ERROR              14:20:32 cloud log\n",
+    false
+);
+
 #[test]
 #[should_panic]
 fn all_json_keys_need_tobe_specified() {

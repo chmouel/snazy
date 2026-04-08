@@ -11,6 +11,9 @@ You do not have to use it only with `tekton` but work well with projects that us
 [`go-uber/zap`](https://github.com/uber-go/zap) library like
 [`knative`](https://knative.dev) and many others.
 
+Snazy also auto-detects common JSON layouts out of the box, including `zap`,
+`logrus`, `zerolog`, Elastic Common Schema (ECS), and Google Cloud Logging.
+
 It can work as a super-"[tail](https://man7.org/linux/man-pages/man1/tail.1.html)" too if you want to stream logs and being able to have "actions" or "highlights" on a regexp match.
 
 ## Screenshot
@@ -173,6 +176,9 @@ are supported for now (ie: no rgb or fixed):
   `-S/--skip-line-regexp`. When it matches the word or regexp in
   this value it will simply skipping printing the line. You can have multiple flags
   if you want to skip multiple lines.
+
+- For common structured log formats such as `zap`, `logrus`, `zerolog`, ECS, and
+  Cloud Logging, snazy auto-detects the usual timestamp, level, and message.
 
 - You can do your own field matching with the `-k/--json-keys` flag, you need to pass the fields `msg`, `level` and `ts`.
   The fields target a key in a json payload specified as [JSON Object notation](https://www.rfc-editor.org/rfc/rfc6901). The description of the fileds are:
