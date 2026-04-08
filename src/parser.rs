@@ -31,6 +31,7 @@ struct Knative {
 #[derive(Serialize, Deserialize, Debug)]
 struct CaddyAccess {
     level: String,
+    logger: Option<String>,
     #[serde(default)]
     msg: String,
     request: CaddyRequest,
@@ -54,6 +55,15 @@ struct CaddyRequest {
 pub struct ParseState {
     pub kubectl_events_mode: bool,
     pub kubectl_events_cols: Option<(usize, usize, usize, usize, usize)>,
+}
+
+struct StructuredFields<'a> {
+    level: &'a str,
+    message: &'a str,
+    timestamp: Option<String>,
+    others: Option<String>,
+    stacktrace: Option<String>,
+    consumed_fields: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -164,6 +174,7 @@ fn parse_custom_json(
         message: message?,
         timestamp,
         others: None,
+        consumed_fields: Vec::new(),
         extra_fields: Vec::new(),
         stacktrace: raw_json
             .get("stacktrace")
@@ -197,6 +208,7 @@ fn parse_pac(
             timezone,
         )),
         others: (!others.is_empty()).then_some(others),
+        consumed_fields: Vec::new(),
         extra_fields: Vec::new(),
         stacktrace: pac
             .other
@@ -215,6 +227,10 @@ fn parse_caddy(
     timezone: Option<&str>,
 ) -> Option<StructuredLog> {
     let caddy = serde_json::from_str::<CaddyAccess>(&prepared.line).ok()?;
+    if caddy.logger.as_deref() != Some("http.log.access") && caddy.msg.trim() != "handled request" {
+        return None;
+    }
+
     Some(StructuredLog {
         level: caddy.level.to_uppercase(),
         message: format!(
@@ -229,6 +245,15 @@ fn parse_caddy(
             .get("ts")
             .map(|value| crate::utils::convert_ts_float_or_str(value, time_format, timezone)),
         others: None,
+        consumed_fields: vec![
+            "/level".to_string(),
+            "/ts".to_string(),
+            "/stacktrace".to_string(),
+            "/request/method".to_string(),
+            "/request/uri".to_string(),
+            "/status".to_string(),
+            "/duration".to_string(),
+        ],
         extra_fields: Vec::new(),
         stacktrace: caddy
             .other
@@ -255,6 +280,12 @@ fn parse_knative(
             .get("ts")
             .map(|value| crate::utils::convert_ts_float_or_str(value, time_format, timezone)),
         others: None,
+        consumed_fields: vec![
+            "/level".to_string(),
+            "/msg".to_string(),
+            "/ts".to_string(),
+            "/stacktrace".to_string(),
+        ],
         extra_fields: Vec::new(),
         stacktrace: knative
             .other
@@ -281,11 +312,20 @@ fn parse_logrus(
     Some(build_structured_log(
         prepared,
         raw_json.clone(),
-        level,
-        message,
-        Some(timestamp),
-        None,
-        stacktrace,
+        StructuredFields {
+            level,
+            message,
+            timestamp: Some(timestamp),
+            others: None,
+            stacktrace,
+            consumed_fields: vec![
+                "/level".to_string(),
+                "/msg".to_string(),
+                "/time".to_string(),
+                "/stack".to_string(),
+                "/stacktrace".to_string(),
+            ],
+        },
     ))
 }
 
@@ -304,11 +344,19 @@ fn parse_zerolog(
     Some(build_structured_log(
         prepared,
         raw_json.clone(),
-        level,
-        message,
-        Some(timestamp),
-        None,
-        stacktrace,
+        StructuredFields {
+            level,
+            message,
+            timestamp: Some(timestamp),
+            others: None,
+            stacktrace,
+            consumed_fields: vec![
+                "/level".to_string(),
+                "/message".to_string(),
+                "/time".to_string(),
+                "/stack".to_string(),
+            ],
+        },
     ))
 }
 
@@ -327,11 +375,19 @@ fn parse_ecs(
     Some(build_structured_log(
         prepared,
         raw_json.clone(),
-        level,
-        message,
-        Some(timestamp),
-        None,
-        stacktrace,
+        StructuredFields {
+            level,
+            message,
+            timestamp: Some(timestamp),
+            others: None,
+            stacktrace,
+            consumed_fields: vec![
+                "/message".to_string(),
+                "/@timestamp".to_string(),
+                "/log/level".to_string(),
+                "/error/stack_trace".to_string(),
+            ],
+        },
     ))
 }
 
@@ -342,7 +398,7 @@ fn parse_cloud_logging(
     timezone: Option<&str>,
 ) -> Option<StructuredLog> {
     let raw_json = raw_json?;
-    let level = json_string(raw_json, &["/severity"])?;
+    let level = normalize_cloud_logging_level(json_string(raw_json, &["/severity"])?);
     let message = json_string(
         raw_json,
         &["/message", "/jsonPayload/message", "/textPayload"],
@@ -366,30 +422,41 @@ fn parse_cloud_logging(
     Some(build_structured_log(
         prepared,
         raw_json.clone(),
-        level,
-        message,
-        timestamp,
-        None,
-        stacktrace,
+        StructuredFields {
+            level,
+            message,
+            timestamp,
+            others: None,
+            stacktrace,
+            consumed_fields: vec![
+                "/severity".to_string(),
+                "/message".to_string(),
+                "/jsonPayload/message".to_string(),
+                "/textPayload".to_string(),
+                "/timestamp".to_string(),
+                "/time".to_string(),
+                "/receiveTimestamp".to_string(),
+                "/jsonPayload/stacktrace".to_string(),
+                "/jsonPayload/stack_trace".to_string(),
+                "/stacktrace".to_string(),
+            ],
+        },
     ))
 }
 
 fn build_structured_log(
     prepared: &PreparedLine,
     raw_json: Value,
-    level: &str,
-    message: &str,
-    timestamp: Option<String>,
-    others: Option<String>,
-    stacktrace: Option<String>,
+    fields: StructuredFields<'_>,
 ) -> StructuredLog {
     StructuredLog {
-        level: level.to_uppercase(),
-        message: message.trim().to_string(),
-        timestamp,
-        others,
+        level: fields.level.to_uppercase(),
+        message: fields.message.trim().to_string(),
+        timestamp: fields.timestamp,
+        others: fields.others,
+        consumed_fields: fields.consumed_fields,
         extra_fields: Vec::new(),
-        stacktrace,
+        stacktrace: fields.stacktrace,
         raw_json: Some(raw_json),
         kail_prefix: prepared.kail_prefix.clone(),
     }
@@ -417,6 +484,15 @@ fn json_timestamp(
             crate::utils::convert_ts_float_or_str(candidate, time_format, timezone)
         })
     })
+}
+
+fn normalize_cloud_logging_level(level: &str) -> &str {
+    match level.to_uppercase().as_str() {
+        "DEBUG" => "DEBUG",
+        "WARNING" | "WARN" => "WARNING",
+        "ERROR" | "CRITICAL" | "ALERT" | "EMERGENCY" => "ERROR",
+        _ => "INFO",
+    }
 }
 
 pub fn parse_kail_lines(config: &Config, rawline: &str) -> Option<String> {
@@ -505,6 +581,16 @@ mod tests {
     }
 
     #[test]
+    fn does_not_treat_generic_request_logs_as_caddy() {
+        let line = r#"{"level":"info","message":"request completed","time":"2022-04-25T14:20:32.505637358Z","request":{"method":"GET","uri":"/api/users"},"status":200,"duration":0.001234}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.message, "request completed");
+        assert_eq!(log.level, "INFO");
+        assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
+    }
+
+    #[test]
     fn parses_logrus_logs() {
         let line =
             r#"{"level":"warning","msg":"logrus log","time":"2022-04-25T14:20:32.505637358Z"}"#;
@@ -546,6 +632,14 @@ mod tests {
         assert_eq!(log.level, "ERROR");
         assert_eq!(log.timestamp.as_deref(), Some("14:20:32"));
         assert_eq!(log.stacktrace.as_deref(), Some("trace"));
+    }
+
+    #[test]
+    fn normalizes_cloud_logging_critical_to_error() {
+        let line = r#"{"severity":"CRITICAL","textPayload":"cloud log","timestamp":"2022-04-25T14:20:32.505637358Z"}"#;
+        let prepared = prepare_line(&Config::default(), line);
+        let log = parse_structured_log(&Config::default(), &prepared).unwrap();
+        assert_eq!(log.level, "ERROR");
     }
 
     #[test]

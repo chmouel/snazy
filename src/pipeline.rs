@@ -69,7 +69,8 @@ fn process_structured_log(config: &Config, mut log: StructuredLog) -> Option<Str
     }
 
     if config.extra_fields || !config.include_fields.is_empty() {
-        log.extra_fields = collect_extra_fields(config, log.raw_json.as_ref());
+        log.extra_fields =
+            collect_extra_fields(config, log.raw_json.as_ref(), &log.consumed_fields);
     }
 
     Some(log)
@@ -78,6 +79,7 @@ fn process_structured_log(config: &Config, mut log: StructuredLog) -> Option<Str
 fn collect_extra_fields(
     config: &Config,
     raw_json: Option<&serde_json::Value>,
+    consumed_fields: &[String],
 ) -> Vec<(String, String)> {
     let Some(raw_json) = raw_json else {
         return Vec::new();
@@ -99,7 +101,10 @@ fn collect_extra_fields(
 
     if config.include_fields.is_empty() {
         map.iter()
-            .filter(|(key, _)| !main_fields.contains(&key.as_str()))
+            .filter(|(key, value)| {
+                !main_fields.contains(&key.as_str())
+                    && !field_is_consumed(key, value, consumed_fields)
+            })
             .map(|(key, value)| (key.clone(), json_value_to_string(value)))
             .collect()
     } else {
@@ -112,6 +117,31 @@ fn collect_extra_fields(
             })
             .collect()
     }
+}
+
+fn field_is_consumed(key: &str, value: &serde_json::Value, consumed_fields: &[String]) -> bool {
+    let pointer = format!("/{}", escape_json_pointer_segment(key));
+    value_is_consumed(pointer.as_str(), value, consumed_fields)
+}
+
+fn value_is_consumed(pointer: &str, value: &serde_json::Value, consumed_fields: &[String]) -> bool {
+    if consumed_fields.iter().any(|field| field == pointer) {
+        return true;
+    }
+
+    let serde_json::Value::Object(map) = value else {
+        return false;
+    };
+
+    !map.is_empty()
+        && map.iter().all(|(key, value)| {
+            let child_pointer = format!("{pointer}/{}", escape_json_pointer_segment(key));
+            value_is_consumed(child_pointer.as_str(), value, consumed_fields)
+        })
+}
+
+fn escape_json_pointer_segment(segment: &str) -> String {
+    segment.replace('~', "~0").replace('/', "~1")
 }
 
 fn json_value_to_string(value: &serde_json::Value) -> String {
@@ -154,6 +184,7 @@ mod tests {
             message: "hello".to_string(),
             timestamp: None,
             others: None,
+            consumed_fields: Vec::new(),
             extra_fields: Vec::new(),
             stacktrace: None,
             raw_json: Some(serde_json::json!({
@@ -176,6 +207,90 @@ mod tests {
         assert_eq!(
             log.extra_fields,
             vec![("meta.status.code".to_string(), "200".to_string())]
+        );
+    }
+
+    #[test]
+    fn extra_fields_skip_consumed_top_level_fields() {
+        let config = Config {
+            extra_fields: true,
+            ..Config::default()
+        };
+        let log = StructuredLog {
+            level: "WARNING".to_string(),
+            message: "hello".to_string(),
+            timestamp: Some("10:00:00".to_string()),
+            others: None,
+            consumed_fields: vec![
+                "/level".to_string(),
+                "/msg".to_string(),
+                "/time".to_string(),
+                "/stack".to_string(),
+            ],
+            extra_fields: Vec::new(),
+            stacktrace: Some("trace".to_string()),
+            raw_json: Some(serde_json::json!({
+                "level": "warning",
+                "msg": "hello",
+                "time": "2022-04-25T14:20:32.505637358Z",
+                "stack": "trace",
+                "request_id": "req-1"
+            })),
+            kail_prefix: None,
+        };
+
+        let processed =
+            super::process_line(&config, crate::model::ParsedLine::Structured(log)).unwrap();
+
+        let crate::model::ParsedLine::Structured(log) = processed else {
+            panic!("expected structured log");
+        };
+
+        assert_eq!(
+            log.extra_fields,
+            vec![("request_id".to_string(), "req-1".to_string())]
+        );
+    }
+
+    #[test]
+    fn extra_fields_skip_consumed_nested_objects() {
+        let config = Config {
+            extra_fields: true,
+            ..Config::default()
+        };
+        let log = StructuredLog {
+            level: "INFO".to_string(),
+            message: "ecs".to_string(),
+            timestamp: Some("10:00:00".to_string()),
+            others: None,
+            consumed_fields: vec![
+                "/@timestamp".to_string(),
+                "/message".to_string(),
+                "/log/level".to_string(),
+                "/error/stack_trace".to_string(),
+            ],
+            extra_fields: Vec::new(),
+            stacktrace: Some("trace".to_string()),
+            raw_json: Some(serde_json::json!({
+                "@timestamp": "2022-04-25T14:20:32.505637358Z",
+                "message": "ecs",
+                "log": { "level": "info" },
+                "error": { "stack_trace": "trace" },
+                "service": { "name": "api" }
+            })),
+            kail_prefix: None,
+        };
+
+        let processed =
+            super::process_line(&config, crate::model::ParsedLine::Structured(log)).unwrap();
+
+        let crate::model::ParsedLine::Structured(log) = processed else {
+            panic!("expected structured log");
+        };
+
+        assert_eq!(
+            log.extra_fields,
+            vec![("service".to_string(), r#"{"name":"api"}"#.to_string())]
         );
     }
 

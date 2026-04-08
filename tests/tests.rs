@@ -344,6 +344,14 @@ snazytest!(
 );
 
 snazytest!(
+    caddy_does_not_override_generic_request_logs,
+    ["--color", "never"],
+    r#"{"level":"info","message":"request completed","time":"2022-04-25T14:20:32.505637358Z","request":{"method":"GET","uri":"/path"},"status":200,"duration":0.001234}"#,
+    "INFO                14:20:32 request completed\n",
+    false
+);
+
+snazytest!(
     logrus_autodetect,
     ["--color", "never"],
     r#"{"level":"warning","msg":"logrus log","time":"2022-04-25T14:20:32.505637358Z"}"#,
@@ -372,6 +380,30 @@ snazytest!(
     ["--color", "never"],
     r#"{"severity":"ERROR","textPayload":"cloud log","timestamp":"2022-04-25T14:20:32.505637358Z"}"#,
     "ERROR              14:20:32 cloud log\n",
+    false
+);
+
+snazytest!(
+    logrus_extra_fields_skip_consumed_time,
+    ["--color", "never", "--extra-fields"],
+    r#"{"level":"warning","msg":"logrus log","time":"2022-04-25T14:20:32.505637358Z","request_id":"req-1"}"#,
+    "WARN                14:20:32 logrus log request_id=req-1\n",
+    false
+);
+
+snazytest!(
+    zerolog_extra_fields_skip_consumed_stack,
+    ["--color", "never", "--extra-fields", "--hide-stacktrace"],
+    r#"{"level":"error","message":"zerolog log","time":"2022-04-25T14:20:32.505637358Z","stack":"trace","request_id":"req-1"}"#,
+    "ERROR              14:20:32 zerolog log request_id=req-1\n",
+    false
+);
+
+snazytest!(
+    cloud_logging_critical_matches_error_filter,
+    ["--color", "never", "--filter-levels", "error"],
+    r#"{"severity":"CRITICAL","textPayload":"cloud critical","timestamp":"2022-04-25T14:20:32.505637358Z"}"#,
+    "ERROR              14:20:32 cloud critical\n",
     false
 );
 

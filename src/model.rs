@@ -6,6 +6,7 @@ pub struct StructuredLog {
     pub message: String,
     pub timestamp: Option<String>,
     pub others: Option<String>,
+    pub consumed_fields: Vec<String>,
     pub extra_fields: Vec<(String, String)>,
     pub stacktrace: Option<String>,
     pub raw_json: Option<Value>,

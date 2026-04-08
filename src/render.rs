@@ -283,6 +283,7 @@ mod tests {
                 message: "hello".to_string(),
                 timestamp: Some("10:00:00".to_string()),
                 others: None,
+                consumed_fields: Vec::new(),
                 extra_fields: vec![("status".to_string(), "200".to_string())],
                 stacktrace: None,
                 raw_json: None,
