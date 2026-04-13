@@ -188,7 +188,7 @@ jobs:
           path: ${{ steps.package.outputs.PKG_PATH }}.sha256
 
       - name: Publish archives and packages
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
