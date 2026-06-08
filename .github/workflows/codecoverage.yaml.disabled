@@ -1,4 +1,10 @@
-on: [push]
+on:
+  push:
+    paths:
+      - '**.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/codecoverage.yaml'
 
 name: Code Coverage
 

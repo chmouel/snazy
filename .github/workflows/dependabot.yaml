@@ -1,5 +1,10 @@
 name: auto-merge
-on: ["pull_request_target"]
+on:
+  pull_request_target:
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/**'
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
