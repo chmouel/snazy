@@ -1,0 +1,71 @@
+name: Weekly
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly on Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: weekly-maintenance
+  cancel-in-progress: false
+
+jobs:
+  weekly-maintenance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require automation token
+        env:
+          AUTOMATION_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if [ -z "$AUTOMATION_TOKEN" ]; then
+            echo "GH_TOKEN is required."
+            echo "Use a fine-grained PAT or GitHub App token with contents and pull requests access."
+            echo "The default GITHUB_TOKEN cannot reliably trigger the PR CI required for auto-merge."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Update Rust dependencies
+        run: cargo update
+
+      - name: Create pull request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          branch: ci/weekly-maintenance
+          delete-branch: true
+          commit-message: "chore: weekly maintenance update"
+          title: "chore: weekly maintenance update"
+          body: |
+            ## Summary
+
+            - Updated Rust dependencies (`cargo update`)
+
+            This PR was opened automatically by the weekly maintenance workflow.
+          labels: |
+            dependencies
+
+      - name: Enable auto-merge
+        if: ${{ steps.create-pr.outputs.pull-request-number != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: gh pr merge --auto --merge "${{ steps.create-pr.outputs.pull-request-number }}"
