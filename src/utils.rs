@@ -79,7 +79,7 @@ fn parse_unix_ts(value: &Number) -> Option<DateTime<Utc>> {
         .map_or((false, raw.as_str()), |rest| (true, rest));
     let (whole, fractional) = unsigned
         .split_once('.')
-        .map_or((unsigned, ""), |parts| parts);
+        .unwrap_or((unsigned, ""));
     let whole_seconds: i64 = whole.parse().ok()?;
     let (nanos, carry_second) = parse_fractional_nanos(fractional)?;
 
