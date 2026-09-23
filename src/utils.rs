@@ -77,9 +77,7 @@ fn parse_unix_ts(value: &Number) -> Option<DateTime<Utc>> {
     let (negative, unsigned) = raw
         .strip_prefix('-')
         .map_or((false, raw.as_str()), |rest| (true, rest));
-    let (whole, fractional) = unsigned
-        .split_once('.')
-        .unwrap_or((unsigned, ""));
+    let (whole, fractional) = unsigned.split_once('.').unwrap_or((unsigned, ""));
     let whole_seconds: i64 = whole.parse().ok()?;
     let (nanos, carry_second) = parse_fractional_nanos(fractional)?;
 
