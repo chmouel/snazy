@@ -17,6 +17,9 @@ get_sha256() {
 
 COMMIT_AUTHOR=${COMMIT_AUTHOR:-"Chmouel Boudjnah"}
 COMMIT_EMAIL=${COMMIT_EMAIL:-"chmouel@chmouel.com"}
+# Fine-grained PAT or GitHub App token. The default GITHUB_TOKEN cannot push to
+# main (protected branch) nor trigger the PR checks required by auto-merge.
+AUTOMATION_TOKEN=${AUTOMATION_TOKEN:-""}
 VERSION=${1:-$cargo_release_version}
 MACOS_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-macos.tar.gz"
 MACOS_ARM_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-macos-arm64.tar.gz"
@@ -38,14 +41,24 @@ function set_git_config() {
 	fi
 }
 
+# main is protected, so the bump goes through a throwaway branch and a PR that
+# auto-merges once the required checks pass.
+function open_formula_pr() {
+	local branch=ci/formula-bump-${VERSION}
+	local remote=https://git:${AUTOMATION_TOKEN}@github.com/chmouel/${project_name}
+	git checkout -B "${branch}"
+	git push --force "${remote}" "${branch}"
+	GH_TOKEN=${AUTOMATION_TOKEN} GITHUB_TOKEN=${AUTOMATION_TOKEN} \
+		gh pr create --repo chmouel/${project_name} --base main --head "${branch}" \
+		--title "Formula Bump ${project_name} to ${VERSION}" \
+		--body "Automated Homebrew formula bump for \`${VERSION}\`." ||
+		echo "Reusing existing pull request for ${branch}"
+	GH_TOKEN=${AUTOMATION_TOKEN} GITHUB_TOKEN=${AUTOMATION_TOKEN} \
+		gh pr merge --repo chmouel/${project_name} --auto --merge "${branch}"
+}
+
 function update_brew() {
 	targetFile=Formula/${project_name}.rb
-	if [[ -n ${GITHUB_TOKEN:-""} ]]; then
-		rm -rf /tmp/pac-repo
-		git clone --depth=1 https://git:${GITHUB_TOKEN}@github.com/chmouel/${project_name} /tmp/pac-repo
-		targetFile=/tmp/pac-repo/${targetFile}
-		cd /tmp/pac-repo
-	fi
 	sed -e "s,%VERSION%,${VERSION},g" \
 		-e "s,%MACOS_URL%,${MACOS_URL},g" \
 		-e "s,%MACOS_SHA256%,${MACOS_SHA256},g" \
@@ -57,10 +70,14 @@ function update_brew() {
 		-e "s,%LINUX_ARM_SHA256%,${LINUX_ARM_SHA256},g" <${current_dir}/brews/${project_name}.tmpl.rb \
 		>${targetFile}
 
-	if [[ -n $(git status -s Formula/${project_name}.rb) ]]; then
-		git add Formula/${project_name}.rb
+	if [[ -n $(git status -s ${targetFile}) ]]; then
+		git add ${targetFile}
 		git commit -m "Formula Bump ${project_name} to ${VERSION}"
-		[[ -n ${GITHUB_TOKEN:-""} ]] && git push
+		if [[ -n ${AUTOMATION_TOKEN} ]]; then
+			open_formula_pr
+		elif [[ -n ${GITHUB_TOKEN:-""} ]]; then
+			git push
+		fi
 	fi
 }
 

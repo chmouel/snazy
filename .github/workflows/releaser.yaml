@@ -203,13 +203,27 @@ jobs:
     name: Update Homebrew formula
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 1
-      - name: Run update-formula.sh
+          # The bump is pushed with the automation token, not the job token.
+          persist-credentials: false
+      - name: Require automation token
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTOMATION_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if [ -z "$AUTOMATION_TOKEN" ]; then
+            echo "GH_TOKEN is required."
+            echo "Use a fine-grained PAT or GitHub App token with contents and pull requests access."
+            echo "The default GITHUB_TOKEN can neither push to the protected main branch nor trigger the PR CI required for auto-merge."
+            exit 1
+          fi
+      - name: Update formula and packages
+        env:
+          AUTOMATION_TOKEN: ${{ secrets.GH_TOKEN }}
           AUR_PRIVATE_KEY: ${{ secrets.AUR_PRIVATE_KEY }}
         run: |
           misc/packages/update.sh
