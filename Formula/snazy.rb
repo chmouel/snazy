@@ -8,8 +8,13 @@ class Snazy < Formula
   version "0.59.0"
 
   on_macos do
-    url "https://github.com/chmouel/snazy/releases/download/0.59.0/snazy-v0.59.0-macos.tar.gz"
-    sha256 "1000504bda5fde1fad822cf14cdff42cb6e7fa082a76f0c778efa6491ae40941"
+    if Hardware::CPU.arm?
+      url "https://github.com/chmouel/snazy/releases/download/0.59.0/snazy-v0.59.0-macos-arm64.tar.gz"
+      sha256 "1b8b34a9ed65ed56ae56a2c548277bd1f7bcba997d16b445ca1b0e8110f10b63"
+    else
+      url "https://github.com/chmouel/snazy/releases/download/0.59.0/snazy-v0.59.0-macos.tar.gz"
+      sha256 "1000504bda5fde1fad822cf14cdff42cb6e7fa082a76f0c778efa6491ae40941"
+    end
 
     def install
       bin.install "snazy" => "snazy"

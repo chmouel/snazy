@@ -19,10 +19,12 @@ COMMIT_AUTHOR=${COMMIT_AUTHOR:-"Chmouel Boudjnah"}
 COMMIT_EMAIL=${COMMIT_EMAIL:-"chmouel@chmouel.com"}
 VERSION=${1:-$cargo_release_version}
 MACOS_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-macos.tar.gz"
+MACOS_ARM_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-macos-arm64.tar.gz"
 LINUX_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-linux-amd64.tar.gz"
 LINUX_ARM_URL="${project_url}/releases/download/${VERSION}/${project_name}-v${VERSION}-linux-arm64.tar.gz"
 
 MACOS_SHA256=$(get_sha256 "$MACOS_URL")
+MACOS_ARM_SHA256=$(get_sha256 "$MACOS_ARM_URL")
 LINUX_SHA256=$(get_sha256 "$LINUX_URL")
 LINUX_ARM_SHA256=$(get_sha256 "$LINUX_ARM_URL")
 
@@ -47,6 +49,8 @@ function update_brew() {
 	sed -e "s,%VERSION%,${VERSION},g" \
 		-e "s,%MACOS_URL%,${MACOS_URL},g" \
 		-e "s,%MACOS_SHA256%,${MACOS_SHA256},g" \
+		-e "s,%MACOS_ARM_URL%,${MACOS_ARM_URL},g" \
+		-e "s,%MACOS_ARM_SHA256%,${MACOS_ARM_SHA256},g" \
 		-e "s,%LINUX_URL%,${LINUX_URL},g" \
 		-e "s,%LINUX_SHA256%,${LINUX_SHA256},g" \
 		-e "s,%LINUX_ARM_URL%,${LINUX_ARM_URL},g" \

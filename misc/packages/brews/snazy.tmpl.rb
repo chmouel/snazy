@@ -8,8 +8,13 @@ class Snazy < Formula
   version "%VERSION%"
 
   on_macos do
-    url "%MACOS_URL%"
-    sha256 "%MACOS_SHA256%"
+    if Hardware::CPU.arm?
+      url "%MACOS_ARM_URL%"
+      sha256 "%MACOS_ARM_SHA256%"
+    else
+      url "%MACOS_URL%"
+      sha256 "%MACOS_SHA256%"
+    end
 
     def install
       bin.install "snazy" => "snazy"
